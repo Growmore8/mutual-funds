@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\KycReviewController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\PoolController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Models\PoolAccount;
 use App\Models\User;
@@ -37,4 +38,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+
+    // Pool / PnL
+    Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');
+    Route::post('/pool/sync', [PoolController::class, 'sync'])->name('pool.sync');
 });

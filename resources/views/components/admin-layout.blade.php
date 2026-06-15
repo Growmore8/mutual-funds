@@ -20,6 +20,7 @@
                 ['admin.account-types.index','Account Types'],
                 ['admin.payment-methods.index','Payment Methods'],
                 ['admin.transactions.index','Transactions'],
+                ['admin.pool.index','Pool / PnL'],
             ]; @endphp
             @foreach ($nav as [$route, $label])
                 <a href="{{ route($route) }}"
