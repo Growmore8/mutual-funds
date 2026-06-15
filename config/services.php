@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Pool / trading server REST API (live PnL for the managed pool, e.g. account 800120)
+    'pool' => [
+        'url' => env('POOL_API_URL'),
+        'key' => env('POOL_API_KEY'),
+    ],
+
 ];
