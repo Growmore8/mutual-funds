@@ -22,7 +22,39 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'country',
+        'account_type_id',
+        'status',
+        'kyc_status',
+        'otp_verified_at',
     ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function accountType()
+    {
+        return $this->belongsTo(AccountType::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function kycDocuments()
+    {
+        return $this->hasMany(KycDocument::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -43,6 +75,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'otp_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
