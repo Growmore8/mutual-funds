@@ -28,9 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
 
     // Client dashboard (only after OTP + KYC approval)
-    Route::get('/app', function () {
-        return view('client.dashboard', ['user' => Auth::user()]);
-    })->middleware('onboarded')->name('client.dashboard');
+    Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
+        ->middleware('onboarded')->name('client.dashboard');
 
     // Profile (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
