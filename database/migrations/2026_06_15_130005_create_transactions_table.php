@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('balance_after', 15, 2)->nullable();
             $table->string('status')->default('completed');  // pending | completed | rejected
             $table->string('description')->nullable();
-            $table->morphs('source');                        // optional link (deposit, pnl_allocation, ...)
+            $table->nullableMorphs('source');                        // optional link (deposit, pnl_allocation, ...)
             $table->timestamps();
         });
     }
