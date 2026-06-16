@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PoolAccount;
+use App\Models\PoolSnapshot;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -41,24 +42,33 @@ class PoolApiClient
 
     private function fetchLive(PoolAccount $pool): array
     {
-        // TODO: adjust the path + field mapping to the real API once provided.
-        $res = Http::withToken($this->apiKey)
+        // CubeX external API:
+        //   GET {url}?accountId={ref}   header: x-api-key
+        //   -> { "ok": true, "accountId": "...", "pnl": <closed P&L>, "currency": "USD" }
+        $res = Http::withHeaders(['x-api-key' => $this->apiKey])
             ->acceptJson()
             ->timeout(20)
-            ->get(rtrim($this->baseUrl, '/') . "/accounts/{$pool->account_ref}");
+            ->get($this->baseUrl, ['accountId' => $pool->account_ref]);
 
         $res->throw();
         $d = $res->json();
 
-        $balance = (float) ($d['balance'] ?? $d['equity'] ?? $pool->balance);
-        $equity  = (float) ($d['equity'] ?? $balance);
-        $pnl     = (float) ($d['pnl'] ?? $d['daily_pnl'] ?? ($balance - (float) $pool->balance));
+        // CubeX returns the account's *cumulative* closed P&L. Convert it to the
+        // day's delta = current total − everything already booked on prior days.
+        $cumulative = (float) ($d['pnl'] ?? 0);
+        $priorTotal = (float) PoolSnapshot::where('pool_account_id', $pool->id)
+            ->whereDate('snapshot_date', '<', now()->toDateString())
+            ->sum('pnl');
+
+        $daily   = round($cumulative - $priorTotal, 2);
+        $opening = (float) $pool->balance;
+        $balance = round($opening + $daily, 2);
 
         return [
             'balance' => $balance,
-            'equity'  => $equity,
-            'pnl'     => $pnl,
-            'pnl_pct' => $pool->balance > 0 ? round($pnl / (float) $pool->balance * 100, 4) : 0,
+            'equity'  => $balance,
+            'pnl'     => $daily,
+            'pnl_pct' => $opening > 0 ? round($daily / $opening * 100, 4) : 0,
             'raw'     => $d,
         ];
     }
