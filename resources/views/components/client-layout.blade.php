@@ -21,9 +21,11 @@
     <style>
         .nav-link{transition:all .15s ease}
         .nav-link:hover{transform:translateX(2px)}
-        .tab{transition:transform .15s ease, color .15s ease}
-        .tab.is-active{color:#10b981}
-        .tab.is-active .tab-ico{transform:translateY(-2px) scale(1.08)}
+        .tab{position:relative;transition:color .15s ease}
+        .tab .tab-ico{padding:.3rem 1.05rem;border-radius:9999px;transition:background .2s ease, color .2s ease, transform .2s ease}
+        .tab.is-active{color:#10b981;font-weight:600}
+        .tab.is-active .tab-ico{background:rgba(16,185,129,.16);color:#10b981;transform:translateY(-1px)}
+        .tab.is-active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:3px;border-radius:0 0 3px 3px;background:#10b981}
         .safe-b{padding-bottom:env(safe-area-inset-bottom)}
         .safe-t{padding-top:env(safe-area-inset-top)}
         /* Premium dark backdrop: near-black with a soft emerald glow up top */
