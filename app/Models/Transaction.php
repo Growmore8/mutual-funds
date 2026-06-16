@@ -17,4 +17,10 @@ class Transaction extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /** Linked deposit/withdrawal record (for method + payout details). */
+    public function source()
+    {
+        return $this->morphTo();
+    }
 }

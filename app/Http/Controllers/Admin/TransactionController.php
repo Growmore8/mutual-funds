@@ -13,7 +13,7 @@ class TransactionController extends Controller
     {
         $search = trim((string) $request->get('q'));
 
-        $transactions = Transaction::with('user')
+        $transactions = Transaction::with('user', 'source')
             ->when($request->type, fn ($q) => $q->where('type', $request->type))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {

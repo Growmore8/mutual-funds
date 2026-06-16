@@ -26,7 +26,7 @@
         </div>
 
         {{-- List --}}
-        <div class="bg-white shadow rounded-xl overflow-hidden lg:col-span-2" x-data="{ edit:false, f:{id:null,type:'profit',amount:0,description:''} }">
+        <div class="bg-white shadow rounded-xl overflow-x-auto lg:col-span-2" x-data="{ edit:false, f:{id:null,type:'profit',amount:0,description:''} }">
             <div class="p-4 border-b">
                 <form method="GET" class="flex flex-wrap gap-2 text-sm">
                     <input name="q" value="{{ $search }}" placeholder="Search by client name, email, or transaction ID…"
@@ -43,20 +43,44 @@
                     @endif
                 </form>
             </div>
-            <table class="min-w-full text-sm">
+            <table class="min-w-full text-sm whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-500 text-left">
-                    <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">#</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3 text-right">Actions</th></tr>
+                    <tr>
+                        <th class="px-3 py-3">Date</th>
+                        <th class="px-3 py-3">Txn #</th>
+                        <th class="px-3 py-3">Client</th>
+                        <th class="px-3 py-3 text-right">Debit / Credit</th>
+                        <th class="px-3 py-3">Method / Details</th>
+                        <th class="px-3 py-3">Note</th>
+                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3 text-right">Actions</th>
+                    </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($transactions as $t)
+                        @php
+                            $src = $t->source;
+                            $method = $src->method ?? null;
+                            $details = $src->payout_details ?? null;
+                            $st = ['completed' => ['Done','bg-emerald-100 text-emerald-800'], 'pending' => ['Pending','bg-amber-100 text-amber-800'], 'rejected' => ['Rejected','bg-red-100 text-red-700']][$t->status] ?? ['Done','bg-emerald-100 text-emerald-800'];
+                        @endphp
                         <tr>
-                            <td class="px-4 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-gray-400">{{ $t->id }}</td>
-                            <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $t->user?->clientCode() }}</div><div class="text-gray-400 text-xs">{{ $t->user->email ?? '' }}</div></td>
-                            <td class="px-4 py-3">{{ ucfirst($t->type) }}</td>
-                            <td class="px-4 py-3 {{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
-                            <td class="px-4 py-3">{{ number_format((float)$t->balance_after,2) }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-3 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}</td>
+                            <td class="px-3 py-3 text-gray-400">{{ $t->id }}</td>
+                            <td class="px-3 py-3"><div class="font-medium text-gray-900">{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $t->user?->clientCode() }}</div></td>
+                            <td class="px-3 py-3 text-right">
+                                <span class="font-semibold {{ $t->amount < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($t->amount < 0 ? '-' : '+') . '$' . number_format(abs((float)$t->amount),2) }}</span>
+                                <div class="text-[11px] text-gray-400">{{ $t->amount < 0 ? 'Debit' : 'Credit' }} · {{ ucfirst($t->type) }}</div>
+                            </td>
+                            <td class="px-3 py-3">
+                                @if ($method)
+                                    <div class="text-gray-700">{{ $method }}</div>
+                                    @if ($details)<div class="text-[11px] text-gray-400 max-w-[220px] truncate" title="{{ $details }}">{{ $details }}</div>@endif
+                                @else <span class="text-gray-300">—</span> @endif
+                            </td>
+                            <td class="px-3 py-3 text-gray-500 max-w-[180px] truncate" title="{{ $t->description }}">{{ $t->description ?? '—' }}</td>
+                            <td class="px-3 py-3"><span class="text-xs px-2 py-0.5 rounded-full {{ $st[1] }}">{{ $st[0] }}</span></td>
+                            <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-1">
                                     <button type="button" title="Edit"
                                             @click="edit=true; f={id:{{ $t->id }}, type:'{{ $t->type }}', amount:{{ (float)$t->amount }}, description:@js($t->description)}"
@@ -69,7 +93,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
+                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
