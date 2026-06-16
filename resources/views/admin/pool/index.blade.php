@@ -111,6 +111,7 @@
                 requestAnimationFrame(step);
             }
             async function tick() {
+                if (document.hidden) return;
                 try {
                     const res = await fetch('{{ route('admin.pool.live') }}', {headers: {'Accept': 'application/json'}});
                     if (!res.ok) return;

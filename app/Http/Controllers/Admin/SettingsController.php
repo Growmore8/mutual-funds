@@ -15,6 +15,11 @@ class SettingsController extends Controller
         return view('admin.settings', ['admin' => $request->user()]);
     }
 
+    public function security()
+    {
+        return view('admin.settings-security');
+    }
+
     public function updateProfile(Request $request)
     {
         $admin = $request->user();
@@ -32,7 +37,6 @@ class SettingsController extends Controller
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 

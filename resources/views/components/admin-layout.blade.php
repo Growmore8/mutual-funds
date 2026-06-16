@@ -19,31 +19,43 @@
             <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
             <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Fund Admin</span></div>
         </div>
-        <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-            @php $nav = [
-                ['admin.dashboard','Dashboard','fa-gauge-high'],
-                ['admin.clients.index','Clients','fa-users'],
-                ['admin.account-requests.index','Account Requests','fa-folder-plus'],
-                ['admin.kyc.index','KYC Review','fa-id-card'],
-                ['admin.account-types.index','Account Types','fa-layer-group'],
-                ['admin.deposits.index','Deposits','fa-arrow-down-to-bracket'],
-                ['admin.withdrawals.index','Withdrawals','fa-money-bill-transfer'],
-                ['admin.payment-methods.index','Payment Methods','fa-credit-card'],
-                ['admin.transactions.index','Transactions','fa-receipt'],
-                ['admin.pool.index','Pool / PnL','fa-chart-pie'],
-                ['admin.settings.edit','Settings','fa-gear'],
-            ]; @endphp
-            @foreach ($nav as [$route, $label, $icon])
-                <a href="{{ route($route) }}"
-                   class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs($route) || request()->routeIs(str_replace('.index','.*',$route)) ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
-                    <i class="fa-solid {{ $icon }} w-5 text-center"></i> <span>{{ $label }}</span>
-                </a>
-            @endforeach
+        <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
+            @php
+                $link = fn ($route, $label, $icon) =>
+                    '<a href="' . route($route) . '" class="flex items-center gap-3 px-3 py-2 rounded-md '
+                    . (request()->routeIs($route) || request()->routeIs(str_replace('.index', '.*', $route)) ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10')
+                    . '"><i class="fa-solid ' . $icon . ' w-5 text-center"></i><span>' . $label . '</span></a>';
+                $heading = fn ($t) => '<p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">' . $t . '</p>';
+            @endphp
 
-            <div class="pt-2 mt-2 border-t border-white/10"></div>
-            <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md {{ request()->routeIs('admin.messages.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
-                <i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Message Center</span>
-            </a>
+            {!! $link('admin.dashboard', 'Dashboard', 'fa-gauge-high') !!}
+
+            {!! $heading('Clients') !!}
+            {!! $link('admin.clients.index', 'Clients', 'fa-users') !!}
+            {!! $link('admin.account-requests.index', 'Account Requests', 'fa-folder-plus') !!}
+            {!! $link('admin.kyc.index', 'KYC Review', 'fa-id-card') !!}
+            {!! $link('admin.account-types.index', 'Account Types', 'fa-layer-group') !!}
+
+            {!! $heading('Finance') !!}
+            {!! $link('admin.deposits.index', 'Deposits', 'fa-arrow-down-to-bracket') !!}
+            {!! $link('admin.withdrawals.index', 'Withdrawals', 'fa-money-bill-transfer') !!}
+            {!! $link('admin.transactions.index', 'Transactions', 'fa-receipt') !!}
+            {!! $link('admin.payment-methods.index', 'Payment Methods', 'fa-credit-card') !!}
+
+            {!! $heading('Fund') !!}
+            {!! $link('admin.pool.index', 'Pool / PnL', 'fa-chart-pie') !!}
+            <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('admin.messages.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5 text-center"></i><span>Message Center</span></a>
+
+            {!! $heading('Settings') !!}
+            {!! $link('admin.settings.edit', 'Profile', 'fa-user') !!}
+            {!! $link('admin.settings.security', 'Security', 'fa-shield-halved') !!}
+            <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/10 text-left">
+                <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i><span>Appearance</span>
+            </button>
+            <form method="POST" action="{{ route('logout') }}">@csrf
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/10 text-left text-red-300"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i><span>Log out</span></button>
+            </form>
         </nav>
     </aside>
 

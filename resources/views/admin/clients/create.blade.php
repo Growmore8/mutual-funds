@@ -22,7 +22,7 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div><label class="block text-gray-700 mb-1">Country</label><input name="country" value="{{ old('country') }}" class="w-full border-gray-300 rounded-md"></div>
+                <div><label class="block text-gray-700 mb-1">Country</label><x-country-select name="country" :value="old('country')" class="w-full border-gray-300 rounded-md" /></div>
                 <div><label class="block text-gray-700 mb-1">Address</label><input name="address" value="{{ old('address') }}" class="w-full border-gray-300 rounded-md"></div>
             </div>
 

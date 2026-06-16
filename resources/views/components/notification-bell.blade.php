@@ -40,6 +40,7 @@
             open: false, unread: 0, items: [], sound: sound, last: -1,
             init() { this.load(); setInterval(() => this.load(), 12000); },
             async load() {
+                if (document.hidden) return;
                 try {
                     const r = await fetch('{{ route('notifications.feed') }}', {headers: {'Accept': 'application/json'}});
                     if (!r.ok) return;

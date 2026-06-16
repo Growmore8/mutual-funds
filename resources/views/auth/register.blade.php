@@ -26,7 +26,7 @@
         <!-- Country -->
         <div class="mt-4">
             <x-input-label for="country" :value="__('Country')" />
-            <x-text-input id="country" class="block mt-1 w-full" type="text" name="country" :value="old('country')" required autocomplete="country-name" />
+            <x-country-select name="country" :value="old('country')" :required="true" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" />
             <x-input-error :messages="$errors->get('country')" class="mt-2" />
         </div>
 

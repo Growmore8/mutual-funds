@@ -33,7 +33,7 @@
                 <div><label class="block text-gray-700">Email</label><input type="email" name="email" value="{{ old('email',$client->email) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
                 <div class="grid grid-cols-2 gap-2">
                     <div><label class="block text-gray-700">Phone</label><input name="phone" value="{{ old('phone',$client->phone) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
-                    <div><label class="block text-gray-700">Country</label><input name="country" value="{{ old('country',$client->country) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
+                    <div><label class="block text-gray-700">Country</label><x-country-select name="country" :value="old('country',$client->country)" class="mt-1 w-full border-gray-300 rounded-md" /></div>
                 </div>
                 <div><label class="block text-gray-700">Address</label><input name="address" value="{{ old('address',$client->address) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                 <div>
