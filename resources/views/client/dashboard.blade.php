@@ -39,9 +39,9 @@
                 <i class="fa-solid fa-wifi rotate-90 opacity-70"></i>
             </div>
             <div class="relative w-12 h-9 rounded-md mt-5" style="background:linear-gradient(135deg,#f6d365,#d4af37)"></div>
-            <p class="relative text-xs text-white/60 mt-4">Total Balance</p>
-            <p class="relative text-3xl font-bold tracking-wide">{{ $money($balanceAfter) }}</p>
-            <p class="relative text-[11px] text-white/70 mt-1">Principal {{ $money($investment) }} locked · Withdrawable {{ $money($withdrawable) }}</p>
+            <p class="relative text-xs text-white/60 mt-4">Capital (Balance)</p>
+            <p class="relative text-3xl font-bold tracking-wide">{{ $money($investment) }}</p>
+            <p class="relative text-[11px] text-white/70 mt-1">PnL {{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }} · Withdrawable {{ $money($withdrawable) }}</p>
             <div class="relative flex items-center justify-between mt-5 text-sm">
                 <span class="tracking-[0.25em] text-white/80">{{ $liveRef ? '•••• ' . substr($liveRef, -4) : '•••• ••••' }}</span>
                 <span class="uppercase tracking-wide text-white/90">{{ $user->name }}</span>
@@ -53,27 +53,27 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500">Pool Account Size</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($poolsCapacity > 0 ? $poolsCapacity : ($pool->capacity ?? 0)) }}</p>
-                <p class="text-[11px] text-gray-400 mt-1">Live ID: <span class="font-medium text-gray-500">{{ $liveRef ?? '—' }}</span></p>
+                <p class="text-xs text-gray-500">Capital (Balance)</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($investment) }}</p>
+                <p class="text-[11px] text-gray-400 mt-1"><i class="fa-solid fa-lock text-[9px]"></i> Principal · {{ $at->name ?? 'No plan' }}</p>
             </div>
-            <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center shrink-0"><i class="fa-solid fa-users"></i></span>
+            <span class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 grid place-items-center shrink-0"><i class="fa-solid fa-wallet"></i></span>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500 flex items-center gap-1">Pool P/L (Live) <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span></p>
-                <p id="live-pool" class="text-2xl font-bold {{ $poolsFloating < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($poolsFloating < 0 ? '-' : '+') . $money(abs($poolsFloating)) }}</p>
-                <p class="text-[11px] text-gray-400 mt-1">Running, updates live</p>
+                <p class="text-xs text-gray-500">Running PnL</p>
+                <p class="text-2xl font-bold {{ $runningPnl < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
+                <p class="text-[11px] text-gray-400 mt-1">Open: <span id="live-floating" class="{{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span></p>
             </div>
             <span class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 grid place-items-center shrink-0"><i class="fa-solid fa-arrow-trend-up"></i></span>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500">Principal (Locked)</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($investment) }}</p>
-                <p class="text-[11px] text-gray-400 mt-1"><i class="fa-solid fa-lock text-[9px]"></i> {{ $at->name ?? 'No plan' }} · capital locked</p>
+                <p class="text-xs text-gray-500">Withdrawable</p>
+                <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $money($withdrawable) }}</p>
+                <p class="text-[11px] text-gray-400 mt-1">Positive PnL only</p>
             </div>
-            <span class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 grid place-items-center shrink-0"><i class="fa-solid fa-wallet"></i></span>
+            <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center shrink-0"><i class="fa-solid fa-money-bill-wave"></i></span>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
@@ -91,24 +91,24 @@
             <h3 class="font-semibold text-gray-900 mb-4">Your Earnings Overview</h3>
             <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl border border-gray-100 p-4">
-                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Today's Profit</p><span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center text-xs"><i class="fa-solid fa-dollar-sign"></i></span></div>
-                    <p id="live-today" class="text-lg font-bold text-emerald-600 mt-2">{{ $money($today) }}</p>
+                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Today's Profit</p><span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center"><i class="fa-solid fa-dollar-sign"></i></span></div>
+                    <p id="live-today" class="text-lg font-bold text-gray-900 mt-2">{{ $money($today) }}</p>
                     <p class="text-[11px] text-gray-400">From today's pool profit</p>
                 </div>
                 <div class="rounded-xl border border-gray-100 p-4">
-                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Running PnL</p><span class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xs"><i class="fa-solid fa-sack-dollar"></i></span></div>
-                    <p class="text-lg font-bold {{ $totalEarned < 0 ? 'text-red-600' : 'text-gray-900' }} mt-2">{{ ($totalEarned < 0 ? '-' : '') . $money(abs($totalEarned)) }}</p>
-                    <p class="text-[11px] text-gray-400">Total accumulated profit/loss</p>
+                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Total Earned</p><span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 grid place-items-center"><i class="fa-solid fa-sack-dollar"></i></span></div>
+                    <p class="text-lg font-bold text-gray-900 mt-2">{{ $money($totalEarned) }}</p>
+                    <p class="text-[11px] text-gray-400">All time earnings</p>
                 </div>
                 <div class="rounded-xl border border-gray-100 p-4">
-                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Open P/L (unrealized)</p><span class="w-7 h-7 rounded-full bg-amber-100 text-amber-600 grid place-items-center text-xs"><i class="fa-solid fa-coins"></i></span></div>
-                    <p id="live-floating" class="text-lg font-bold {{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-2">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</p>
-                    <p class="text-[11px] text-gray-400">Your share, live</p>
+                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Yesterday's Profit</p><span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 grid place-items-center"><i class="fa-solid fa-dollar-sign"></i></span></div>
+                    <p class="text-lg font-bold text-gray-900 mt-2">{{ $money($yesterday) }}</p>
+                    <p class="text-[11px] text-gray-400">From yesterday's pool profit</p>
                 </div>
-                <div class="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
-                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">Withdrawable profit</p><span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center text-xs"><i class="fa-solid fa-money-bill-wave"></i></span></div>
-                    <p class="text-lg font-bold text-emerald-700 mt-2">{{ $money($withdrawable) }}</p>
-                    <p class="text-[11px] text-gray-400">Profit only · capital stays locked</p>
+                <div class="rounded-xl border border-gray-100 p-4">
+                    <div class="flex items-center justify-between"><p class="text-xs text-gray-500">This Month's Profit</p><span class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 grid place-items-center"><i class="fa-solid fa-chart-column"></i></span></div>
+                    <p class="text-lg font-bold text-gray-900 mt-2">{{ $money($month) }}</p>
+                    <p class="text-[11px] text-gray-400">Total profit this month</p>
                 </div>
             </div>
         </div>
@@ -141,7 +141,7 @@
                 <div class="flex justify-between py-2"><dt class="text-gray-500">Daily Pool Profit</dt><dd class="font-semibold">{{ $money($dailyPoolProfit) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500"><i class="fa-solid fa-lock text-[10px] text-gray-400"></i> Principal (locked)</dt><dd class="font-semibold">{{ $money($investment) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500">Your Profit Share</dt><dd class="font-semibold">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</dd></div>
-                <div class="flex justify-between py-2"><dt class="text-gray-500">Running PnL</dt><dd class="font-semibold {{ $totalEarned < 0 ? 'text-red-600' : 'text-gray-900' }}">{{ ($totalEarned < 0 ? '-' : '') . $money(abs($totalEarned)) }}</dd></div>
+                <div class="flex justify-between py-2"><dt class="text-gray-500">Running PnL</dt><dd class="font-semibold {{ $runningPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</dd></div>
                 <div class="flex justify-between py-2 bg-emerald-50 -mx-2 px-2 rounded"><dt class="text-gray-600">Withdrawable profit</dt><dd class="font-bold text-emerald-700">{{ $money($withdrawable) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500">Per Day Profit (est.)</dt><dd class="font-semibold">{{ $money($perDay) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500">ROI (monthly, est.)</dt><dd class="font-semibold">{{ rtrim(rtrim(number_format($roiMonthly,2),'0'),'.') }}%</dd></div>

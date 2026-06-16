@@ -73,10 +73,34 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return (float) ($this->transactions()->latest('id')->value('balance_after') ?? 0);
     }
 
-    /** Total approved capital deposited. */
+    /** Capital = Principal = Balance = total approved deposits. */
     public function totalDeposited(): float
     {
         return (float) $this->deposits()->where('status', 'approved')->sum('amount');
+    }
+
+    /** Running PnL = all profit/loss credited − profit already paid out (can be negative). */
+    public function runningPnl(): float
+    {
+        $paidOut = (float) $this->withdrawals()->where('status', 'approved')->sum('amount');
+
+        return round($this->totalProfit() - $paidOut, 2);
+    }
+
+    /** Re-evaluate the plan from the current total deposit (upgrade or downgrade). */
+    public function recalcPlan(): void
+    {
+        $total = $this->totalDeposited();
+        $plan = AccountType::forAmount($total);
+
+        if ($plan && (int) $this->account_type_id !== (int) $plan->id) {
+            $this->update(['account_type_id' => $plan->id]);
+            AppNotification::push(
+                $this->id, 'info', 'Plan updated to ' . $plan->name,
+                'Your plan is now ' . $plan->name . ' based on a total deposit of $' . number_format($total, 2) . '.',
+                route('accounts.index'),
+            );
+        }
     }
 
     public function deposits()

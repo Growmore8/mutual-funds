@@ -83,6 +83,7 @@ class TransactionController extends Controller
         }
 
         $this->recalc($transaction->user_id);
+        optional(User::find($transaction->user_id))->recalcPlan();
 
         return back()->with('status', 'Transaction updated.');
     }
@@ -100,6 +101,7 @@ class TransactionController extends Controller
 
         $transaction->delete();
         $this->recalc($userId);
+        optional(User::find($userId))->recalcPlan();
 
         return back()->with('status', 'Transaction deleted.');
     }

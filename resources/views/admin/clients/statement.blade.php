@@ -40,9 +40,9 @@
             <div><span>Pool / Live ID</span><b>{{ $client->poolAccount->account_ref ?? '—' }}</b></div>
             <div><span>Plan</span><b>{{ $client->accountType->name ?? '—' }}</b></div>
             <div><span>KYC</span><b>{{ ucfirst(str_replace('_',' ',$client->kyc_status)) }}</b></div>
-            <div><span>Total deposited</span><b>${{ number_format($client->totalDeposited(),2) }}</b></div>
-            <div><span>Total profit</span><b>${{ number_format($client->totalProfit(),2) }}</b></div>
-            <div><span>Current balance</span><b>${{ number_format($client->currentBalance(),2) }}</b></div>
+            <div><span>Capital (Balance)</span><b>${{ number_format($client->totalDeposited(),2) }}</b></div>
+            <div><span>Running PnL</span><b>${{ number_format($client->runningPnl(),2) }}</b></div>
+            <div><span>Withdrawable</span><b>${{ number_format($client->availableToWithdraw(),2) }}</b></div>
         </div>
         <table>
             <thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="r">Amount</th><th class="r">Balance</th></tr></thead>

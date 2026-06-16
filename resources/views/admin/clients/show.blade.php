@@ -4,19 +4,22 @@
     <a href="{{ route('admin.clients.index') }}" class="text-sm text-gray-500 hover:text-gray-700"><i class="fa-solid fa-arrow-left"></i> Back to clients</a>
 
     {{-- Balance cards --}}
+    @php $cpnl = $client->runningPnl(); @endphp
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
         <div class="bg-white shadow rounded-xl p-5">
-            <p class="text-xs text-gray-500"><i class="fa-solid fa-wallet text-gray-400 mr-1"></i> Account balance</p>
-            <p class="text-2xl font-bold text-gray-900">{{ $money($client->currentBalance()) }}</p>
-            <p class="text-[11px] text-gray-400">Deposits + profit − withdrawals</p>
-        </div>
-        <div class="bg-white shadow rounded-xl p-5">
-            <p class="text-xs text-gray-500"><i class="fa-solid fa-arrow-down text-gray-400 mr-1"></i> Total deposited</p>
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-wallet text-gray-400 mr-1"></i> Capital (Balance)</p>
             <p class="text-2xl font-bold text-gray-900">{{ $money($client->totalDeposited()) }}</p>
+            <p class="text-[11px] text-gray-400">Principal · locked capital</p>
         </div>
         <div class="bg-white shadow rounded-xl p-5">
-            <p class="text-xs text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Total profit</p>
-            <p class="text-2xl font-bold text-emerald-600">{{ $money($client->totalProfit()) }}</p>
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Running PnL</p>
+            <p class="text-2xl font-bold {{ $cpnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($cpnl < 0 ? '-' : '+') . $money(abs($cpnl)) }}</p>
+            <p class="text-[11px] text-gray-400">Profit/loss after payouts</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5">
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-money-bill-wave text-gray-400 mr-1"></i> Withdrawable</p>
+            <p class="text-2xl font-bold text-emerald-600">{{ $money($client->availableToWithdraw()) }}</p>
+            <p class="text-[11px] text-gray-400">Positive PnL only</p>
         </div>
     </div>
 
