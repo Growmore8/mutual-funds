@@ -6,6 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'GrowthCapital Funds') }}</title>
+        <link rel="icon" href="/logo.png" type="image/png">
+        <link rel="apple-touch-icon" href="/logo.png">
         <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
 
         <!-- Fonts -->

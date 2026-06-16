@@ -1,7 +1,7 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v1';
-const OFFLINE_URLS = ['/offline.html', '/icon.svg'];
+const CACHE = 'gc-funds-v2';
+const OFFLINE_URLS = ['/offline.html', '/logo.png'];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(caches.open(CACHE).then((c) => c.addAll(OFFLINE_URLS)));
