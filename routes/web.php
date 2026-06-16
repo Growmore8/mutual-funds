@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('login');
 });
 
 // Post-login landing: admins -> admin, clients -> client dashboard (gated by onboarding).
@@ -30,6 +34,13 @@ Route::middleware('auth')->group(function () {
     // Client dashboard (only after OTP + KYC approval)
     Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
         ->middleware('onboarded')->name('client.dashboard');
+
+    // Support tickets / message center
+    Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');
+    Route::get('/support/new', [\App\Http\Controllers\SupportController::class, 'create'])->name('support.create');
+    Route::post('/support', [\App\Http\Controllers\SupportController::class, 'store'])->name('support.store');
+    Route::get('/support/{ticket}', [\App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])->name('support.reply');
 
     // Profile (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

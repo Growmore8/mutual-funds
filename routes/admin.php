@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\DepositController;
 use App\Http\Controllers\Admin\KycReviewController;
+use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PoolController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -45,6 +46,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/deposits', [DepositController::class, 'store'])->name('deposits.store');
     Route::post('/deposits/{deposit}/approve', [DepositController::class, 'approve'])->name('deposits.approve');
     Route::post('/deposits/{deposit}/reject', [DepositController::class, 'reject'])->name('deposits.reject');
+
+    // Message center / support
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{ticket}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('/messages/{ticket}/reply', [MessageController::class, 'reply'])->name('messages.reply');
+    Route::patch('/messages/{ticket}/status', [MessageController::class, 'updateStatus'])->name('messages.status');
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');

@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $title }} · GrowthCapital Funds</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full bg-gray-50 text-gray-800">
@@ -21,6 +22,7 @@
             <a href="{{ route('client.dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Dashboard</a>
             <a href="#invest" class="block px-3 py-2 rounded-md hover:bg-white/10">My Investment</a>
             <a href="#transactions" class="block px-3 py-2 rounded-md hover:bg-white/10">Transactions</a>
+            <a href="{{ route('support.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5"></i> Support</a>
             <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('profile.edit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Profile</a>
         </nav>
         <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
@@ -59,6 +61,8 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Invest</a>
         <a href="#transactions" class="{{ $tab }} text-gray-400">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>History</a>
+        <a href="{{ route('support.index') }}" class="{{ $tab }} {{ request()->routeIs('support.*') ? 'text-emerald-600' : 'text-gray-400' }}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 13a3 3 0 01-3 3l-4 3v-3H8a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3z"/></svg>Support</a>
         <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'text-emerald-600' : 'text-gray-400' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 14a4 4 0 10-8 0M12 7a3 3 0 100 6 3 3 0 000-6z"/></svg>Profile</a>
     </nav>

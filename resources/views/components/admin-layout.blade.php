@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }} · GrowthCapital Funds</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full bg-gray-100 text-gray-800">
@@ -21,6 +22,7 @@
                 ['admin.deposits.index','Deposits'],
                 ['admin.payment-methods.index','Payment Methods'],
                 ['admin.transactions.index','Transactions'],
+                ['admin.messages.index','Message Center'],
                 ['admin.pool.index','Pool / PnL'],
             ]; @endphp
             @foreach ($nav as [$route, $label])
