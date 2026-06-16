@@ -15,6 +15,7 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $clients = User::where('role', 'client')
+            ->with('poolAccount')
             ->when($request->q, fn ($q) => $q->where(fn ($w) =>
                 $w->where('name', 'like', "%{$request->q}%")->orWhere('email', 'like', "%{$request->q}%")))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
