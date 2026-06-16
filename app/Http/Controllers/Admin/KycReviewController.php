@@ -41,7 +41,7 @@ class KycReviewController extends Controller
         // Approving any document grants full access.
         $document->user->update(['kyc_status' => 'approved', 'status' => 'active']);
 
-        \App\Models\AppNotification::push($document->user_id, 'kyc', 'KYC approved', 'Your identity is verified — full access unlocked.', route('client.dashboard'));
+        \App\Models\AppNotification::notify($document->user_id, 'kyc', 'KYC approved', 'Your identity is verified — full access unlocked.', route('client.dashboard'));
 
         return back()->with('status', "KYC approved for {$document->user->name}.");
     }
@@ -59,7 +59,7 @@ class KycReviewController extends Controller
 
         $document->user->update(['kyc_status' => 'rejected']);
 
-        \App\Models\AppNotification::push($document->user_id, 'kyc', 'KYC not approved', ($data['review_note'] ?? 'Please re-upload your documents.'), route('client.dashboard'));
+        \App\Models\AppNotification::notify($document->user_id, 'kyc', 'KYC not approved', ($data['review_note'] ?? 'Please re-upload your documents.'), route('client.dashboard'));
 
         return back()->with('status', "KYC rejected for {$document->user->name}.");
     }

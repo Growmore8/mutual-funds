@@ -47,7 +47,7 @@ class MessageController extends Controller
 
         $ticket->update(['status' => 'answered', 'last_reply_at' => now()]);
 
-        \App\Models\AppNotification::push($ticket->user_id, 'message', 'Support replied', $ticket->subject, route('support.show', $ticket));
+        \App\Models\AppNotification::notify($ticket->user_id, 'message', 'Support replied', $ticket->subject, route('support.show', $ticket));
         Notifier::send(
             $ticket->user,
             'Support replied to your ticket',

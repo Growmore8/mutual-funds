@@ -18,16 +18,16 @@ class AppNotification extends Model
     }
 
     /** Create a notification for one user. */
-    public static function push(int $userId, string $type, string $title, ?string $body = null, ?string $url = null, ?string $icon = null): void
+    public static function notify(int $userId, string $type, string $title, ?string $body = null, ?string $url = null, ?string $icon = null): void
     {
         static::create(compact('type', 'title', 'body', 'url', 'icon') + ['user_id' => $userId]);
     }
 
     /** Notify every admin (e.g. a new client request). */
-    public static function pushAdmins(string $type, string $title, ?string $body = null, ?string $url = null, ?string $icon = null): void
+    public static function notifyAdmins(string $type, string $title, ?string $body = null, ?string $url = null, ?string $icon = null): void
     {
         foreach (User::where('role', 'admin')->pluck('id') as $id) {
-            static::push($id, $type, $title, $body, $url, $icon);
+            static::notify($id, $type, $title, $body, $url, $icon);
         }
     }
 }

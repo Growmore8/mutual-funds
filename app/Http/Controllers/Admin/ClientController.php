@@ -117,7 +117,7 @@ class ClientController extends Controller
             ]);
         }
 
-        \App\Models\AppNotification::push(
+        \App\Models\AppNotification::notify(
             $client->id, 'kyc',
             $decision === 'approved' ? 'KYC approved' : 'KYC not approved',
             $decision === 'approved' ? 'Your identity is verified — full access unlocked.' : 'Please re-upload your documents.',

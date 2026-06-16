@@ -52,7 +52,7 @@ class WithdrawalController extends Controller
         });
 
         $amt = '$' . number_format((float) $withdrawal->amount, 2);
-        \App\Models\AppNotification::push($withdrawal->user_id, 'withdrawal', 'Withdrawal approved', $amt . ' approved and being sent.', route('client.transactions'));
+        \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Withdrawal approved', $amt . ' approved and being sent.', route('client.transactions'));
         Notifier::send(
             $withdrawal->user,
             'Your withdrawal has been approved',
@@ -82,7 +82,7 @@ class WithdrawalController extends Controller
 
         $amt = '$' . number_format((float) $withdrawal->amount, 2);
         $reason = $request->input('admin_note');
-        \App\Models\AppNotification::push($withdrawal->user_id, 'withdrawal', 'Withdrawal not approved', $amt . ($reason ? ' — ' . $reason : ''), route('withdraw.create'));
+        \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Withdrawal not approved', $amt . ($reason ? ' — ' . $reason : ''), route('withdraw.create'));
         Notifier::send(
             $withdrawal->user,
             'Update on your withdrawal request',

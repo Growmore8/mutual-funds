@@ -82,7 +82,7 @@ class PnlDistributor
                 ]);
 
                 if (abs($net) > 0) {
-                    \App\Models\AppNotification::push(
+                    \App\Models\AppNotification::notify(
                         $row->user_id,
                         'profit',
                         'Daily profit added',

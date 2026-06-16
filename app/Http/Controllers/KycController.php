@@ -45,7 +45,7 @@ class KycController extends Controller
 
         $request->user()->update(['kyc_status' => 'submitted']);
 
-        \App\Models\AppNotification::pushAdmins('kyc', 'New KYC submission', $request->user()->name . ' uploaded their ID for review.', route('admin.kyc.index'));
+        \App\Models\AppNotification::notifyAdmins('kyc', 'New KYC submission', $request->user()->name . ' uploaded their ID for review.', route('admin.kyc.index'));
 
         return redirect()->route('kyc.show')->with('status', 'Document uploaded. Your KYC is under review.');
     }

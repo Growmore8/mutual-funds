@@ -46,7 +46,7 @@ class ClientDepositController extends Controller
             'status' => 'pending',
         ]);
 
-        AppNotification::pushAdmins(
+        AppNotification::notifyAdmins(
             'deposit',
             'New deposit request',
             $user->name . ' · $' . number_format((float) $data['amount'], 2) . ' · ' . $data['method'],

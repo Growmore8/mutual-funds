@@ -77,7 +77,7 @@ class DepositController extends Controller
         $this->creditCapital($deposit);
 
         $amt = '$' . number_format((float) $deposit->amount, 2);
-        \App\Models\AppNotification::push($deposit->user_id, 'deposit', 'Deposit approved', $amt . ' credited to your account.', route('client.dashboard'));
+        \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Deposit approved', $amt . ' credited to your account.', route('client.dashboard'));
         Notifier::send(
             $deposit->user,
             'Your deposit has been approved',
@@ -99,7 +99,7 @@ class DepositController extends Controller
         $deposit->update(['status' => 'rejected', 'admin_note' => $reason]);
 
         $amt = '$' . number_format((float) $deposit->amount, 2);
-        \App\Models\AppNotification::push($deposit->user_id, 'deposit', 'Deposit not approved', $amt . ($reason ? ' — ' . $reason : ''), route('client.deposit.create'));
+        \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Deposit not approved', $amt . ($reason ? ' — ' . $reason : ''), route('client.deposit.create'));
         Notifier::send(
             $deposit->user,
             'Update on your deposit',

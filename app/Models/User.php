@@ -95,7 +95,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
 
         if ($plan && (int) $this->account_type_id !== (int) $plan->id) {
             $this->update(['account_type_id' => $plan->id]);
-            AppNotification::push(
+            AppNotification::notify(
                 $this->id, 'info', 'Plan updated to ' . $plan->name,
                 'Your plan is now ' . $plan->name . ' based on a total deposit of $' . number_format($total, 2) . '.',
                 route('accounts.index'),

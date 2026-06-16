@@ -46,7 +46,7 @@ class WithdrawalController extends Controller
             'status' => 'pending',
         ]);
 
-        \App\Models\AppNotification::pushAdmins(
+        \App\Models\AppNotification::notifyAdmins(
             'withdrawal',
             'New withdrawal request',
             $user->name . ' · $' . number_format((float) $data['amount'], 2) . ' · ' . $data['method'],
