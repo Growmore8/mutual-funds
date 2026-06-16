@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ | Dark theme
+ | App-wide dark mode driven by a `.dark` class on <html>. Rather than tagging
+ | every view with dark: variants, we override the common surface/text/border
+ | utilities under `.dark` — `.dark .bg-white` outranks `.bg-white`.
+ */
+.dark body { background-color: #0b1220; color: #e2e8f0; }
+
+/* surfaces */
+.dark .bg-white { background-color: #131c31 !important; }
+.dark .bg-gray-50 { background-color: #0f1830 !important; }
+.dark .bg-gray-100 { background-color: #0b1220 !important; }
+
+/* soft tint backgrounds */
+.dark .bg-emerald-50, .dark .bg-emerald-50\/50, .dark .bg-emerald-50\/40 { background-color: rgba(16,185,129,0.12) !important; }
+.dark .bg-amber-50 { background-color: rgba(245,158,11,0.12) !important; }
+.dark .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
+
+/* text */
+.dark .text-gray-900 { color: #f1f5f9 !important; }
+.dark .text-gray-800 { color: #e2e8f0 !important; }
+.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dark .text-gray-600 { color: #aab6c8 !important; }
+.dark .text-gray-500 { color: #93a1b5 !important; }
+.dark .text-gray-400 { color: #6b7a90 !important; }
+
+/* borders + dividers */
+.dark .border, .dark .border-b, .dark .border-t,
+.dark .border-gray-100, .dark .border-gray-200, .dark .border-gray-300 { border-color: rgba(255,255,255,0.10) !important; }
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.08) !important; }
+.dark .shadow, .dark .shadow-sm, .dark .shadow-md { box-shadow: 0 1px 3px rgba(0,0,0,0.5) !important; }
+
+/* form controls */
+.dark input, .dark select, .dark textarea {
+    background-color: #0f1830 !important;
+    border-color: rgba(255,255,255,0.15) !important;
+    color: #e2e8f0 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder { color: #6b7a90 !important; }
+
+/* keep the brand navy sidebar consistent (already dark) */
+.dark .hover\:bg-gray-50:hover { background-color: rgba(255,255,255,0.04) !important; }

@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }} · GrowthCapital Funds</title>
+    <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -45,7 +46,14 @@
         <header class="bg-white shadow-sm">
             <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                 <h1 class="text-lg font-semibold text-gray-900">{{ $title }}</h1>
-                <div class="text-sm text-gray-500">{{ auth()->user()->name }}</div>
+                <div class="flex items-center gap-3">
+                    <button type="button" aria-label="Toggle theme"
+                            onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
+                            class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">
+                        <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i>
+                    </button>
+                    <span class="text-sm text-gray-500">{{ auth()->user()->name }}</span>
+                </div>
             </div>
         </header>
         <main class="px-4 sm:px-6 lg:px-8 py-8">
