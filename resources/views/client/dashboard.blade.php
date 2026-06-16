@@ -52,7 +52,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500">Capital (Balance)</p>
+                <p class="text-xs text-gray-500">Total Deposit</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($investment) }}</p>
                 <p class="text-[11px] text-gray-400 mt-1"><i class="fa-solid fa-lock text-[9px]"></i> Principal · {{ $at->name ?? 'No plan' }}</p>
             </div>
@@ -60,17 +60,17 @@
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500">Running PnL</p>
-                <p class="text-2xl font-bold {{ $runningPnl < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
-                <p class="text-[11px] text-gray-400 mt-1">Open: <span id="live-floating" class="{{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span></p>
+                <p class="text-xs text-gray-500 flex items-center gap-1">Floating PnL <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span></p>
+                <p id="live-floating" class="text-2xl font-bold {{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</p>
+                <p class="text-[11px] text-gray-400 mt-1">Current open P/L · live</p>
             </div>
             <span class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 grid place-items-center shrink-0"><i class="fa-solid fa-arrow-trend-up"></i></span>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs text-gray-500">Withdrawable</p>
-                <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $money($withdrawable) }}</p>
-                <p class="text-[11px] text-gray-400 mt-1">Positive PnL only</p>
+                <p class="text-xs text-gray-500">Balance (withdrawable)</p>
+                <p class="text-2xl font-bold {{ $runningPnl < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</p>
+                <p class="text-[11px] text-gray-400 mt-1">PnL − withdrawals</p>
             </div>
             <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center shrink-0"><i class="fa-solid fa-money-bill-wave"></i></span>
         </div>
