@@ -68,7 +68,9 @@ class PoolController extends Controller
     public static function liveFigures(PoolApiClient $api, PoolAccount $pool): array
     {
         try {
-            return Cache::remember("pool.live.{$pool->id}", 15, fn () => $api->snapshot($pool));
+            // Short TTL so the on-screen ticker refreshes fast; one CubeX call
+            // per pool per 3s is shared by all viewers (well under 120/min).
+            return Cache::remember("pool.live.{$pool->id}", 3, fn () => $api->snapshot($pool));
         } catch (\Throwable $e) {
             return [
                 'balance' => (float) $pool->balance,

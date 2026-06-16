@@ -87,30 +87,37 @@
 
     <script>
         (function () {
-            const fmt = (n) => (n < 0 ? '-' : '+') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            const money = (n) => '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
+            const POLL = 3000;
+            const fmt = (n, signed) => (signed ? (n < 0 ? '-' : '+') : '') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            function animate(el, to, signed) {
+                if (!el || to == null) return;
+                let from = parseFloat(el.dataset.val); if (isNaN(from)) from = to;
+                el.dataset.val = to;
+                const dur = POLL - 200, t0 = performance.now();
+                function step(t) {
+                    const p = Math.min(1, (t - t0) / dur);
+                    const v = from + (to - from) * p;
+                    el.textContent = fmt(v, signed);
+                    if (signed) { el.classList.toggle('text-red-600', v < 0); el.classList.toggle('text-green-600', v >= 0); }
+                    if (p < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
             async function tick() {
                 try {
                     const res = await fetch('{{ route('admin.pool.live') }}', {headers: {'Accept': 'application/json'}});
                     if (!res.ok) return;
                     const json = await res.json();
                     (json.data || []).forEach((p) => {
-                        const fl = document.querySelector('[data-pool-float="' + p.id + '"]');
-                        if (fl) {
-                            fl.textContent = fmt(Number(p.floating));
-                            fl.classList.toggle('text-red-600', Number(p.floating) < 0);
-                            fl.classList.toggle('text-green-600', Number(p.floating) >= 0);
-                        }
-                        const bal = document.querySelector('[data-pool-balance="' + p.id + '"]');
-                        if (bal) bal.textContent = money(p.balance);
+                        animate(document.querySelector('[data-pool-float="' + p.id + '"]'), Number(p.floating), true);
+                        animate(document.querySelector('[data-pool-balance="' + p.id + '"]'), Number(p.balance), false);
                     });
                     const at = document.getElementById('live-at');
                     if (at) at.textContent = json.at;
-                } catch (e) { /* ignore transient errors */ }
+                } catch (e) {}
             }
             tick();
-            setInterval(tick, 20000); // refresh every 20s
+            setInterval(tick, POLL);
         })();
     </script>
 </x-admin-layout>

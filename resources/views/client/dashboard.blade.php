@@ -177,26 +177,34 @@
 
     <script>
         (function () {
-            const money = (n) => '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const POLL = 3000; // ms
+            const fmt = (n, signed) => (signed ? (n < 0 ? '-' : '+') : '') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            function animate(id, to, signed) {
+                const el = document.getElementById(id); if (el == null || to == null) return;
+                let from = parseFloat(el.dataset.val); if (isNaN(from)) from = to;
+                el.dataset.val = to;
+                const dur = POLL - 200, t0 = performance.now();
+                function step(t) {
+                    const p = Math.min(1, (t - t0) / dur);
+                    const v = from + (to - from) * p;
+                    el.textContent = fmt(v, signed);
+                    if (signed) { el.classList.toggle('text-red-600', v < 0); el.classList.toggle('text-emerald-600', v >= 0); }
+                    if (p < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
             async function tick() {
                 try {
                     const res = await fetch('{{ route('client.live') }}', {headers: {'Accept': 'application/json'}});
                     if (!res.ok) return;
                     const d = await res.json();
-                    const set = (id, val, signed) => {
-                        const el = document.getElementById(id); if (!el) return;
-                        el.textContent = (signed ? (val < 0 ? '-' : '+') : '') + money(val);
-                        el.classList.toggle('text-red-600', val < 0);
-                        el.classList.toggle('text-emerald-600', val >= 0);
-                    };
-                    if (d.poolFloating !== undefined) set('live-pool', d.poolFloating, true);
-                    if (d.floatingShare !== undefined) set('live-floating', d.floatingShare, true);
-                    const td = document.getElementById('live-today');
-                    if (td) td.textContent = '$' + Number(d.today).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (d.poolFloating !== undefined) animate('live-pool', d.poolFloating, true);
+                    if (d.floatingShare !== undefined) animate('live-floating', d.floatingShare, true);
+                    if (d.today !== undefined) animate('live-today', d.today, false);
                 } catch (e) {}
             }
             tick();
-            setInterval(tick, 30000);
+            setInterval(tick, POLL);
         })();
     </script>
 </x-client-layout>
