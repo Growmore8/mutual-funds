@@ -209,32 +209,43 @@
 
     <script>
         (function () {
-            const POLL = 6000; // ms
+            const POLL = 4000; // ms — fetch latest value
             const fmt = (n, signed) => (signed ? (n < 0 ? '-' : '+') : '') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            function animate(id, to, signed) {
-                const el = document.getElementById(id); if (el == null || to == null) return;
-                let from = parseFloat(el.dataset.val); if (isNaN(from)) from = to;
-                el.dataset.val = to;
-                if (Math.abs(to - from) < 0.005) { el.textContent = fmt(to, signed); return; }
-                const dur = 800, t0 = performance.now();
-                function step(t) {
-                    const p = Math.min(1, (t - t0) / dur);
-                    const v = from + (to - from) * p;
-                    el.textContent = fmt(v, signed);
-                    if (signed) { el.classList.toggle('text-red-600', v < 0); el.classList.toggle('text-emerald-600', v >= 0); }
-                    if (p < 1) requestAnimationFrame(step);
+
+            // Registry of live values; a single light timer eases each toward its target
+            // so the number drifts continuously (no jump-then-freeze).
+            const reg = {};
+            function track(id, target, signed) {
+                if (target == null) return;
+                const el = document.getElementById(id); if (!el) return;
+                if (!reg[id]) {
+                    let cur = parseFloat(el.dataset.val); if (isNaN(cur)) cur = target;
+                    reg[id] = {el, cur, target, signed};
+                } else {
+                    reg[id].target = target; reg[id].signed = signed;
                 }
-                requestAnimationFrame(step);
+                el.dataset.val = target;
             }
+            setInterval(() => {
+                if (document.hidden) return;
+                for (const id in reg) {
+                    const o = reg[id];
+                    const diff = o.target - o.cur;
+                    o.cur = Math.abs(diff) < 0.01 ? o.target : o.cur + diff * 0.18;   // ease
+                    o.el.textContent = fmt(o.cur, o.signed);
+                    if (o.signed) { o.el.classList.toggle('text-red-600', o.cur < 0); o.el.classList.toggle('text-emerald-600', o.cur >= 0); }
+                }
+            }, 90);
+
             async function tick() {
                 if (document.hidden) return;
                 try {
                     const res = await fetch('{{ route('client.live') }}', {headers: {'Accept': 'application/json'}});
                     if (!res.ok) return;
                     const d = await res.json();
-                    if (d.poolFloating !== undefined) animate('live-pool', d.poolFloating, true);
-                    if (d.floatingShare !== undefined) animate('live-floating', d.floatingShare, true);
-                    if (d.today !== undefined) animate('live-today', d.today, false);
+                    if (d.poolFloating !== undefined) track('live-pool', d.poolFloating, true);
+                    if (d.floatingShare !== undefined) track('live-floating', d.floatingShare, true);
+                    if (d.today !== undefined) track('live-today', d.today, false);
                 } catch (e) {}
             }
             tick();
