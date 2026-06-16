@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} · GrowthCapital Funds</title>
-    <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
+    <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();</script>
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#0a1730">
@@ -28,7 +28,7 @@
         .safe-t{padding-top:env(safe-area-inset-top)}
     </style>
 </head>
-<body class="h-full bg-gray-50 text-gray-800" x-data="{ sheet: false }">
+<body class="h-full bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
 <div class="min-h-full lg:flex">
 
     {{-- Desktop sidebar --}}
@@ -69,12 +69,13 @@
     {{-- Main --}}
     <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
         {{-- Top bar: logo+name left, notifications + profile right --}}
-        <header class="bg-white border-b sticky top-0 z-30 safe-t">
+        <header class="bg-white border-b dark:bg-[#0a1730]/80 dark:border-white/10 dark:backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 lg:hidden">
                     <img src="/logo.png" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
-                    <span class="font-bold text-[#0a1730] truncate">Growth<span class="text-emerald-500">Capital</span></span>
+                    <span class="font-bold text-[#0a1730] dark:text-white truncate">Growth<span class="text-emerald-500">Capital</span></span>
                 </div>
+                <div class="hidden lg:block"></div>
                 <x-notification-bell />
             </div>
         </header>
@@ -90,18 +91,18 @@
     {{-- Deposit/Withdraw action sheet (mobile +) --}}
     <div x-show="sheet" x-transition.opacity @click="sheet=false" style="display:none" class="lg:hidden fixed inset-0 bg-black/40 z-40"></div>
     <div x-show="sheet" x-transition x-cloak class="lg:hidden fixed inset-x-0 bottom-20 z-50 px-6 safe-b">
-        <div class="bg-white rounded-2xl shadow-xl p-3 max-w-sm mx-auto grid grid-cols-2 gap-3">
-            <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-emerald-50 text-emerald-700">
+        <div class="bg-white dark:bg-[#0f1b38] dark:ring-1 dark:ring-white/10 rounded-2xl shadow-xl p-3 max-w-sm mx-auto grid grid-cols-2 gap-3">
+            <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                 <i class="fa-solid fa-arrow-down text-xl"></i><span class="text-sm font-medium">Deposit</span>
             </a>
-            <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700">
+            <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                 <i class="fa-solid fa-money-bill-transfer text-xl"></i><span class="text-sm font-medium">Withdraw</span>
             </a>
         </div>
     </div>
 
     {{-- Mobile bottom tab bar --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t z-40 safe-b">
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t dark:bg-[#0a1730] dark:border-white/10 z-40 safe-b">
         <div class="grid grid-cols-5 items-end px-1">
             @php $tab = 'tab flex flex-col items-center gap-0.5 text-[11px] py-2 text-gray-400'; @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
