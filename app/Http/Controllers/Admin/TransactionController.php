@@ -61,4 +61,39 @@ class TransactionController extends Controller
 
         return back()->with('status', 'Transaction recorded.');
     }
+
+    public function update(Request $request, Transaction $transaction)
+    {
+        $data = $request->validate([
+            'type' => ['required', 'in:deposit,withdrawal,profit,fee,adjustment'],
+            'amount' => ['required', 'numeric'],
+            'description' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $transaction->update($data);
+        $this->recalc($transaction->user_id);
+
+        return back()->with('status', 'Transaction updated.');
+    }
+
+    public function destroy(Transaction $transaction)
+    {
+        $userId = $transaction->user_id;
+        $transaction->delete();
+        $this->recalc($userId);
+
+        return back()->with('status', 'Transaction deleted.');
+    }
+
+    /** Recompute the running balance for a client after an edit/delete. */
+    private function recalc(int $userId): void
+    {
+        $running = 0.0;
+        Transaction::where('user_id', $userId)->orderBy('id')->get()->each(function ($t) use (&$running) {
+            $running = round($running + (float) $t->amount, 2);
+            if ((float) $t->balance_after !== $running) {
+                $t->update(['balance_after' => $running]);
+            }
+        });
+    }
 }

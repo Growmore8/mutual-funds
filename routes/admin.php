@@ -58,6 +58,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::patch('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 
     // Deposits (capital into pools)
     Route::get('/deposits', [DepositController::class, 'index'])->name('deposits.index');

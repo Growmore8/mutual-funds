@@ -26,7 +26,7 @@
         </div>
 
         {{-- List --}}
-        <div class="bg-white shadow rounded-xl overflow-hidden lg:col-span-2">
+        <div class="bg-white shadow rounded-xl overflow-hidden lg:col-span-2" x-data="{ edit:false, f:{id:null,type:'profit',amount:0,description:''} }">
             <div class="p-4 border-b">
                 <form method="GET" class="flex flex-wrap gap-2 text-sm">
                     <input name="q" value="{{ $search }}" placeholder="Search by client name, email, or transaction ID…"
@@ -45,7 +45,7 @@
             </div>
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-left">
-                    <tr><th class="px-4 py-3">#</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th></tr>
+                    <tr><th class="px-4 py-3">#</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3 text-right">Actions</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($transactions as $t)
@@ -56,13 +56,47 @@
                             <td class="px-4 py-3">{{ ucfirst($t->type) }}</td>
                             <td class="px-4 py-3 {{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
                             <td class="px-4 py-3">{{ number_format((float)$t->balance_after,2) }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button type="button" title="Edit"
+                                            @click="edit=true; f={id:{{ $t->id }}, type:'{{ $t->type }}', amount:{{ (float)$t->amount }}, description:@js($t->description)}"
+                                            class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
+                                    <form method="POST" action="{{ route('admin.transactions.destroy',$t) }}" onsubmit="return confirm('Delete this transaction? Client balances will be recalculated.')">
+                                        @csrf @method('DELETE')
+                                        <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
+                        <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
             <div class="p-4">{{ $transactions->links() }}</div>
+
+            {{-- Edit modal --}}
+            <div x-show="edit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/40" @click="edit=false"></div>
+                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Edit transaction</h3>
+                    <form :action="'{{ url('admin/transactions') }}/' + f.id" method="POST" class="space-y-3 text-sm">
+                        @csrf @method('PATCH')
+                        <div>
+                            <label class="block text-gray-700 mb-1">Type</label>
+                            <select name="type" x-model="f.type" class="w-full border-gray-300 rounded-md">
+                                @foreach (['deposit','withdrawal','profit','fee','adjustment'] as $ty)<option value="{{ $ty }}">{{ ucfirst($ty) }}</option>@endforeach
+                            </select>
+                        </div>
+                        <div><label class="block text-gray-700 mb-1">Amount (use − for debit)</label><input type="number" step="0.01" name="amount" x-model="f.amount" class="w-full border-gray-300 rounded-md" required></div>
+                        <div><label class="block text-gray-700 mb-1">Description</label><input name="description" x-model="f.description" class="w-full border-gray-300 rounded-md"></div>
+                        <div class="flex gap-2 pt-2">
+                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save</button>
+                            <button type="button" @click="edit=false" class="px-4 py-2 border rounded-md text-gray-600">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </x-admin-layout>
