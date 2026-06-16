@@ -31,6 +31,7 @@
                 ['admin.payment-methods.index','Payment Methods','fa-credit-card'],
                 ['admin.transactions.index','Transactions','fa-receipt'],
                 ['admin.pool.index','Pool / PnL','fa-chart-pie'],
+                ['admin.settings.edit','Settings','fa-gear'],
             ]; @endphp
             @foreach ($nav as [$route, $label, $icon])
                 <a href="{{ route($route) }}"
@@ -52,27 +53,8 @@
             <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                 <h1 class="text-lg font-semibold text-gray-900">{{ $title }}</h1>
                 <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
                     <x-notification-bell :sound="true" />
-                    <button type="button" aria-label="Toggle theme"
-                            onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
-                            class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">
-                        <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i>
-                    </button>
-                    <div class="relative" x-data="{ menu: false }">
-                        <button @click="menu=!menu" class="flex items-center gap-2">
-                            <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
-                            <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
-                            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
-                        </button>
-                        <div x-show="menu" @click.outside="menu=false" x-transition style="display:none"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
-                            <div class="px-4 py-2 border-b border-gray-100"><p class="font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p></div>
-                            <a href="{{ route('admin.settings.edit') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-gear w-5 text-gray-400"></i> Settings</a>
-                            <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">@csrf
-                                <button class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600"><i class="fa-solid fa-right-from-bracket w-5"></i> Log out</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
         </header>
