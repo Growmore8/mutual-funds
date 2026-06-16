@@ -51,19 +51,11 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-gray-700">Status</label>
-                        <select name="status" class="mt-1 w-full border-gray-300 rounded-md">
-                            @foreach (['pending','active','suspended'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">KYC</label>
-                        <select name="kyc_status" class="mt-1 w-full border-gray-300 rounded-md">
-                            @foreach (['not_submitted','submitted','approved','rejected'] as $k)<option value="{{ $k }}" @selected($client->kyc_status===$k)>{{ ucfirst(str_replace('_',' ',$k)) }}</option>@endforeach
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-gray-700">Account status</label>
+                    <select name="status" class="mt-1 w-full border-gray-300 rounded-md">
+                        @foreach (['pending','active','suspended'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
+                    </select>
                 </div>
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-md w-full">Save changes</button>
             </form>
@@ -103,7 +95,24 @@
 
             {{-- KYC documents --}}
             <div class="bg-white shadow rounded-xl p-6">
-                <h3 class="font-semibold text-gray-900 mb-3">KYC — National ID / Passport</h3>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900">KYC — National ID / Passport</h3>
+                    @php $kc = ['not_submitted'=>'bg-gray-100 text-gray-600','submitted'=>'bg-amber-100 text-amber-800','approved'=>'bg-emerald-100 text-emerald-800','rejected'=>'bg-red-100 text-red-700'][$client->kyc_status] ?? 'bg-gray-100'; @endphp
+                    <span class="text-xs px-2.5 py-1 rounded-full {{ $kc }}">{{ ucfirst(str_replace('_',' ',$client->kyc_status)) }}</span>
+                </div>
+
+                @if ($client->kyc_status !== 'approved')
+                    <div class="flex gap-2 mb-4">
+                        <form method="POST" action="{{ route('admin.clients.kyc.decision', $client) }}">@csrf
+                            <input type="hidden" name="decision" value="approved">
+                            <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-check mr-1"></i> Approve KYC</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.clients.kyc.decision', $client) }}">@csrf
+                            <input type="hidden" name="decision" value="rejected">
+                            <button class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm">Reject</button>
+                        </form>
+                    </div>
+                @endif
 
                 @forelse ($client->kycDocuments as $doc)
                     <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">

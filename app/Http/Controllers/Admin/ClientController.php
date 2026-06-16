@@ -45,11 +45,11 @@ class ClientController extends Controller
             'account_type_id' => ['nullable', 'exists:account_types,id'],
             'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
             'status' => ['required', 'in:pending,active,suspended'],
-            'kyc_status' => ['required', 'in:not_submitted,submitted,approved,rejected'],
         ]);
 
         $client = User::create($data + [
             'role' => 'client',
+            'kyc_status' => 'not_submitted',
             // Admin-created accounts skip the email-OTP onboarding step.
             'email_verified_at' => now(),
             'otp_verified_at' => now(),
@@ -89,12 +89,34 @@ class ClientController extends Controller
             'account_type_id' => ['nullable', 'exists:account_types,id'],
             'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
             'status' => ['required', 'in:pending,active,suspended'],
-            'kyc_status' => ['required', 'in:not_submitted,submitted,approved,rejected'],
         ]);
 
         $client->update($data);
 
         return back()->with('status', 'Client updated.');
+    }
+
+    /** Approve/reject a client's KYC directly from the client page. */
+    public function kycDecision(Request $request, User $client)
+    {
+        abort_unless($client->role === 'client', 404);
+        $decision = $request->validate(['decision' => ['required', 'in:approved,rejected']])['decision'];
+
+        $client->update([
+            'kyc_status' => $decision,
+            'status' => $decision === 'approved' ? 'active' : $client->status,
+        ]);
+
+        // Reflect the decision on the latest submitted document, if any.
+        if ($doc = $client->kycDocuments()->where('status', 'submitted')->latest()->first()) {
+            $doc->update([
+                'status' => $decision,
+                'reviewed_by' => $request->user()->id,
+                'reviewed_at' => now(),
+            ]);
+        }
+
+        return back()->with('status', 'KYC ' . $decision . ' for ' . $client->name . '.');
     }
 
     public function updateStatus(Request $request, User $client)

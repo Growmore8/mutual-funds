@@ -43,19 +43,12 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-gray-700 mb-1">Status</label>
-                    <select name="status" class="w-full border-gray-300 rounded-md">
-                        @foreach (['active','pending','suspended'] as $s)<option value="{{ $s }}" @selected(old('status','active')===$s)>{{ ucfirst($s) }}</option>@endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-gray-700 mb-1">KYC status</label>
-                    <select name="kyc_status" class="w-full border-gray-300 rounded-md">
-                        @foreach (['not_submitted','submitted','approved','rejected'] as $k)<option value="{{ $k }}" @selected(old('kyc_status','not_submitted')===$k)>{{ ucfirst(str_replace('_',' ',$k)) }}</option>@endforeach
-                    </select>
-                </div>
+            <div>
+                <label class="block text-gray-700 mb-1">Account status</label>
+                <select name="status" class="w-full border-gray-300 rounded-md">
+                    @foreach (['active','pending','suspended'] as $s)<option value="{{ $s }}" @selected(old('status','active')===$s)>{{ ucfirst($s) }}</option>@endforeach
+                </select>
+                <p class="text-xs text-gray-400 mt-1">KYC starts as “not submitted” — upload documents (here or by the client) then approve.</p>
             </div>
 
             <button class="px-4 py-2 bg-emerald-600 text-white rounded-md font-medium"><i class="fa-solid fa-user-plus mr-1"></i> Create client</button>

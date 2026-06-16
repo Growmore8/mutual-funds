@@ -36,6 +36,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::patch('/clients/{client}/status', [ClientController::class, 'updateStatus'])->name('clients.status');
     Route::post('/clients/{client}/kyc', [ClientController::class, 'uploadKyc'])->name('clients.kyc.upload');
+    Route::post('/clients/{client}/kyc/decision', [ClientController::class, 'kycDecision'])->name('clients.kyc.decision');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
 
     // Additional-account requests
