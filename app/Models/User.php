@@ -45,6 +45,12 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return ! empty($this->pin_hash);
     }
 
+    /** Display client ID, e.g. GC000042. */
+    public function clientCode(): string
+    {
+        return 'GC' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
+
     public function accountType()
     {
         return $this->belongsTo(AccountType::class);

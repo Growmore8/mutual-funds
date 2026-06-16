@@ -25,6 +25,7 @@
         .tab.is-active{color:#059669}
         .tab.is-active .tab-ico{transform:translateY(-2px) scale(1.08)}
         .safe-b{padding-bottom:env(safe-area-inset-bottom)}
+        .safe-t{padding-top:env(safe-area-inset-top)}
     </style>
 </head>
 <body class="h-full bg-gray-50 text-gray-800" x-data="{ sheet: false }">
@@ -52,7 +53,7 @@
     {{-- Main --}}
     <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
         {{-- Top bar: logo+name left, notifications + profile right --}}
-        <header class="bg-white border-b sticky top-0 z-30">
+        <header class="bg-white border-b sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0">
                     <img src="/logo.png" alt="" class="w-8 h-8 shrink-0 lg:hidden" onerror="this.style.display='none'">

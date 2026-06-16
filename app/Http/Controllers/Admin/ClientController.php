@@ -15,7 +15,7 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $clients = User::where('role', 'client')
-            ->with('poolAccount')
+            ->with('poolAccount', 'accountType')
             ->when($request->q, fn ($q) => $q->where(fn ($w) =>
                 $w->where('name', 'like', "%{$request->q}%")->orWhere('email', 'like', "%{$request->q}%")))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
@@ -164,6 +164,18 @@ class ClientController extends Controller
         }
 
         return back()->with('status', 'KYC document uploaded for ' . $client->name . '.');
+    }
+
+    /** Printable client statement (admin can save as PDF via the browser). */
+    public function statement(User $client)
+    {
+        abort_unless($client->role === 'client', 404);
+        $client->load('accountType', 'poolAccount');
+
+        return view('admin.clients.statement', [
+            'client' => $client,
+            'transactions' => $client->transactions()->latest('id')->limit(200)->get(),
+        ]);
     }
 
     public function destroy(User $client)
