@@ -92,7 +92,13 @@ class ClientController extends Controller
             'status' => ['required', 'in:pending,active,suspended'],
         ]);
 
-        $client->update($data);
+        $oldPool = $client->pool_account_id;
+        $client->update($data + ['plan_locked' => $request->boolean('plan_locked')]);
+
+        // If admin moved the client's Live ID, move their capital to that pool too.
+        if ($client->pool_account_id && (int) $client->pool_account_id !== (int) $oldPool) {
+            $client->deposits()->update(['pool_account_id' => $client->pool_account_id]);
+        }
 
         return back()->with('status', 'Client updated.');
     }

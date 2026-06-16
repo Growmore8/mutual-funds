@@ -30,6 +30,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         'address',
         'account_type_id',
         'pool_account_id',
+        'plan_locked',
         'status',
         'kyc_status',
         'otp_verified_at',
@@ -91,6 +92,10 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
      *  Live ID (pool) to the plan's pool — moving the client's capital there. */
     public function recalcPlan(): void
     {
+        if ($this->plan_locked) {
+            return;   // admin set the plan/pool manually
+        }
+
         $total = $this->totalDeposited();
         $plan = AccountType::forAmount($total);
         if (! $plan) {
@@ -193,6 +198,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
             'email_verified_at' => 'datetime',
             'otp_verified_at' => 'datetime',
             'password' => 'hashed',
+            'plan_locked' => 'boolean',
         ];
     }
 }

@@ -46,7 +46,7 @@
                                     </form>
                                 </div>
                             @else
-                                <span class="text-gray-400 text-xs">{{ $w->processed_at?->format('d M Y') }}</span>
+                                <span class="text-gray-300">—</span>
                             @endif
                         </td>
                     </tr>

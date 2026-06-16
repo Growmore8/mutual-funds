@@ -60,6 +60,10 @@
                         @foreach (['pending','active','suspended'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
                     </select>
                 </div>
+                <label class="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-md p-2">
+                    <input type="checkbox" name="plan_locked" value="1" @checked($client->plan_locked) class="rounded mt-0.5">
+                    <span><span class="font-medium text-amber-800">Lock plan &amp; Live ID (manual)</span> — keep the chosen plan/pool fixed; the deposit-based auto-upgrade won't change it.</span>
+                </label>
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-md w-full">Save changes</button>
             </form>
 

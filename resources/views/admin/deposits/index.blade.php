@@ -38,7 +38,7 @@
                                     <form method="POST" action="{{ route('admin.deposits.reject',$d) }}" onsubmit="this.admin_note.value=prompt('Reason for rejecting (optional):')||''">@csrf<input type="hidden" name="admin_note"><button class="px-3 py-1.5 bg-red-600 text-white rounded-md">Reject</button></form>
                                 </div>
                             @else
-                                <span class="text-gray-300 text-xs">{{ $d->approved_at?->format('d M Y') ?? ($d->admin_note ? 'rejected' : '—') }}</span>
+                                <span class="text-gray-300">—</span>
                             @endif
                         </td>
                     </tr>
