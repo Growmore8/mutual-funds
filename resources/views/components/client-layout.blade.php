@@ -110,19 +110,6 @@
                 <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg p-3">{{ session('status') }}</div>
             @endif
             {{ $slot }}
-
-            {{-- Need Help card + footer (mobile; sidebar shows its own on desktop) --}}
-            <div class="lg:hidden mt-8 space-y-3">
-                <div class="rounded-2xl border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.04] p-4">
-                    <p class="font-semibold text-gray-900 dark:text-white text-sm">Need Help?</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Our support team is here to help you.</p>
-                    <a href="{{ route('support.index') }}" class="mt-3 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"><i class="fa-solid fa-headset"></i> Contact Support</a>
-                </div>
-                <div class="text-xs text-gray-400 dark:text-gray-500 px-1">
-                    <p class="font-semibold text-gray-600 dark:text-gray-300">GrowthCapital Ltd.</p>
-                    <p>© {{ date('Y') }} All rights reserved.</p>
-                </div>
-            </div>
         </main>
     </div>
 

@@ -13,14 +13,96 @@
     @endphp
 
     <style>
-        .atm-card{background:linear-gradient(135deg,#0a1730 0%,#0f3d2e 55%,#0e7a52 100%)}
-        .atm-card .shine{position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-20deg);animation:atmshine 6s ease-in-out infinite}
+        .wallet-grad{background:linear-gradient(140deg,#0a1730 0%,#0d3b2e 52%,#0e8a5f 105%)}
+        .wallet-grad .shine{position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-20deg);animation:atmshine 6s ease-in-out infinite}
         @keyframes atmshine{0%{left:-60%}55%,100%{left:130%}}
         .glow{text-shadow:0 0 18px rgba(16,185,129,.45)}
         .glow-red{text-shadow:0 0 18px rgba(239,68,68,.4)}
         .gcard{transition:transform .2s ease, border-color .2s ease}
         .gcard:hover{transform:translateY(-2px)}
     </style>
+
+    {{-- ===================== MOBILE: wallet-first home ===================== --}}
+    <div class="lg:hidden space-y-5">
+        <div>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Welcome back,</p>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $user->name }}</h2>
+        </div>
+
+        {{-- Balance card --}}
+        <div class="wallet-grad relative overflow-hidden rounded-3xl p-6 text-white shadow-xl ring-1 ring-white/10" x-data="{ show: true }">
+            <div class="shine"></div>
+            <div class="relative flex items-center justify-between">
+                <p class="text-white/70 text-sm flex items-center gap-2">Total Balance
+                    <button type="button" @click="show=!show" class="text-white/70"><i class="fa-regular" :class="show?'fa-eye':'fa-eye-slash'"></i></button>
+                </p>
+                <span class="text-[11px] px-2.5 py-1 rounded-full bg-white/15">{{ $at->name ?? 'No plan' }}</span>
+            </div>
+            <p class="relative text-4xl font-bold mt-2 tracking-tight">
+                <span x-show="show">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</span>
+                <span x-show="!show" style="display:none">••••••</span>
+            </p>
+            <p class="relative text-sm mt-1 text-white/80">Floating P&L
+                <span id="m-live-floating" data-no-color="1" class="font-semibold {{ $floatingShare < 0 ? 'text-rose-200' : 'text-emerald-200' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span>
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse align-middle"></span>
+            </p>
+            <p class="relative text-xs text-white/60 mt-5 tracking-[0.25em]">{{ $liveRef ? '•••• ' . substr($liveRef, -4) : '•••• ••••' }}</p>
+        </div>
+
+        {{-- Quick actions --}}
+        @php $qa = 'flex flex-col items-center gap-2 py-4 rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06]'; @endphp
+        <div class="grid grid-cols-3 gap-3">
+            <a href="{{ route('client.deposit.create') }}" class="{{ $qa }}">
+                <span class="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300 grid place-items-center text-lg"><i class="fa-solid fa-arrow-down"></i></span>
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Deposit</span>
+            </a>
+            <a href="{{ route('withdraw.create') }}" class="{{ $qa }}">
+                <span class="w-11 h-11 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300 grid place-items-center text-lg"><i class="fa-solid fa-arrow-up"></i></span>
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Withdraw</span>
+            </a>
+            <x-statement-modal :base-url="route('client.statement')" class="{{ $qa }} w-full">
+                <span class="w-11 h-11 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300 grid place-items-center text-lg"><i class="fa-solid fa-file-pdf"></i></span>
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Statement</span>
+            </x-statement-modal>
+        </div>
+
+        {{-- Your money --}}
+        @php $row = 'flex items-center justify-between px-4 py-3 text-sm'; @endphp
+        <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] divide-y divide-gray-100 dark:divide-white/[0.06]">
+            <p class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">Your money</p>
+            <div class="{{ $row }}"><span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-wallet w-5 text-gray-400"></i> Total Deposit</span><span class="font-semibold text-gray-900 dark:text-white">{{ $money($investment) }}</span></div>
+            <div class="{{ $row }}"><span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-chart-pie w-5 text-gray-400"></i> Profit share</span><span class="font-semibold text-gray-900 dark:text-white">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</span></div>
+            <div class="{{ $row }}"><span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-money-bill-trend-up w-5 text-gray-400"></i> Running PnL</span><span class="font-semibold {{ $runningPnl<0?'text-red-600 dark:text-red-400':'text-emerald-600 dark:text-emerald-400' }}">{{ ($runningPnl<0?'-':'+').$money(abs($runningPnl)) }}</span></div>
+            <div class="{{ $row }}"><span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-hand-holding-dollar w-5 text-gray-400"></i> Withdrawable</span><span class="font-semibold text-emerald-600 dark:text-emerald-300">{{ $money($withdrawable) }}</span></div>
+        </div>
+
+        {{-- Recent activity --}}
+        <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] p-4">
+            <div class="flex items-center justify-between mb-1">
+                <p class="font-semibold text-gray-900 dark:text-white text-sm">Recent activity</p>
+                <a href="{{ route('client.transactions') }}" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">View all</a>
+            </div>
+            <div class="divide-y divide-gray-100 dark:divide-white/[0.06]">
+                @forelse ($recent as $t)
+                    <div class="flex items-center justify-between py-2.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-9 h-9 rounded-full grid place-items-center shrink-0 {{ $t->amount<0 ? 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-300' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300' }}"><i class="fa-solid {{ $t->amount<0 ? 'fa-arrow-up' : 'fa-arrow-down' }} text-xs"></i></span>
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ $t->description ?? ucfirst($t->type) }}</p>
+                                <p class="text-[11px] text-gray-400">{{ $t->created_at->format('d M Y · h:i A') }}</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-semibold shrink-0 {{ $t->amount<0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($t->amount<0?'':'+').$money($t->amount) }}</span>
+                    </div>
+                @empty
+                    <p class="py-6 text-center text-sm text-gray-400">No transactions yet.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== DESKTOP / tablet ===================== --}}
+    <div class="hidden lg:block">
 
     {{-- Welcome --}}
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
@@ -220,6 +302,7 @@
     <div class="mt-6 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-blue-800 dark:text-blue-200 text-sm rounded-xl p-3 flex items-center gap-2">
         <i class="fa-solid fa-circle-info"></i> Profits are calculated daily based on the pool performance. Returns may vary with market conditions.
     </div>
+    </div>{{-- end desktop --}}
 
     <script>
         (function () {
@@ -253,7 +336,7 @@
                     if (Math.abs(diff) < 0.01) { if (o.cur !== o.target) { o.cur = o.target; } else continue; }
                     else { o.cur += diff * 0.18; moving = true; }
                     o.el.textContent = fmt(o.cur, o.signed);
-                    if (o.signed) { o.el.classList.toggle('text-red-600', o.cur < 0); o.el.classList.toggle('dark:text-red-400', o.cur < 0); o.el.classList.toggle('text-emerald-600', o.cur >= 0); o.el.classList.toggle('dark:text-emerald-400', o.cur >= 0); }
+                    if (o.signed && o.el.dataset.noColor !== '1') { o.el.classList.toggle('text-red-600', o.cur < 0); o.el.classList.toggle('dark:text-red-400', o.cur < 0); o.el.classList.toggle('text-emerald-600', o.cur >= 0); o.el.classList.toggle('dark:text-emerald-400', o.cur >= 0); }
                 }
                 if (moving && !document.hidden) raf = requestAnimationFrame(frame);
             }
@@ -267,7 +350,7 @@
                     if (!res.ok) return;
                     const d = await res.json();
                     if (d.poolFloating !== undefined) track('live-pool', d.poolFloating, true);
-                    if (d.floatingShare !== undefined) { track('live-floating', d.floatingShare, true); track('live-floating-hero', d.floatingShare, true); }
+                    if (d.floatingShare !== undefined) { track('live-floating', d.floatingShare, true); track('live-floating-hero', d.floatingShare, true); track('m-live-floating', d.floatingShare, true); }
                     if (d.today !== undefined) track('live-today', d.today, false);
                 } catch (e) {}
             }

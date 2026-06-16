@@ -7,7 +7,7 @@
             if(this.period==='custom'){ p.set('from', this.from); p.set('to', this.to); }
             return @js($baseUrl) + '?' + p.toString();
         }
-     }" class="inline">
+     }" class="contents">
     <button type="button" @click="open=true" {{ $attributes }}>{{ $slot }}</button>
 
     <template x-teleport="body">
