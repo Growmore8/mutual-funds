@@ -21,35 +21,40 @@
                 @endif
 
                 @if ($available <= 0)
-                    <p class="text-sm text-gray-400">You have no profit available to withdraw yet. Profit accrues daily once your deposit is approved.</p>
-                @else
-                    <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm">
-                        @csrf
-                        <div>
-                            <label class="block text-gray-700 mb-1">Amount (USD)</label>
-                            <input type="number" step="0.01" min="1" max="{{ $available }}" name="amount" value="{{ old('amount') }}" required
-                                   class="w-full border-gray-300 rounded-md" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-1">Payout method</label>
-                            <select name="method" class="w-full border-gray-300 rounded-md" required>
-                                @forelse ($methods as $m)
-                                    <option value="{{ $m->name }}">{{ $m->name }} ({{ $m->currency }})</option>
-                                @empty
-                                    <option value="Bank Wire">Bank Wire</option>
-                                @endforelse
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-1">Payout details</label>
-                            <textarea name="payout_details" rows="3" required maxlength="1000"
-                                      class="w-full border-gray-300 rounded-md"
-                                      placeholder="Bank account / IBAN / SWIFT, or your USDT wallet address">{{ old('payout_details') }}</textarea>
-                        </div>
-                        <button class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700">
-                            <i class="fa-solid fa-money-bill-transfer"></i> Submit request
-                        </button>
-                    </form>
+                    <div class="mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3">
+                        <i class="fa-solid fa-circle-info"></i> You can submit a withdrawal once you have profit. Your capital stays locked — only profit is withdrawable.
+                    </div>
+                @endif
+                <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm">
+                    @csrf
+                    <div>
+                        <label class="block text-gray-700 mb-1">Amount (USD)</label>
+                        <input type="number" step="0.01" min="1" @if($available > 0) max="{{ $available }}" @endif name="amount" value="{{ old('amount') }}" required
+                               class="w-full border-gray-300 rounded-md" placeholder="0.00" {{ $available <= 0 ? 'disabled' : '' }}>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">Payout method</label>
+                        <select name="method" class="w-full border-gray-300 rounded-md" required {{ $available <= 0 ? 'disabled' : '' }}>
+                            @forelse ($methods as $m)
+                                <option value="{{ trim($m->name . ($m->network ? ' · '.$m->network : '')) }}">{{ $m->name }}{{ $m->network ? ' · '.$m->network : '' }} ({{ $m->currency }})</option>
+                            @empty
+                                <option value="Bank Wire">Bank Wire</option>
+                                <option value="USDT (TRC20)">USDT (TRC20)</option>
+                            @endforelse
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">Your payout details</label>
+                        <textarea name="payout_details" rows="3" required maxlength="1000"
+                                  class="w-full border-gray-300 rounded-md"
+                                  placeholder="Bank account / IBAN / SWIFT, or your USDT wallet address" {{ $available <= 0 ? 'disabled' : '' }}>{{ old('payout_details') }}</textarea>
+                    </div>
+                    <button {{ $available <= 0 ? 'disabled' : '' }} class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Submit request
+                    </button>
+                </form>
+                @if ($available <= 0)
+                    <p class="text-xs text-gray-400 mt-2">Withdrawable profit: $0.00 — submit enabled once profit is credited.</p>
                 @endif
             </div>
         </div>
