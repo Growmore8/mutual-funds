@@ -9,9 +9,16 @@ class KycController extends Controller
 {
     public function show(Request $request)
     {
+        $user = $request->user();
+
+        // Approved clients have full access — never show the KYC gate.
+        if ($user->kyc_status === 'approved') {
+            return redirect()->route('client.dashboard');
+        }
+
         return view('kyc.show', [
-            'user' => $request->user(),
-            'documents' => $request->user()->kycDocuments()->latest()->get(),
+            'user' => $user,
+            'documents' => $user->kycDocuments()->latest()->get(),
         ]);
     }
 

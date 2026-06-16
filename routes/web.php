@@ -74,13 +74,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/webauthn/unlock', [\App\Http\Controllers\WebAuthnController::class, 'unlock'])->name('webauthn.unlock');
     Route::delete('/webauthn', [\App\Http\Controllers\WebAuthnController::class, 'destroy'])->name('webauthn.destroy');
 
-    // Client app — gated by the app-lock (PIN/biometric) when configured.
-    Route::middleware('locked')->group(function () {
-        // Client dashboard (only after OTP + KYC approval)
-        Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
-            ->middleware('onboarded')->name('client.dashboard');
-        Route::get('/app/live', [\App\Http\Controllers\ClientDashboardController::class, 'live'])
-            ->middleware('onboarded')->name('client.live');
+    // Client app — only reachable once KYC is approved (onboarded), and gated
+    // by the app-lock (PIN/biometric) when configured.
+    Route::middleware(['onboarded', 'locked'])->group(function () {
+        // Client dashboard
+        Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])->name('client.dashboard');
+        Route::get('/app/live', [\App\Http\Controllers\ClientDashboardController::class, 'live'])->name('client.live');
 
         // Accounts (1st free; additional accounts need admin approval)
         Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');
