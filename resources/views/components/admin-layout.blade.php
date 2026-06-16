@@ -20,6 +20,7 @@
                 ['admin.kyc.index','KYC Review'],
                 ['admin.account-types.index','Account Types'],
                 ['admin.deposits.index','Deposits'],
+                ['admin.withdrawals.index','Withdrawals'],
                 ['admin.payment-methods.index','Payment Methods'],
                 ['admin.transactions.index','Transactions'],
                 ['admin.messages.index','Message Center'],

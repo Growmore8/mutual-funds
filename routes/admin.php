@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PoolController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\WithdrawalController;
 use App\Models\PoolAccount;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.dashboard', [
             'clients' => User::where('role', 'client')->count(),
             'pendingKyc' => User::where('kyc_status', 'submitted')->count(),
+            'pendingWithdrawals' => \App\Models\Withdrawal::where('status', 'pending')->count(),
+            'openTickets' => \App\Models\SupportTicket::whereIn('status', ['open', 'answered'])->count(),
             'pool' => PoolAccount::first(),
         ]);
     })->name('dashboard');
@@ -52,6 +55,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/messages/{ticket}', [MessageController::class, 'show'])->name('messages.show');
     Route::post('/messages/{ticket}/reply', [MessageController::class, 'reply'])->name('messages.reply');
     Route::patch('/messages/{ticket}/status', [MessageController::class, 'updateStatus'])->name('messages.status');
+
+    // Withdrawal requests
+    Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::post('/withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
+    Route::post('/withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');

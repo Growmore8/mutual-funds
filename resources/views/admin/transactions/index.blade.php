@@ -27,21 +27,38 @@
 
         {{-- List --}}
         <div class="bg-white shadow rounded-xl overflow-hidden lg:col-span-2">
+            <div class="p-4 border-b">
+                <form method="GET" class="flex flex-wrap gap-2 text-sm">
+                    <input name="q" value="{{ $search }}" placeholder="Search by client name, email, or transaction ID…"
+                           class="flex-1 min-w-[200px] border-gray-300 rounded-md">
+                    <select name="type" class="border-gray-300 rounded-md">
+                        <option value="">All types</option>
+                        @foreach (['deposit','withdrawal','profit','fee','adjustment'] as $t)
+                            <option value="{{ $t }}" @selected(request('type')===$t)>{{ ucfirst($t) }}</option>
+                        @endforeach
+                    </select>
+                    <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    @if ($search || request('type'))
+                        <a href="{{ route('admin.transactions.index') }}" class="px-4 py-2 border rounded-md text-gray-600">Clear</a>
+                    @endif
+                </form>
+            </div>
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-left">
-                    <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th></tr>
+                    <tr><th class="px-4 py-3">#</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($transactions as $t)
                         <tr>
+                            <td class="px-4 py-3 text-gray-400">{{ $t->id }}</td>
                             <td class="px-4 py-3 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3">{{ $t->user->name ?? '—' }}</td>
+                            <td class="px-4 py-3"><div>{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs">{{ $t->user->email ?? '' }}</div></td>
                             <td class="px-4 py-3">{{ ucfirst($t->type) }}</td>
                             <td class="px-4 py-3 {{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
                             <td class="px-4 py-3">{{ number_format((float)$t->balance_after,2) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No transactions yet.</td></tr>
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
                     @endforelse
                 </tbody>
             </table>

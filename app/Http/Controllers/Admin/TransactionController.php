@@ -11,15 +11,30 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim((string) $request->get('q'));
+
         $transactions = Transaction::with('user')
             ->when($request->type, fn ($q) => $q->where('type', $request->type))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    // by transaction id
+                    if (ctype_digit($search)) {
+                        $w->orWhere('id', (int) $search);
+                    }
+                    // by client name / email
+                    $w->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%");
+                    });
+                });
+            })
             ->latest()
             ->paginate(30)
             ->withQueryString();
 
         $clients = User::where('role', 'client')->orderBy('name')->get(['id', 'name', 'email']);
 
-        return view('admin.transactions.index', compact('transactions', 'clients'));
+        return view('admin.transactions.index', compact('transactions', 'clients', 'search'));
     }
 
     public function store(Request $request)

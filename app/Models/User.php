@@ -56,6 +56,28 @@ class User extends Authenticatable
         return $this->hasMany(KycDocument::class);
     }
 
+    public function withdrawals()
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    /** Total profit credited to this client. */
+    public function totalProfit(): float
+    {
+        return (float) $this->transactions()->where('type', 'profit')->sum('amount');
+    }
+
+    /**
+     * Profit-only withdrawable balance: total profit earned minus any
+     * withdrawals already requested/approved (capital stays locked in the pool).
+     */
+    public function availableToWithdraw(): float
+    {
+        $locked = (float) $this->withdrawals()->whereIn('status', ['pending', 'approved'])->sum('amount');
+
+        return round(max(0, $this->totalProfit() - $locked), 2);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

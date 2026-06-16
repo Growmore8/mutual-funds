@@ -35,6 +35,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
         ->middleware('onboarded')->name('client.dashboard');
 
+    // Withdrawals (profit only; request -> admin approval)
+    Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');
+    Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->name('withdraw.store');
+
+    // Statements
+    Route::get('/transactions', [\App\Http\Controllers\StatementController::class, 'transactions'])->name('client.transactions');
+    Route::get('/profit', [\App\Http\Controllers\StatementController::class, 'profit'])->name('client.profit');
+
     // Support tickets / message center
     Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');
     Route::get('/support/new', [\App\Http\Controllers\SupportController::class, 'create'])->name('support.create');

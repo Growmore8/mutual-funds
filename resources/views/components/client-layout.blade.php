@@ -19,9 +19,10 @@
                 ['client.dashboard','Dashboard','M3 12l9-9 9 9M4 10v10h16V10'],
                 ['profile.edit','Profile','M16 14a4 4 0 10-8 0'],
             ]; @endphp
-            <a href="{{ route('client.dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Dashboard</a>
-            <a href="#invest" class="block px-3 py-2 rounded-md hover:bg-white/10">My Investment</a>
-            <a href="#transactions" class="block px-3 py-2 rounded-md hover:bg-white/10">Transactions</a>
+            <a href="{{ route('client.dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-gauge w-5"></i> Dashboard</a>
+            <a href="{{ route('client.profit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.profit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-chart-line w-5"></i> Profit History</a>
+            <a href="{{ route('client.transactions') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.transactions') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-receipt w-5"></i> Transactions</a>
+            <a href="{{ route('withdraw.create') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('withdraw.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw</a>
             <a href="{{ route('support.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5"></i> Support</a>
             <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('profile.edit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Profile</a>
         </nav>
@@ -57,10 +58,10 @@
         @php $tab = 'flex flex-col items-center text-[11px] gap-0.5 px-3 py-1'; @endphp
         <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'text-emerald-600' : 'text-gray-400' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
-        <a href="#invest" class="{{ $tab }} text-gray-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Invest</a>
-        <a href="#transactions" class="{{ $tab }} text-gray-400">
+        <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions','client.profit') ? 'text-emerald-600' : 'text-gray-400' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>History</a>
+        <a href="{{ route('withdraw.create') }}" class="{{ $tab }} {{ request()->routeIs('withdraw.*') ? 'text-emerald-600' : 'text-gray-400' }}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Withdraw</a>
         <a href="{{ route('support.index') }}" class="{{ $tab }} {{ request()->routeIs('support.*') ? 'text-emerald-600' : 'text-gray-400' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 13a3 3 0 01-3 3l-4 3v-3H8a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3z"/></svg>Support</a>
         <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'text-emerald-600' : 'text-gray-400' }}">
