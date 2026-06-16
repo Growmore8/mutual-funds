@@ -60,12 +60,14 @@ class PoolApiClient
             ->whereDate('snapshot_date', '<', now()->toDateString())
             ->sum('pnl');
 
-        $daily   = round($cumulative - $priorTotal, 2);
-        $opening = (float) $pool->balance;
-        $balance = round($opening + $daily, 2);
+        $daily = round($cumulative - $priorTotal, 2);
 
-        // Floating (unrealized) P&L — present only if CubeX adds it to the
-        // response (floating_pnl / floatingPnl / flt_pnl), else 0.
+        // Balance is derived (idempotent), not accumulated, so re-syncing the
+        // same day never inflates it: Balance = capacity + total realized P&L.
+        $base    = (float) $pool->capacity;
+        $balance = isset($d['balance']) ? (float) $d['balance'] : round($base + $cumulative, 2);
+
+        // Floating (unrealized) P&L from CubeX (floating_pnl / floatingPnl / flt_pnl).
         $floating = (float) ($d['floating_pnl'] ?? $d['floatingPnl'] ?? $d['flt_pnl'] ?? 0);
         $equity   = isset($d['equity']) ? (float) $d['equity'] : round($balance + $floating, 2);
 
@@ -74,7 +76,7 @@ class PoolApiClient
             'equity'   => $equity,
             'pnl'      => $daily,
             'floating' => $floating,
-            'pnl_pct'  => $opening > 0 ? round($daily / $opening * 100, 4) : 0,
+            'pnl_pct'  => $base > 0 ? round($daily / $base * 100, 4) : 0,
             'raw'      => $d,
         ];
     }
