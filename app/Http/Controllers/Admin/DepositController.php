@@ -7,6 +7,7 @@ use App\Models\Deposit;
 use App\Models\PoolAccount;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -66,6 +67,18 @@ class DepositController extends Controller
         ]);
 
         $this->creditCapital($deposit);
+
+        Notifier::send(
+            $deposit->user,
+            'Your deposit has been approved',
+            'Deposit approved',
+            [
+                'Your deposit of $' . number_format((float) $deposit->amount, 2) . ' has been approved and credited to your account.',
+                'Your capital is now active in the pool and will start earning daily profit.',
+            ],
+            route('client.dashboard'),
+            'Go to dashboard',
+        );
 
         return back()->with('status', 'Deposit approved and capital credited.');
     }

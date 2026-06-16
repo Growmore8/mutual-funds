@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccountRequest;
+use App\Services\Notifier;
 use Illuminate\Http\Request;
 
 class AccountRequestController extends Controller
@@ -31,6 +32,18 @@ class AccountRequestController extends Controller
             'admin_note' => $request->input('admin_note'),
         ]);
 
+        Notifier::send(
+            $accountRequest->user,
+            'Your additional account is approved',
+            'Account request approved',
+            [
+                'Your request for a ' . ($accountRequest->accountType->name ?? 'new') . ' account has been approved.',
+                'You can now fund and manage it from your dashboard.',
+            ],
+            route('accounts.index'),
+            'View my accounts',
+        );
+
         return back()->with('status', 'Additional account approved.');
     }
 
@@ -45,6 +58,16 @@ class AccountRequestController extends Controller
             'processed_at' => now(),
             'admin_note' => $request->input('admin_note'),
         ]);
+
+        Notifier::send(
+            $accountRequest->user,
+            'Update on your account request',
+            'Account request not approved',
+            [
+                'Your request for a ' . ($accountRequest->accountType->name ?? 'new') . ' account was not approved at this time.',
+                $request->input('admin_note') ? 'Note from our team: ' . $request->input('admin_note') : 'If you have questions, please open a support ticket from your dashboard.',
+            ],
+        );
 
         return back()->with('status', 'Account request rejected.');
     }

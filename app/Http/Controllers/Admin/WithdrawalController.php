@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
+use App\Services\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -50,6 +51,18 @@ class WithdrawalController extends Controller
             ]);
         });
 
+        Notifier::send(
+            $withdrawal->user,
+            'Your withdrawal has been approved',
+            'Withdrawal approved',
+            [
+                'Your withdrawal request of $' . number_format((float) $withdrawal->amount, 2) . ' has been approved.',
+                'Payout method: ' . ($withdrawal->method ?? 'as provided') . '. Funds will be sent to your nominated destination.',
+            ],
+            route('client.transactions'),
+            'View transactions',
+        );
+
         return back()->with('status', 'Withdrawal approved and balance debited.');
     }
 
@@ -64,6 +77,16 @@ class WithdrawalController extends Controller
             'processed_at' => now(),
             'admin_note' => $request->input('admin_note'),
         ]);
+
+        Notifier::send(
+            $withdrawal->user,
+            'Update on your withdrawal request',
+            'Withdrawal not approved',
+            [
+                'Your withdrawal request of $' . number_format((float) $withdrawal->amount, 2) . ' was not approved at this time.',
+                $request->input('admin_note') ? 'Note from our team: ' . $request->input('admin_note') : 'If you have questions, please open a support ticket from your dashboard.',
+            ],
+        );
 
         return back()->with('status', 'Withdrawal rejected.');
     }

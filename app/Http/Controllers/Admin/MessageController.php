@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
+use App\Services\Notifier;
 use Illuminate\Http\Request;
 
 class MessageController extends Controller
@@ -45,6 +46,18 @@ class MessageController extends Controller
         ]);
 
         $ticket->update(['status' => 'answered', 'last_reply_at' => now()]);
+
+        Notifier::send(
+            $ticket->user,
+            'Support replied to your ticket',
+            'New reply on your support ticket',
+            [
+                'Our team has replied to your ticket: "' . $ticket->subject . '".',
+                'Log in to your dashboard to read the reply and respond.',
+            ],
+            route('support.show', $ticket),
+            'View ticket',
+        );
 
         return back()->with('status', 'Reply sent to client.');
     }
