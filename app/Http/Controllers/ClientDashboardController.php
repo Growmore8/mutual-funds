@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Admin\PoolController;
 use App\Models\PnlAllocation;
 use App\Models\PoolAccount;
+use App\Models\PoolSnapshot;
 use App\Models\Transaction;
 use App\Services\PoolApiClient;
 use Illuminate\Http\Request;
