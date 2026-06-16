@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         // Client dashboard (only after OTP + KYC approval)
         Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
             ->middleware('onboarded')->name('client.dashboard');
+        Route::get('/app/live', [\App\Http\Controllers\ClientDashboardController::class, 'live'])
+            ->middleware('onboarded')->name('client.live');
 
         // Accounts (1st free; additional accounts need admin approval)
         Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');

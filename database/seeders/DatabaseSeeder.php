@@ -27,16 +27,18 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 4 mutual-fund account types (manageable from the admin dashboard)
+        // Mutual-fund plans (manageable from the admin dashboard)
         $types = [
-            ['name' => 'Starter',  'slug' => 'starter',  'min_deposit' => 250,    'max_deposit' => 2499,   'profit_share_pct' => 70, 'management_fee_pct' => 5, 'lock_in_months' => 1,  'sort_order' => 1, 'description' => 'Entry-level managed fund for first-time investors.', 'features' => ['Pooled trading', 'Daily profit share', '24/7 support']],
-            ['name' => 'Growth',   'slug' => 'growth',   'min_deposit' => 2500,   'max_deposit' => 9999,   'profit_share_pct' => 75, 'management_fee_pct' => 5, 'lock_in_months' => 2,  'sort_order' => 2, 'description' => 'Balanced growth with a higher profit share.', 'features' => ['Higher profit share', 'Priority support', 'Monthly reports']],
-            ['name' => 'Premium',  'slug' => 'premium',  'min_deposit' => 10000,  'max_deposit' => 24999,  'profit_share_pct' => 80, 'management_fee_pct' => 5, 'lock_in_months' => 3,  'sort_order' => 3, 'description' => 'Premium tier for serious investors.', 'features' => ['Top profit share', 'Dedicated manager', 'Faster withdrawals']],
-            ['name' => 'Elite',    'slug' => 'elite',    'min_deposit' => 25000,  'max_deposit' => null,   'profit_share_pct' => 85, 'management_fee_pct' => 5, 'lock_in_months' => 5,  'sort_order' => 4, 'description' => 'Flagship plan with the highest profit share.', 'features' => ['Maximum profit share', 'VIP support', 'Compounding option']],
+            ['name' => 'Silver Plan',   'slug' => 'silver',   'min_deposit' => 50,  'max_deposit' => 250,  'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 1, 'description' => 'Up to $500/day · ~5% daily return',   'features' => ['$10,000 managed pool', 'Up to $500/day profit', '~5% daily return', 'Funds stay client-owned']],
+            ['name' => 'Gold Plan',     'slug' => 'gold',     'min_deposit' => 250, 'max_deposit' => 500,  'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 2, 'description' => 'Up to $1,500/day · ~6% daily return', 'features' => ['$25,000 managed pool', 'Up to $1,500/day profit', '~6% daily return', 'Funds stay client-owned']],
+            ['name' => 'Platinum Plan', 'slug' => 'platinum', 'min_deposit' => 500, 'max_deposit' => 2500, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 3, 'description' => 'Up to $4,000/day · ~8% daily return', 'features' => ['$50,000 managed pool', 'Up to $4,000/day profit', '~8% daily return', 'Funds stay client-owned']],
         ];
         foreach ($types as $t) {
-            AccountType::updateOrCreate(['slug' => $t['slug']], $t);
+            AccountType::updateOrCreate(['slug' => $t['slug']], $t + ['is_active' => true]);
         }
+
+        // Hide any older/demo plans from the app + marketing page (kept for existing clients).
+        AccountType::whereNotIn('slug', ['silver', 'gold', 'platinum'])->update(['is_active' => false]);
 
         // Payment methods (manageable from the admin dashboard)
         $methods = [

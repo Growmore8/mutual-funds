@@ -5,9 +5,13 @@
             <span class="px-2 py-0.5 rounded-full text-xs {{ $isLive ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
                 {{ $isLive ? 'LIVE CubeX API' : 'SIMULATED (set POOL_API_URL in .env for live data)' }}
             </span>
+            <span class="ml-2 inline-flex items-center gap-1 text-xs text-gray-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                live <span id="live-at">—</span>
+            </span>
         </p>
         <form method="POST" action="{{ route('admin.pool.sync') }}">@csrf
-            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm">Sync now</button>
+            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm">Sync &amp; distribute</button>
         </form>
     </div>
 
@@ -40,8 +44,8 @@
                         <tr>
                             <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $p->account_ref }}</div><div class="text-gray-400">{{ $p->name }}</div></td>
                             <td class="px-4 py-3">${{ number_format((float)$p->capacity) }}</td>
-                            <td class="px-4 py-3">${{ number_format((float)$p->balance,2) }}</td>
-                            <td class="px-4 py-3 {{ (float)$p->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ((float)$p->floating_pnl < 0 ? '' : '+') . '$' . number_format((float)$p->floating_pnl,2) }}</td>
+                            <td class="px-4 py-3" data-pool-balance="{{ $p->id }}">${{ number_format((float)$p->balance,2) }}</td>
+                            <td class="px-4 py-3 {{ (float)$p->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}" data-pool-float="{{ $p->id }}">{{ ((float)$p->floating_pnl < 0 ? '' : '+') . '$' . number_format((float)$p->floating_pnl,2) }}</td>
                             <td class="px-4 py-3 text-gray-400">{{ $p->last_synced_at?->diffForHumans() ?? 'never' }}</td>
                             <td class="px-4 py-3">
                                 <form method="POST" action="{{ route('admin.pool.destroy',$p) }}" class="text-right" onsubmit="return confirm('Delete this pool account?')">@csrf @method('DELETE')
@@ -80,4 +84,33 @@
             </tbody>
         </table>
     </div>
+
+    <script>
+        (function () {
+            const fmt = (n) => (n < 0 ? '-' : '+') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const money = (n) => '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            async function tick() {
+                try {
+                    const res = await fetch('{{ route('admin.pool.live') }}', {headers: {'Accept': 'application/json'}});
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    (json.data || []).forEach((p) => {
+                        const fl = document.querySelector('[data-pool-float="' + p.id + '"]');
+                        if (fl) {
+                            fl.textContent = fmt(Number(p.floating));
+                            fl.classList.toggle('text-red-600', Number(p.floating) < 0);
+                            fl.classList.toggle('text-green-600', Number(p.floating) >= 0);
+                        }
+                        const bal = document.querySelector('[data-pool-balance="' + p.id + '"]');
+                        if (bal) bal.textContent = money(p.balance);
+                    });
+                    const at = document.getElementById('live-at');
+                    if (at) at.textContent = json.at;
+                } catch (e) { /* ignore transient errors */ }
+            }
+            tick();
+            setInterval(tick, 20000); // refresh every 20s
+        })();
+    </script>
 </x-admin-layout>

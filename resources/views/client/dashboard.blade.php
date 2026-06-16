@@ -38,10 +38,10 @@
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Your Earnings Overview</h3>
             <div class="grid grid-cols-2 gap-4">
-                <div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs text-gray-500">Today's Profit (closed)</p><p class="text-xl font-bold text-emerald-600">{{ $money($today) }}</p></div>
+                <div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs text-gray-500">Today's Profit (closed)</p><p id="live-today" class="text-xl font-bold text-emerald-600">{{ $money($today) }}</p></div>
                 <div class="rounded-xl bg-gray-50 p-4">
-                    <p class="text-xs text-gray-500">Open P/L (unrealized)</p>
-                    <p class="text-xl font-bold {{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</p>
+                    <p class="text-xs text-gray-500 flex items-center gap-1">Open P/L (unrealized) <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span></p>
+                    <p id="live-floating" class="text-xl font-bold {{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</p>
                 </div>
                 <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-500">Total Earned</p><p class="text-xl font-bold text-gray-900">{{ $money($totalEarned) }}</p></div>
                 <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-500">This Month</p><p class="text-xl font-bold text-gray-900">{{ $money($month) }}</p></div>
@@ -99,4 +99,27 @@
         <h3 class="font-semibold mb-2">Pool · Invest · Earn Together</h3>
         <p class="text-sm text-gray-300">Your capital joins the managed pool ({{ $pool->account_ref ?? '—' }}). Each day the pool's profit is distributed to investors in proportion to their share, adjusted by your plan's profit-share rate. Your funds always remain under your ownership.</p>
     </div>
+
+    <script>
+        (function () {
+            const money = (n) => '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            async function tick() {
+                try {
+                    const res = await fetch('{{ route('client.live') }}', {headers: {'Accept': 'application/json'}});
+                    if (!res.ok) return;
+                    const d = await res.json();
+                    const fl = document.getElementById('live-floating');
+                    if (fl) {
+                        fl.textContent = (d.floatingShare < 0 ? '-' : '+') + money(d.floatingShare);
+                        fl.classList.toggle('text-red-600', d.floatingShare < 0);
+                        fl.classList.toggle('text-emerald-600', d.floatingShare >= 0);
+                    }
+                    const td = document.getElementById('live-today');
+                    if (td) td.textContent = '$' + Number(d.today).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } catch (e) { /* ignore */ }
+            }
+            tick();
+            setInterval(tick, 30000); // refresh every 30s
+        })();
+    </script>
 </x-client-layout>

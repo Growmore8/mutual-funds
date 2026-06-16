@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\PoolController;
 use App\Models\PnlAllocation;
 use App\Models\PoolAccount;
 use App\Models\Transaction;
+use App\Services\PoolApiClient;
 use Illuminate\Http\Request;
 
 class ClientDashboardController extends Controller
@@ -58,5 +60,30 @@ class ClientDashboardController extends Controller
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare'
         ));
+    }
+
+    /** Live figures for the client dashboard's auto-refresh (JSON). */
+    public function live(Request $request, PoolApiClient $api)
+    {
+        $user = $request->user();
+
+        $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
+        $pools = PoolAccount::whereIn('id', $poolIds)->get();
+        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
+        $poolsBalance = (float) $pools->sum('balance');
+
+        $floatingTotal = 0.0;
+        foreach ($pools as $pool) {
+            $floatingTotal += (float) (PoolController::liveFigures($api, $pool)['floating'] ?? 0);
+        }
+
+        $floatingShare = $poolsBalance > 0 ? round($floatingTotal * $investment / $poolsBalance, 2) : 0.0;
+        $today = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today())->sum('net_pnl');
+
+        return response()->json([
+            'floatingShare' => $floatingShare,
+            'today' => $today,
+            'at' => now()->format('H:i:s'),
+        ]);
     }
 }
