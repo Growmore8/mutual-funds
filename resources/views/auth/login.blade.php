@@ -14,9 +14,12 @@
 
     {{-- Brand panel --}}
     <div class="hidden lg:flex flex-col justify-between bg-[#0a1730] text-white p-12 relative overflow-hidden">
-        <div class="relative z-10">
-            <div class="text-2xl font-bold">Growth<span class="text-emerald-400">Capital</span></div>
-            <p class="text-xs text-gray-400 mt-1">Mutual Funds</p>
+        <div class="relative z-10 flex items-center gap-3">
+            <img src="/logo.png" alt="GrowthCapital" class="w-12 h-12" onerror="this.style.display='none'">
+            <div>
+                <div class="text-2xl font-bold">Growth<span class="text-emerald-400">Capital</span></div>
+                <p class="text-xs text-gray-400">Mutual Funds</p>
+            </div>
         </div>
         <div class="relative z-10 max-w-md">
             <h1 class="text-3xl font-bold leading-tight">Invest together.<br>Earn together.</h1>
@@ -36,6 +39,7 @@
         <div class="w-full max-w-md">
             {{-- mobile brand --}}
             <div class="lg:hidden text-center mb-8">
+                <img src="/logo.png" alt="GrowthCapital" class="w-16 h-16 mx-auto mb-2" onerror="this.style.display='none'">
                 <div class="text-2xl font-bold text-[#0a1730]">Growth<span class="text-emerald-500">Capital</span></div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </div>

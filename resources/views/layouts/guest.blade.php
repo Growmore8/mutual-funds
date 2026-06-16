@@ -19,6 +19,7 @@
     <body class="h-full font-sans text-gray-900 antialiased">
         <div class="min-h-full flex flex-col justify-center items-center px-6 py-10 bg-gray-100">
             <a href="/" class="mb-6 text-center">
+                <img src="/logo.png" alt="GrowthCapital" class="w-16 h-16 mx-auto mb-2" onerror="this.style.display='none'">
                 <div class="text-2xl font-bold text-[#0a1730]">Growth<span class="text-emerald-500">Capital</span></div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </a>

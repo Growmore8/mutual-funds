@@ -13,7 +13,10 @@
 <div x-data="{ open: false }" class="min-h-full">
     {{-- Sidebar --}}
     <aside class="fixed inset-y-0 left-0 w-64 bg-[#0a1730] text-gray-300 hidden lg:flex flex-col">
-        <div class="px-6 py-5 text-white font-bold text-lg border-b border-white/10">Growth<span class="text-emerald-400">Capital</span> <span class="block text-xs font-normal text-gray-400">Fund Admin</span></div>
+        <div class="px-6 py-5 border-b border-white/10 flex items-center gap-2.5">
+            <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
+            <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Fund Admin</span></div>
+        </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
             @php $nav = [
                 ['admin.dashboard','Dashboard'],

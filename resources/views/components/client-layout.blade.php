@@ -23,7 +23,10 @@
 
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
-        <div class="px-6 py-5 text-white font-bold text-lg border-b border-white/10">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
+        <div class="px-6 py-5 border-b border-white/10 flex items-center gap-2.5">
+            <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
+            <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
+        </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
             @php $nav = [
                 ['client.dashboard','Dashboard','M3 12l9-9 9 9M4 10v10h16V10'],
@@ -48,7 +51,7 @@
         {{-- Top bar --}}
         <header class="bg-white border-b sticky top-0 z-10">
             <div class="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-                <div class="lg:hidden font-bold text-[#0a1730]">Growth<span class="text-emerald-500">Capital</span></div>
+                <div class="lg:hidden flex items-center gap-2 font-bold text-[#0a1730]"><img src="/logo.png" alt="" class="w-7 h-7" onerror="this.style.display='none'">Growth<span class="text-emerald-500">Capital</span></div>
                 <h1 class="hidden lg:block text-lg font-semibold text-gray-900">{{ $title }}</h1>
                 <div class="flex items-center gap-2">
                     <button type="button" aria-label="Toggle theme"
