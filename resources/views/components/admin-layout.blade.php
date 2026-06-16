@@ -43,7 +43,8 @@
             {!! $link('admin.payment-methods.index', 'Payment Methods', 'fa-credit-card') !!}
 
             {!! $heading('Fund') !!}
-            {!! $link('admin.pool.index', 'Pool / PnL', 'fa-chart-pie') !!}
+            <a href="{{ route('admin.pool.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('admin.pool.index') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-layer-group w-5 text-center"></i><span>Pool</span></a>
+            <a href="{{ route('admin.pool.pnl') }}" class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('admin.pool.pnl') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-chart-pie w-5 text-center"></i><span>PnL</span></a>
             <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('admin.messages.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5 text-center"></i><span>Message Center</span></a>
 
             {!! $heading('Settings') !!}

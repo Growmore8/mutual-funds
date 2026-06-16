@@ -30,25 +30,51 @@
         </div>
     </div>
 
-    {{-- Animated balance card --}}
-    <div class="mb-6 max-w-md">
-        <div class="atm-card relative overflow-hidden rounded-2xl p-6 text-white shadow-xl ring-1 ring-white/10">
-            <div class="shine"></div>
-            <div class="relative flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <img src="/logo.png" alt="" class="w-7 h-7" onerror="this.style.display='none'">
-                    <span class="font-bold text-lg">Growth<span class="text-emerald-300">Capital</span></span>
-                </div>
-                <i class="fa-solid fa-wifi rotate-90 opacity-70"></i>
+    {{-- Balance + performance chart (exchange-style hero) --}}
+    @php
+        $hcoords = [];
+        foreach ($pts as $i => $row) {
+            $hx = $n > 1 ? round(($i / ($n - 1)) * 600, 1) : 300;
+            $hy = round(110 - (max(0, (float) $row->net_pnl) / $max) * 90, 1);
+            $hcoords[] = "$hx,$hy";
+        }
+        $hline = implode(' ', $hcoords);
+        $harea = $n ? ('0,120 ' . $hline . ' 600,120') : '';
+    @endphp
+    <div class="mb-6 rounded-2xl p-6 bg-white dark:bg-white/[0.04] shadow-sm border border-transparent dark:border-white/10 dark:backdrop-blur">
+        <div class="flex items-start justify-between gap-4" x-data="{ show: true }">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Balance
+                    <button type="button" @click="show=!show" class="text-gray-400 hover:text-emerald-400"><i class="fa-regular" :class="show?'fa-eye':'fa-eye-slash'"></i></button>
+                </p>
+                <p class="text-4xl font-bold text-gray-900 dark:text-white mt-1 tracking-tight glow">
+                    <span x-show="show">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</span>
+                    <span x-show="!show" style="display:none">••••••</span>
+                    <span class="text-base font-medium text-gray-400">USD</span>
+                </p>
+                <p class="text-sm mt-1 text-gray-500 dark:text-gray-400">Floating P&L
+                    <span id="live-floating-hero" class="font-semibold {{ $floatingShare < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span>
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse align-middle"></span>
+                </p>
             </div>
-            <div class="relative w-12 h-9 rounded-md mt-5" style="background:linear-gradient(135deg,#f6d365,#d4af37)"></div>
-            <p class="relative text-xs text-white/60 mt-4">Balance</p>
-            <p class="relative text-3xl font-bold tracking-wide glow">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</p>
-            <div class="relative flex items-center justify-between mt-5 text-sm">
-                <span class="tracking-[0.25em] text-white/80">{{ $liveRef ? '•••• ' . substr($liveRef, -4) : '•••• ••••' }}</span>
-                <span class="uppercase tracking-wide text-white/90">{{ $user->name }}</span>
-            </div>
+            <a href="{{ route('withdraw.create') }}" class="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Withdraw</a>
         </div>
+
+        @if ($n)
+            <svg viewBox="0 0 600 120" preserveAspectRatio="none" class="w-full h-36 mt-4">
+                <defs>
+                    <linearGradient id="gcfill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(16,185,129,.35)"/>
+                        <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="{{ $harea }}" fill="url(#gcfill)"/>
+                <polyline points="{{ $hline }}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+        @else
+            <div class="h-36 mt-4 grid place-items-center text-sm text-gray-400 text-center">Your performance chart appears once the pool starts distributing daily profit.</div>
+        @endif
+        <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Earnings, last 14 days</p>
     </div>
 
     @php
@@ -159,30 +185,8 @@
         </div>
     </div>
 
-    {{-- Chart · transactions · CTA --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div class="{{ $card }} p-6">
-            <h3 class="{{ $head }} mb-4">Earnings (last 14 days)</h3>
-            @if ($n)
-                @php
-                    $coords = [];
-                    foreach ($pts as $i => $row) {
-                        $x = $n > 1 ? round(($i / ($n - 1)) * 300, 1) : 150;
-                        $y = round(95 - (max(0, (float) $row->net_pnl) / $max) * 80, 1);
-                        $coords[] = "$x,$y";
-                    }
-                    $line = implode(' ', $coords);
-                    $area = '0,100 ' . $line . ' 300,100';
-                @endphp
-                <svg viewBox="0 0 300 100" preserveAspectRatio="none" class="w-full h-32">
-                    <polygon points="{{ $area }}" fill="rgba(16,185,129,0.12)"/>
-                    <polyline points="{{ $line }}" fill="none" stroke="#16c784" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-                </svg>
-            @else
-                <div class="h-32 grid place-items-center text-sm {{ $sub }} text-center">No earnings yet — they appear once your deposit is approved and the pool distributes daily profit.</div>
-            @endif
-        </div>
-
+    {{-- Transactions · CTA --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <div class="{{ $card }} p-6">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="{{ $head }}">Recent Transactions</h3>
@@ -263,7 +267,7 @@
                     if (!res.ok) return;
                     const d = await res.json();
                     if (d.poolFloating !== undefined) track('live-pool', d.poolFloating, true);
-                    if (d.floatingShare !== undefined) track('live-floating', d.floatingShare, true);
+                    if (d.floatingShare !== undefined) { track('live-floating', d.floatingShare, true); track('live-floating-hero', d.floatingShare, true); }
                     if (d.today !== undefined) track('live-today', d.today, false);
                 } catch (e) {}
             }

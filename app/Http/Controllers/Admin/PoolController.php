@@ -16,8 +16,14 @@ class PoolController extends Controller
     {
         return view('admin.pool.index', [
             'pools' => PoolAccount::orderBy('account_ref')->get(),
-            'snapshots' => PoolSnapshot::with('poolAccount')->latest('snapshot_date')->limit(30)->get(),
             'isLive' => $api->isLive(),
+        ]);
+    }
+
+    public function pnl()
+    {
+        return view('admin.pool.pnl', [
+            'snapshots' => PoolSnapshot::with('poolAccount')->latest('snapshot_date')->limit(60)->get(),
         ]);
     }
 

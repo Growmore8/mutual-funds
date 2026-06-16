@@ -87,6 +87,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');
+    Route::get('/pool/pnl', [PoolController::class, 'pnl'])->name('pool.pnl');
     Route::get('/pool/live', [PoolController::class, 'live'])->name('pool.live');
     Route::post('/pool', [PoolController::class, 'store'])->name('pool.store');
     Route::patch('/pool/{pool}', [PoolController::class, 'update'])->name('pool.update');
