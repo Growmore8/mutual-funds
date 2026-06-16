@@ -131,5 +131,26 @@ class DepositController extends Controller
                 'source_id' => $deposit->id,
             ]);
         });
+
+        $this->autoAssignPlan($deposit->user);
+    }
+
+    /** Auto-set the client's plan based on their total approved deposits. */
+    private function autoAssignPlan(User $user): void
+    {
+        $total = (float) $user->deposits()->where('status', 'approved')->sum('amount');
+        $plan = \App\Models\AccountType::forAmount($total);
+
+        if ($plan && $user->account_type_id !== $plan->id) {
+            $old = $user->accountType?->name;
+            $user->update(['account_type_id' => $plan->id]);
+
+            \App\Models\AppNotification::push(
+                $user->id, 'info',
+                'Plan updated to ' . $plan->name,
+                'Your total deposit of $' . number_format($total, 2) . ' now qualifies for the ' . $plan->name . ' plan.',
+                route('accounts.index'),
+            );
+        }
     }
 }
