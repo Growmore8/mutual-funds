@@ -30,9 +30,7 @@
                 ['admin.withdrawals.index','Withdrawals'],
                 ['admin.payment-methods.index','Payment Methods'],
                 ['admin.transactions.index','Transactions'],
-                ['admin.messages.index','Message Center'],
                 ['admin.pool.index','Pool / PnL'],
-                ['admin.settings.edit','Settings'],
             ]; @endphp
             @foreach ($nav as [$route, $label])
                 <a href="{{ route($route) }}"
@@ -40,11 +38,12 @@
                     {{ $label }}
                 </a>
             @endforeach
+
+            <div class="pt-2 mt-2 border-t border-white/10"></div>
+            <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md {{ request()->routeIs('admin.messages.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
+                <i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Message Center</span>
+            </a>
         </nav>
-        <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">
-            @csrf
-            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-white/10 text-sm">Log out</button>
-        </form>
     </aside>
 
     {{-- Main --}}
@@ -58,7 +57,21 @@
                             class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">
                         <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i>
                     </button>
-                    <span class="text-sm text-gray-500">{{ auth()->user()->name }}</span>
+                    <div class="relative" x-data="{ menu: false }">
+                        <button @click="menu=!menu" class="flex items-center gap-2">
+                            <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
+                            <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        <div x-show="menu" @click.outside="menu=false" x-transition style="display:none"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
+                            <div class="px-4 py-2 border-b border-gray-100"><p class="font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p></div>
+                            <a href="{{ route('admin.settings.edit') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-gear w-5 text-gray-400"></i> Settings</a>
+                            <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">@csrf
+                                <button class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600"><i class="fa-solid fa-right-from-bracket w-5"></i> Log out</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>

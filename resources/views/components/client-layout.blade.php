@@ -29,22 +29,15 @@
             <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-            @php $nav = [
-                ['client.dashboard','Dashboard','M3 12l9-9 9 9M4 10v10h16V10'],
-                ['profile.edit','Profile','M16 14a4 4 0 10-8 0'],
-            ]; @endphp
             <a href="{{ route('client.dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-gauge w-5"></i> Dashboard</a>
             <a href="{{ route('client.profit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.profit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-chart-line w-5"></i> Profit History</a>
             <a href="{{ route('client.transactions') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.transactions') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-receipt w-5"></i> Transactions</a>
             <a href="{{ route('withdraw.create') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('withdraw.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw</a>
             <a href="{{ route('accounts.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('accounts.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-layer-group w-5"></i> My Accounts</a>
-            <a href="{{ route('support.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5"></i> Support</a>
-            <a href="{{ route('security.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('security.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-shield-halved w-5"></i> Security</a>
-            <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('profile.edit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Profile</a>
+
+            <div class="pt-2 mt-2 border-t border-white/10"></div>
+            <a href="{{ route('support.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Support</span></a>
         </nav>
-        <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
-            <button class="w-full text-left px-3 py-2 rounded-md hover:bg-white/10 text-sm">Log out</button>
-        </form>
     </aside>
 
     {{-- Main --}}
@@ -60,8 +53,22 @@
                             class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">
                         <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i>
                     </button>
-                    <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
-                    <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open=!open" class="flex items-center gap-2">
+                            <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
+                            <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        <div x-show="open" @click.outside="open=false" x-transition style="display:none"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
+                            <div class="px-4 py-2 border-b border-gray-100"><p class="font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p></div>
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-user w-5 text-gray-400"></i> Profile</a>
+                            <a href="{{ route('security.index') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-shield-halved w-5 text-gray-400"></i> Security</a>
+                            <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">@csrf
+                                <button class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600"><i class="fa-solid fa-right-from-bracket w-5"></i> Log out</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -83,10 +90,10 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>History</a>
         <a href="{{ route('withdraw.create') }}" class="{{ $tab }} {{ request()->routeIs('withdraw.*') ? 'text-emerald-600' : 'text-gray-400' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Withdraw</a>
+        <a href="{{ route('accounts.index') }}" class="{{ $tab }} {{ request()->routeIs('accounts.*') ? 'text-emerald-600' : 'text-gray-400' }}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/></svg>Accounts</a>
         <a href="{{ route('support.index') }}" class="{{ $tab }} {{ request()->routeIs('support.*') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 13a3 3 0 01-3 3l-4 3v-3H8a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3z"/></svg>Support</a>
-        <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 14a4 4 0 10-8 0M12 7a3 3 0 100 6 3 3 0 000-6z"/></svg>Profile</a>
+            <i class="fa-solid fa-headset text-[22px] leading-6"></i>Support</a>
     </nav>
 </div>
 

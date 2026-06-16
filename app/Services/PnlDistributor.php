@@ -28,29 +28,32 @@ class PnlDistributor
         $date = $snapshot->snapshot_date;
         $poolId = $snapshot->pool_account_id;
 
-        // Eligible capital per client IN THIS POOL as of the snapshot date.
+        // Eligible capital per client IN THIS POOL as of the snapshot date,
+        // plus the client's plan pool_amount (the fixed share denominator).
         $rows = Deposit::query()
-            ->where('pool_account_id', $poolId)
-            ->where('status', 'approved')
-            ->whereDate('value_date', '<=', $date)
-            ->whereHas('user', fn ($q) => $q->where('status', 'active'))
-            ->selectRaw('user_id, SUM(amount) as capital')
-            ->groupBy('user_id')
+            ->join('users', 'users.id', '=', 'deposits.user_id')
+            ->leftJoin('account_types', 'account_types.id', '=', 'users.account_type_id')
+            ->where('deposits.pool_account_id', $poolId)
+            ->where('deposits.status', 'approved')
+            ->whereDate('deposits.value_date', '<=', $date)
+            ->where('users.status', 'active')
+            ->groupBy('deposits.user_id', 'account_types.pool_amount')
+            ->selectRaw('deposits.user_id as user_id, SUM(deposits.amount) as capital, account_types.pool_amount as pool_amount')
             ->get();
 
-        $totalCapital = (float) $rows->sum('capital');
-
-        if ($totalCapital <= 0) {
+        if ($rows->isEmpty()) {
             $snapshot->update(['distributed' => true]);
             return 0;
         }
 
         $count = 0;
 
-        DB::transaction(function () use ($rows, $totalCapital, $snapshot, $date, &$count) {
+        DB::transaction(function () use ($rows, $snapshot, $date, &$count) {
             foreach ($rows as $row) {
                 $capital = (float) $row->capital;
-                $weight = $capital / $totalCapital;                 // client's share of this pool
+                // Profit share = invested / plan pool amount (capped at 100%).
+                $poolAmount = (float) $row->pool_amount;
+                $weight = $poolAmount > 0 ? min(1.0, $capital / $poolAmount) : 0.0;
                 $net = round((float) $snapshot->pnl * $weight, 2);   // 100% of their share
 
                 PnlAllocation::updateOrCreate(

@@ -59,6 +59,7 @@ class AccountTypeController extends Controller
             'description' => ['nullable', 'string'],
             'min_deposit' => ['required', 'numeric', 'min:0'],
             'max_deposit' => ['nullable', 'numeric', 'min:0'],
+            'pool_amount' => ['required', 'numeric', 'min:0'],
             'management_fee_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'profit_share_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'lock_in_months' => ['required', 'integer', 'min:0'],
