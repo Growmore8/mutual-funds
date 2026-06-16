@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountType;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Auth\Events\Registered;
@@ -21,7 +22,9 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'accountTypes' => AccountType::where('is_active', true)->orderBy('sort_order')->get(),
+        ]);
     }
 
     /**
@@ -36,6 +39,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['required', 'string', 'max:40'],
             'country' => ['required', 'string', 'max:100'],
+            'account_type_id' => ['required', 'exists:account_types,id'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -44,6 +48,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'country' => $request->country,
+            'account_type_id' => $request->account_type_id,
             'password' => Hash::make($request->password),
             'role' => 'client',
             'status' => 'pending',

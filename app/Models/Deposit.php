@@ -28,4 +28,9 @@ class Deposit extends Model
     {
         return $this->belongsTo(PaymentMethod::class);
     }
+
+    public function poolAccount()
+    {
+        return $this->belongsTo(PoolAccount::class);
+    }
 }

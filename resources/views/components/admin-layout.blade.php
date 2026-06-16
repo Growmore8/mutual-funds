@@ -18,6 +18,7 @@
                 ['admin.clients.index','Clients'],
                 ['admin.kyc.index','KYC Review'],
                 ['admin.account-types.index','Account Types'],
+                ['admin.deposits.index','Deposits'],
                 ['admin.payment-methods.index','Payment Methods'],
                 ['admin.transactions.index','Transactions'],
                 ['admin.pool.index','Pool / PnL'],

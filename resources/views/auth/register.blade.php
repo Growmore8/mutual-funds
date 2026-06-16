@@ -30,6 +30,21 @@
             <x-input-error :messages="$errors->get('country')" class="mt-2" />
         </div>
 
+        <!-- Account Type -->
+        <div class="mt-4">
+            <x-input-label for="account_type_id" :value="__('Account Type')" />
+            <select id="account_type_id" name="account_type_id" required
+                    class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                <option value="">Select a plan…</option>
+                @foreach ($accountTypes as $t)
+                    <option value="{{ $t->id }}" @selected(old('account_type_id') == $t->id)>
+                        {{ $t->name }} — min ${{ number_format((float)$t->min_deposit) }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('account_type_id')" class="mt-2" />
+        </div>
+
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\DepositController;
 use App\Http\Controllers\Admin\KycReviewController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PoolController;
@@ -38,6 +39,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+
+    // Deposits (capital into pools)
+    Route::get('/deposits', [DepositController::class, 'index'])->name('deposits.index');
+    Route::post('/deposits', [DepositController::class, 'store'])->name('deposits.store');
+    Route::post('/deposits/{deposit}/approve', [DepositController::class, 'approve'])->name('deposits.approve');
+    Route::post('/deposits/{deposit}/reject', [DepositController::class, 'reject'])->name('deposits.reject');
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');

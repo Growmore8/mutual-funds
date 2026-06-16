@@ -12,7 +12,11 @@ class ClientDashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user()->load('accountType');
-        $pool = PoolAccount::first();
+
+        // The pools this client has capital in (a client can be in several).
+        $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
+        $pools = PoolAccount::whereIn('id', $poolIds)->get();
+        $pool = $pools->first() ?? PoolAccount::first();   // for display fallback
         $latestSnap = $pool?->snapshots()->latest('snapshot_date')->first();
 
         $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
@@ -24,10 +28,16 @@ class ClientDashboardController extends Controller
         $month = (float) Transaction::where('user_id', $user->id)->where('type', 'profit')
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount');
 
-        $sharePct = (float) ($user->accountType->profit_share_pct ?? 0);
-        // client's share of the pool (their capital / pool balance)
-        $poolBalance = (float) ($pool->balance ?? 0);
-        $poolToday = (float) ($latestSnap->pnl ?? 0);
+        // Capital share = the client's capital across their pools / total balance of those pools.
+        $poolsCapacity = (float) $pools->sum('capacity');
+        $poolsBalance = (float) $pools->sum('balance');
+        $sharePct = $poolsBalance > 0 ? round($investment / $poolsBalance * 100, 2) : 0.0;
+
+        // Today's combined PnL across the client's pools.
+        $poolToday = (float) PoolSnapshot::whereIn('pool_account_id', $poolIds)
+            ->whereDate('snapshot_date', $latestSnap->snapshot_date ?? today())
+            ->sum('pnl');
+        $poolBalance = $poolsBalance;
 
         // last 14 days of the client's net profit for the chart
         $chart = PnlAllocation::where('user_id', $user->id)
@@ -40,8 +50,8 @@ class ClientDashboardController extends Controller
             ->latest('id')->limit(8)->get();
 
         return view('client.dashboard', compact(
-            'user', 'pool', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
-            'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolToday', 'chart', 'recent'
+            'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
+            'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent'
         ));
     }
 }

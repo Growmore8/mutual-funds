@@ -13,7 +13,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl shadow-sm p-5">
             <p class="text-xs text-gray-500">Pool Account Size</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($pool->capacity ?? 0) }}</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($poolsCapacity > 0 ? $poolsCapacity : ($pool->capacity ?? 0)) }}</p>
             <p class="text-[11px] text-gray-400 mt-1">Total managed pool</p>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5">
@@ -61,7 +61,7 @@
         <div class="bg-white rounded-2xl shadow-sm p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Investment Summary</h3>
             <dl class="text-sm divide-y divide-gray-100">
-                <div class="flex justify-between py-2"><dt class="text-gray-500">Pool Account Size</dt><dd class="font-semibold">{{ $money($pool->capacity ?? 0) }}</dd></div>
+                <div class="flex justify-between py-2"><dt class="text-gray-500">Pool Account Size</dt><dd class="font-semibold">{{ $money($poolsCapacity > 0 ? $poolsCapacity : ($pool->capacity ?? 0)) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500">Pool Profit (today)</dt><dd class="font-semibold">{{ $money($poolToday) }}</dd></div>
                 <div class="flex justify-between py-2 bg-emerald-50 -mx-2 px-2 rounded"><dt class="text-gray-600">Your Investment</dt><dd class="font-bold text-emerald-700">{{ $money($investment) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="text-gray-500">Your Profit Share</dt><dd class="font-semibold">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</dd></div>
