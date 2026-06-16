@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountRequestController;
 use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\DepositController;
@@ -20,6 +21,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             'clients' => User::where('role', 'client')->count(),
             'pendingKyc' => User::where('kyc_status', 'submitted')->count(),
             'pendingWithdrawals' => \App\Models\Withdrawal::where('status', 'pending')->count(),
+            'pendingAccountRequests' => \App\Models\AccountRequest::where('status', 'pending')->count(),
             'openTickets' => \App\Models\SupportTicket::whereIn('status', ['open', 'answered'])->count(),
             'pool' => PoolAccount::first(),
         ]);
@@ -28,7 +30,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Clients
     Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+    Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::patch('/clients/{client}/status', [ClientController::class, 'updateStatus'])->name('clients.status');
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+
+    // Additional-account requests
+    Route::get('/account-requests', [AccountRequestController::class, 'index'])->name('account-requests.index');
+    Route::post('/account-requests/{accountRequest}/approve', [AccountRequestController::class, 'approve'])->name('account-requests.approve');
+    Route::post('/account-requests/{accountRequest}/reject', [AccountRequestController::class, 'reject'])->name('account-requests.reject');
 
     // KYC review
     Route::get('/kyc', [KycReviewController::class, 'index'])->name('kyc.index');

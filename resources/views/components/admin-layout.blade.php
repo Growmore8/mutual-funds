@@ -17,6 +17,7 @@
             @php $nav = [
                 ['admin.dashboard','Dashboard'],
                 ['admin.clients.index','Clients'],
+                ['admin.account-requests.index','Account Requests'],
                 ['admin.kyc.index','KYC Review'],
                 ['admin.account-types.index','Account Types'],
                 ['admin.deposits.index','Deposits'],

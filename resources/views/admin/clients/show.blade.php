@@ -1,41 +1,122 @@
 <x-admin-layout title="Client · {{ $client->name }}">
-    <a href="{{ route('admin.clients.index') }}" class="text-sm text-gray-500">&larr; Back to clients</a>
+    @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
-        <div class="bg-white shadow rounded-xl p-6 lg:col-span-1 space-y-2 text-sm">
-            <h3 class="text-lg font-semibold text-gray-900">{{ $client->name }}</h3>
-            <p class="text-gray-500">{{ $client->email }}</p>
-            <p><span class="text-gray-400">Phone:</span> {{ $client->phone ?? '—' }}</p>
-            <p><span class="text-gray-400">Country:</span> {{ $client->country ?? '—' }}</p>
-            <p><span class="text-gray-400">Account type:</span> {{ $client->accountType->name ?? '—' }}</p>
-            <p><span class="text-gray-400">KYC:</span> {{ ucfirst(str_replace('_',' ',$client->kyc_status)) }}</p>
+    <a href="{{ route('admin.clients.index') }}" class="text-sm text-gray-500 hover:text-gray-700"><i class="fa-solid fa-arrow-left"></i> Back to clients</a>
 
-            <form method="POST" action="{{ route('admin.clients.status',$client) }}" class="pt-3 flex gap-2">
+    {{-- Balance cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+        <div class="bg-white shadow rounded-xl p-5">
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-wallet text-gray-400 mr-1"></i> Account balance</p>
+            <p class="text-2xl font-bold text-gray-900">{{ $money($client->currentBalance()) }}</p>
+            <p class="text-[11px] text-gray-400">Deposits + profit − withdrawals</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5">
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-arrow-down text-gray-400 mr-1"></i> Total deposited</p>
+            <p class="text-2xl font-bold text-gray-900">{{ $money($client->totalDeposited()) }}</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5">
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Total profit</p>
+            <p class="text-2xl font-bold text-emerald-600">{{ $money($client->totalProfit()) }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {{-- Edit client --}}
+        <div class="bg-white shadow rounded-xl p-6 lg:col-span-1">
+            <h3 class="font-semibold text-gray-900 mb-4">Edit client</h3>
+            <form method="POST" action="{{ route('admin.clients.update', $client) }}" class="space-y-3 text-sm">
                 @csrf @method('PATCH')
-                <select name="status" class="border-gray-300 rounded-md text-sm flex-1">
-                    @foreach (['pending','active','suspended'] as $s)
-                        <option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>
-                    @endforeach
-                </select>
-                <button class="px-3 py-2 bg-gray-900 text-white rounded-md text-sm">Update</button>
+                <div><label class="block text-gray-700">Name</label><input name="name" value="{{ old('name',$client->name) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
+                <div><label class="block text-gray-700">Email</label><input type="email" name="email" value="{{ old('email',$client->email) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-gray-700">Phone</label><input name="phone" value="{{ old('phone',$client->phone) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
+                    <div><label class="block text-gray-700">Country</label><input name="country" value="{{ old('country',$client->country) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Account type</label>
+                    <select name="account_type_id" class="mt-1 w-full border-gray-300 rounded-md">
+                        <option value="">— none —</option>
+                        @foreach ($accountTypes as $at)
+                            <option value="{{ $at->id }}" @selected($client->account_type_id==$at->id)>{{ $at->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Live ID (pool account)</label>
+                    <select name="pool_account_id" class="mt-1 w-full border-gray-300 rounded-md">
+                        <option value="">— unassigned —</option>
+                        @foreach ($pools as $p)
+                            <option value="{{ $p->id }}" @selected($client->pool_account_id==$p->id)>{{ $p->account_ref }} {{ $p->name ? '· '.$p->name : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-gray-700">Status</label>
+                        <select name="status" class="mt-1 w-full border-gray-300 rounded-md">
+                            @foreach (['pending','active','suspended'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">KYC</label>
+                        <select name="kyc_status" class="mt-1 w-full border-gray-300 rounded-md">
+                            @foreach (['not_submitted','submitted','approved','rejected'] as $k)<option value="{{ $k }}" @selected($client->kyc_status===$k)>{{ ucfirst(str_replace('_',' ',$k)) }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
+                <button class="px-4 py-2 bg-emerald-600 text-white rounded-md w-full">Save changes</button>
+            </form>
+
+            <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" class="mt-3" onsubmit="return confirm('Delete this client and all their data? This cannot be undone.')">
+                @csrf @method('DELETE')
+                <button class="px-4 py-2 bg-red-600 text-white rounded-md w-full text-sm"><i class="fa-solid fa-trash"></i> Delete client</button>
             </form>
         </div>
 
-        <div class="bg-white shadow rounded-xl p-6 lg:col-span-2">
-            <h3 class="font-semibold text-gray-900 mb-3">Recent transactions</h3>
-            <table class="min-w-full text-sm">
-                <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse ($client->transactions as $t)
-                        <tr><td class="py-2 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
-                            <td>{{ ucfirst($t->type) }}</td>
-                            <td class="{{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
-                            <td>{{ number_format((float)$t->balance_after,2) }}</td></tr>
-                    @empty
-                        <tr><td colspan="4" class="py-6 text-center text-gray-400">No transactions yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+        {{-- Right column --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{-- Account requests --}}
+            <div class="bg-white shadow rounded-xl p-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Account requests</h3>
+                @forelse ($client->accountRequests as $r)
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
+                        <div>
+                            <span class="font-medium">{{ $r->accountType->name ?? '—' }}</span>
+                            <span class="text-gray-400">· {{ $r->created_at->format('d M Y') }}</span>
+                            @if ($r->reason)<p class="text-xs text-gray-400">{{ $r->reason }}</p>@endif
+                        </div>
+                        @if ($r->status === 'pending')
+                            <div class="flex gap-2">
+                                <form method="POST" action="{{ route('admin.account-requests.approve', $r) }}">@csrf<button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md">Approve</button></form>
+                                <form method="POST" action="{{ route('admin.account-requests.reject', $r) }}">@csrf<button class="px-3 py-1.5 bg-red-600 text-white rounded-md">Reject</button></form>
+                            </div>
+                        @else
+                            @php $b = ['approved'=>'bg-emerald-100 text-emerald-800','rejected'=>'bg-red-100 text-red-700'][$r->status]; @endphp
+                            <span class="text-xs px-2.5 py-1 rounded-full capitalize {{ $b }}">{{ $r->status }}</span>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-400">No additional-account requests.</p>
+                @endforelse
+            </div>
+
+            {{-- Recent transactions --}}
+            <div class="bg-white shadow rounded-xl p-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Recent transactions</h3>
+                <table class="min-w-full text-sm">
+                    <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($client->transactions as $t)
+                            <tr><td class="py-2 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
+                                <td>{{ ucfirst($t->type) }}</td>
+                                <td class="{{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
+                                <td>{{ number_format((float)$t->balance_after,2) }}</td></tr>
+                        @empty
+                            <tr><td colspan="4" class="py-6 text-center text-gray-400">No transactions yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </x-admin-layout>

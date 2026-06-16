@@ -35,6 +35,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/app', [\App\Http\Controllers\ClientDashboardController::class, 'index'])
         ->middleware('onboarded')->name('client.dashboard');
 
+    // Accounts (1st free; additional accounts need admin approval)
+    Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');
+    Route::post('/accounts/request', [\App\Http\Controllers\AccountRequestController::class, 'store'])->name('accounts.request');
+
     // Withdrawals (profit only; request -> admin approval)
     Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');
     Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->name('withdraw.store');

@@ -23,6 +23,7 @@
             <a href="{{ route('client.profit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.profit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-chart-line w-5"></i> Profit History</a>
             <a href="{{ route('client.transactions') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.transactions') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-receipt w-5"></i> Transactions</a>
             <a href="{{ route('withdraw.create') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('withdraw.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw</a>
+            <a href="{{ route('accounts.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('accounts.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-layer-group w-5"></i> My Accounts</a>
             <a href="{{ route('support.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5"></i> Support</a>
             <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('profile.edit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Profile</a>
         </nav>

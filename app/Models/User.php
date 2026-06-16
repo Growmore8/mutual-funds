@@ -41,6 +41,29 @@ class User extends Authenticatable
         return $this->belongsTo(AccountType::class);
     }
 
+    /** Assigned live/pool account ("live ID"). */
+    public function poolAccount()
+    {
+        return $this->belongsTo(PoolAccount::class);
+    }
+
+    public function accountRequests()
+    {
+        return $this->hasMany(AccountRequest::class);
+    }
+
+    /** Current account balance = deposits + profit − withdrawals (latest ledger balance). */
+    public function currentBalance(): float
+    {
+        return (float) ($this->transactions()->latest('id')->value('balance_after') ?? 0);
+    }
+
+    /** Total approved capital deposited. */
+    public function totalDeposited(): float
+    {
+        return (float) $this->deposits()->where('status', 'approved')->sum('amount');
+    }
+
     public function deposits()
     {
         return $this->hasMany(Deposit::class);
