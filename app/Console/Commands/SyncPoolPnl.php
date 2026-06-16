@@ -20,33 +20,57 @@ class SyncPoolPnl extends Command
         $date = $this->option('date') ? Carbon::parse($this->option('date'))->toDateString() : now()->toDateString();
         $this->info(($api->isLive() ? 'LIVE' : 'STUB') . " pool sync for {$date}");
 
+        $failed = 0;
+
         foreach (PoolAccount::where('is_active', true)->get() as $pool) {
-            $data = $api->snapshot($pool);
-            $opening = (float) $pool->balance;
+            try {
+                $data = $api->snapshot($pool);
+                $opening = (float) $pool->balance;
 
-            $snapshot = PoolSnapshot::updateOrCreate(
-                ['pool_account_id' => $pool->id, 'snapshot_date' => $date],
-                [
-                    'opening_balance' => $opening,
-                    'closing_balance' => $data['balance'],
-                    'pnl' => $data['pnl'],
-                    'pnl_pct' => $data['pnl_pct'],
-                    'raw' => $data['raw'],
-                ]
-            );
+                $snapshot = PoolSnapshot::updateOrCreate(
+                    ['pool_account_id' => $pool->id, 'snapshot_date' => $date],
+                    [
+                        'opening_balance' => $opening,
+                        'closing_balance' => $data['balance'],
+                        'pnl' => $data['pnl'],
+                        'pnl_pct' => $data['pnl_pct'],
+                        'raw' => $data['raw'],
+                    ]
+                );
 
-            $pool->update([
-                'balance' => $data['balance'],
-                'equity' => $data['equity'],
-                'last_synced_at' => now(),
-            ]);
+                $pool->update([
+                    'balance' => $data['balance'],
+                    'equity' => $data['equity'],
+                    'last_synced_at' => now(),
+                ]);
 
-            $credited = $distributor->distribute($snapshot);
-            $this->line("  {$pool->account_ref}: PnL {$data['pnl']} → distributed to {$credited} client(s)");
+                $credited = $distributor->distribute($snapshot);
+                $this->line("  {$pool->account_ref}: PnL {$data['pnl']} → distributed to {$credited} client(s)");
+            } catch (\Throwable $e) {
+                $failed++;
+                $msg = $this->cubexError($e);
+                \Illuminate\Support\Facades\Log::warning("pool:sync failed for {$pool->account_ref}: " . $e->getMessage());
+                $this->line("  {$pool->account_ref}: SKIPPED — {$msg}");
+            }
         }
 
-        $this->info('Pool sync complete.');
+        $this->info($failed ? "Pool sync finished with {$failed} account(s) skipped." : 'Pool sync complete.');
 
         return self::SUCCESS;
+    }
+
+    /** Turn an API/HTTP exception into a short human message. */
+    private function cubexError(\Throwable $e): string
+    {
+        if ($e instanceof \Illuminate\Http\Client\RequestException && $e->response) {
+            return match ($e->response->status()) {
+                401 => 'CubeX rejected the API key (401)',
+                404 => 'No such account on CubeX (404)',
+                429 => 'CubeX rate limit hit (429) — try again shortly',
+                default => 'CubeX error (HTTP ' . $e->response->status() . ')',
+            };
+        }
+
+        return 'could not reach CubeX (' . class_basename($e) . ')';
     }
 }

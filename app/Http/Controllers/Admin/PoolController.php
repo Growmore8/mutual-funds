@@ -43,9 +43,15 @@ class PoolController extends Controller
 
     public function sync()
     {
-        Artisan::call('pool:sync');
+        try {
+            Artisan::call('pool:sync');
 
-        return back()->with('status', 'Pool sync run: ' . trim(Artisan::output()));
+            return back()->with('status', 'Pool sync: ' . trim(Artisan::output()));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('pool:sync failed: ' . $e->getMessage());
+
+            return back()->with('status', 'Pool sync failed: ' . $e->getMessage());
+        }
     }
 
     private function validated(Request $request): array
