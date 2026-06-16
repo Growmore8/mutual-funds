@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -50,10 +52,11 @@ class TransactionController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $user = User::find($data['user_id']);
         $last = Transaction::where('user_id', $data['user_id'])->latest()->first();
         $balanceAfter = (float) ($last->balance_after ?? 0) + (float) $data['amount'];
 
-        Transaction::create([
+        $tx = Transaction::create([
             'user_id' => $data['user_id'],
             'type' => $data['type'],
             'amount' => $data['amount'],
@@ -62,6 +65,33 @@ class TransactionController extends Controller
             'status' => 'completed',
             'description' => $data['description'] ?? null,
         ]);
+
+        // A deposit/withdrawal here also creates the matching record so it counts
+        // as invested capital (Total Deposit, profit share, distribution).
+        if ($data['type'] === 'deposit') {
+            $dep = Deposit::create([
+                'user_id' => $user->id,
+                'pool_account_id' => $user->pool_account_id,
+                'account_type_id' => $user->account_type_id,
+                'amount' => abs((float) $data['amount']),
+                'currency' => 'USD',
+                'status' => 'approved',
+                'value_date' => now()->toDateString(),
+                'approved_at' => now(),
+            ]);
+            $tx->update(['source_type' => Deposit::class, 'source_id' => $dep->id]);
+            $user->recalcPlan();
+        } elseif ($data['type'] === 'withdrawal') {
+            $wd = Withdrawal::create([
+                'user_id' => $user->id,
+                'amount' => abs((float) $data['amount']),
+                'currency' => 'USD',
+                'method' => 'Admin adjustment',
+                'status' => 'approved',
+                'processed_at' => now(),
+            ]);
+            $tx->update(['source_type' => Withdrawal::class, 'source_id' => $wd->id]);
+        }
 
         return back()->with('status', 'Transaction recorded.');
     }
