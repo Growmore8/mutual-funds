@@ -1,6 +1,6 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v3';
+const CACHE = 'gc-funds-v4';
 const OFFLINE_URLS = ['/offline.html', '/logo.png'];
 
 self.addEventListener('install', (event) => {
@@ -27,15 +27,16 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static same-origin assets: cache-first with network fallback.
+    // Static same-origin assets: network-first so new builds always win,
+    // falling back to cache only when offline. (Cache-first served stale CSS/JS.)
     const url = new URL(req.url);
     if (url.origin === self.location.origin && /\.(css|js|svg|png|ico|woff2?)$/.test(url.pathname)) {
         event.respondWith(
-            caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+            fetch(req).then((res) => {
                 const copy = res.clone();
                 caches.open(CACHE).then((c) => c.put(req, copy));
                 return res;
-            }))
+            }).catch(() => caches.match(req))
         );
     }
 });

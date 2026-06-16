@@ -112,6 +112,7 @@
             {{ $slot }}
         </main>
     </div>
+</div>{{-- end app wrapper --}}
 
     {{-- Deposit/Withdraw action sheet (mobile +) --}}
     <div x-show="sheet" x-transition.opacity @click="sheet=false" style="display:none" class="lg:hidden fixed inset-0 bg-black/40 z-40"></div>
@@ -148,7 +149,6 @@
             </div>
         </div>
     </nav>
-</div>
 
 <script>
     if ('serviceWorker' in navigator) {
