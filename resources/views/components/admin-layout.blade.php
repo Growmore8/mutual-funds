@@ -21,21 +21,21 @@
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
             @php $nav = [
-                ['admin.dashboard','Dashboard'],
-                ['admin.clients.index','Clients'],
-                ['admin.account-requests.index','Account Requests'],
-                ['admin.kyc.index','KYC Review'],
-                ['admin.account-types.index','Account Types'],
-                ['admin.deposits.index','Deposits'],
-                ['admin.withdrawals.index','Withdrawals'],
-                ['admin.payment-methods.index','Payment Methods'],
-                ['admin.transactions.index','Transactions'],
-                ['admin.pool.index','Pool / PnL'],
+                ['admin.dashboard','Dashboard','fa-gauge-high'],
+                ['admin.clients.index','Clients','fa-users'],
+                ['admin.account-requests.index','Account Requests','fa-folder-plus'],
+                ['admin.kyc.index','KYC Review','fa-id-card'],
+                ['admin.account-types.index','Account Types','fa-layer-group'],
+                ['admin.deposits.index','Deposits','fa-arrow-down-to-bracket'],
+                ['admin.withdrawals.index','Withdrawals','fa-money-bill-transfer'],
+                ['admin.payment-methods.index','Payment Methods','fa-credit-card'],
+                ['admin.transactions.index','Transactions','fa-receipt'],
+                ['admin.pool.index','Pool / PnL','fa-chart-pie'],
             ]; @endphp
-            @foreach ($nav as [$route, $label])
+            @foreach ($nav as [$route, $label, $icon])
                 <a href="{{ route($route) }}"
-                   class="block px-3 py-2 rounded-md {{ request()->routeIs($route) || request()->routeIs(str_replace('.index','.*',$route)) ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
-                    {{ $label }}
+                   class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs($route) || request()->routeIs(str_replace('.index','.*',$route)) ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
+                    <i class="fa-solid {{ $icon }} w-5 text-center"></i> <span>{{ $label }}</span>
                 </a>
             @endforeach
 
