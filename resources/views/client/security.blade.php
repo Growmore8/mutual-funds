@@ -53,17 +53,72 @@
 
         {{-- Biometric --}}
         <div class="bg-white rounded-2xl shadow-sm p-6">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-3 mb-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center"><i class="fa-solid fa-fingerprint"></i></div>
                 <div>
                     <h3 class="font-semibold text-gray-900">Biometric unlock (Face ID / fingerprint)</h3>
                     <p class="text-xs text-gray-500">Use your device biometrics to unlock the app quickly.</p>
                 </div>
+                @if ($hasPasskey)<span class="ml-auto text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">Enabled</span>@endif
             </div>
-            <div id="biometric-setup" class="text-sm text-gray-500">
-                <p><i class="fa-solid fa-circle-info text-gray-400"></i> Set a PIN first, then enable biometrics. Biometric setup will appear here once available on your device.</p>
-            </div>
+
+            @if (! $hasPin)
+                <p class="text-sm text-gray-500"><i class="fa-solid fa-circle-info text-gray-400"></i> Set an app-lock PIN above first — biometrics unlock the same lock.</p>
+            @else
+                <div id="bio-unsupported" class="hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    This device or browser doesn't support biometric passkeys. Use your PIN to unlock.
+                </div>
+                <div id="bio-msg" class="hidden text-sm rounded-lg p-3 mb-3"></div>
+
+                @if ($hasPasskey)
+                    <p class="text-sm text-gray-600 mb-3">Biometric unlock is active. You can add this device too, or turn it off.</p>
+                    <div class="flex gap-2">
+                        <button type="button" id="bio-register" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add this device</button>
+                        <form method="POST" action="{{ route('webauthn.destroy') }}" onsubmit="return confirm('Turn off biometric unlock on all devices?')">
+                            @csrf @method('DELETE')
+                            <button class="px-4 py-2 border rounded-md text-red-600 text-sm">Turn off biometrics</button>
+                        </form>
+                    </div>
+                @else
+                    <button type="button" id="bio-register" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm">
+                        <i class="fa-solid fa-fingerprint mr-1"></i> Enable Face ID / fingerprint
+                    </button>
+                @endif
+            @endif
         </div>
     </div>
 
+    @if ($hasPin)
+        <script src="https://cdn.jsdelivr.net/npm/@laragear/webpass@2/dist/webpass.js"></script>
+        <script>
+            (function () {
+                var btn = document.getElementById('bio-register');
+                var msg = document.getElementById('bio-msg');
+                var unsupported = document.getElementById('bio-unsupported');
+                if (typeof Webpass === 'undefined') return;
+                if (Webpass.isUnsupported && Webpass.isUnsupported()) {
+                    if (unsupported) unsupported.classList.remove('hidden');
+                    if (btn) btn.disabled = true;
+                    return;
+                }
+                function show(text, ok) {
+                    if (!msg) return;
+                    msg.textContent = text;
+                    msg.className = 'text-sm rounded-lg p-3 mb-3 ' + (ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700');
+                    msg.classList.remove('hidden');
+                }
+                if (btn) btn.addEventListener('click', async function () {
+                    btn.disabled = true;
+                    try {
+                        const { success } = await Webpass.attest('{{ route('webauthn.register.options') }}', '{{ route('webauthn.register') }}');
+                        if (success) { show('Biometric unlock enabled on this device.', true); setTimeout(function(){ location.reload(); }, 1200); }
+                        else { show('Could not enable biometrics. Please try again.', false); btn.disabled = false; }
+                    } catch (e) {
+                        show('Biometric setup was cancelled or failed.', false);
+                        btn.disabled = false;
+                    }
+                });
+            })();
+        </script>
+    @endif
 </x-client-layout>

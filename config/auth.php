@@ -63,7 +63,10 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // WebAuthn-aware provider: verifies passkeys, and still allows
+            // normal password login via the fallback.
+            'driver' => 'eloquent-webauthn',
+            'password_fallback' => true,
             'model' => env('AUTH_MODEL', User::class),
         ],
 

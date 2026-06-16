@@ -15,6 +15,7 @@ class SecurityController extends Controller
         return view('client.security', [
             'user' => $request->user(),
             'hasPin' => $request->user()->hasPin(),
+            'hasPasskey' => $request->user()->webAuthnCredentials()->exists(),
         ]);
     }
 
@@ -50,7 +51,10 @@ class SecurityController extends Controller
             return redirect()->route('client.dashboard');
         }
 
-        return view('client.lock', ['user' => $request->user()]);
+        return view('client.lock', [
+            'user' => $request->user(),
+            'hasPasskey' => $request->user()->webAuthnCredentials()->exists(),
+        ]);
     }
 
     public function unlock(Request $request)

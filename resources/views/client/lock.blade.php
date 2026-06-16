@@ -32,17 +32,47 @@
             </button>
         </form>
 
-        {{-- Biometric unlock mounts here when a passkey is registered (added in biometric build). --}}
-        <div id="biometric-unlock" class="mt-4 hidden">
-            <button type="button" id="biometric-btn" class="w-full bg-white/10 hover:bg-white/15 text-white font-medium py-3 rounded-xl">
-                <i class="fa-solid fa-fingerprint mr-1"></i> Unlock with biometrics
-            </button>
-        </div>
+        @if ($hasPasskey)
+            <div id="biometric-unlock" class="mt-4">
+                <button type="button" id="biometric-btn" class="w-full bg-white/10 hover:bg-white/15 text-white font-medium py-3 rounded-xl">
+                    <i class="fa-solid fa-fingerprint mr-1"></i> Unlock with biometrics
+                </button>
+                <p id="bio-error" class="hidden text-sm text-red-300 mt-2"></p>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('logout') }}" class="mt-8">@csrf
             <button class="text-sm text-gray-400 hover:text-white">Not you? Log out</button>
         </form>
     </div>
 </div>
+
+@if ($hasPasskey)
+    <script src="https://cdn.jsdelivr.net/npm/@laragear/webpass@2/dist/webpass.js"></script>
+    <script>
+        (function () {
+            var btn = document.getElementById('biometric-btn');
+            var err = document.getElementById('bio-error');
+            if (!btn || typeof Webpass === 'undefined') return;
+            if (Webpass.isUnsupported && Webpass.isUnsupported()) { btn.style.display = 'none'; return; }
+
+            async function unlock() {
+                btn.disabled = true;
+                if (err) err.classList.add('hidden');
+                try {
+                    const { success } = await Webpass.assert('{{ route('webauthn.unlock.options') }}', '{{ route('webauthn.unlock') }}');
+                    if (success) { window.location.href = '{{ route('client.dashboard') }}'; }
+                    else { throw new Error('failed'); }
+                } catch (e) {
+                    if (err) { err.textContent = 'Biometric unlock failed. Enter your PIN instead.'; err.classList.remove('hidden'); }
+                    btn.disabled = false;
+                }
+            }
+            btn.addEventListener('click', unlock);
+            // Offer biometrics automatically on load for a native-app feel.
+            window.addEventListener('load', function () { setTimeout(unlock, 400); });
+        })();
+    </script>
+@endif
 </body>
 </html>

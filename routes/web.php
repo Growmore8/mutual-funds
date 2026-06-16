@@ -41,6 +41,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/security/pin', [\App\Http\Controllers\SecurityController::class, 'setPin'])->name('security.pin.set');
     Route::delete('/security/pin', [\App\Http\Controllers\SecurityController::class, 'removePin'])->name('security.pin.remove');
 
+    // WebAuthn biometric (passkeys) — registration + app-unlock
+    Route::post('/webauthn/register/options', [\App\Http\Controllers\WebAuthnController::class, 'registerOptions'])->name('webauthn.register.options');
+    Route::post('/webauthn/register', [\App\Http\Controllers\WebAuthnController::class, 'register'])->name('webauthn.register');
+    Route::post('/webauthn/unlock/options', [\App\Http\Controllers\WebAuthnController::class, 'unlockOptions'])->name('webauthn.unlock.options');
+    Route::post('/webauthn/unlock', [\App\Http\Controllers\WebAuthnController::class, 'unlock'])->name('webauthn.unlock');
+    Route::delete('/webauthn', [\App\Http\Controllers\WebAuthnController::class, 'destroy'])->name('webauthn.destroy');
+
     // Client app — gated by the app-lock (PIN/biometric) when configured.
     Route::middleware('locked')->group(function () {
         // Client dashboard (only after OTP + KYC approval)
