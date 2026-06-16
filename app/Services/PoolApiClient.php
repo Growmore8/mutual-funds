@@ -72,12 +72,13 @@ class PoolApiClient
         $equity   = isset($d['equity']) ? (float) $d['equity'] : round($balance + $floating, 2);
 
         return [
-            'balance'  => $balance,
-            'equity'   => $equity,
-            'pnl'      => $daily,
-            'floating' => $floating,
-            'pnl_pct'  => $base > 0 ? round($daily / $base * 100, 4) : 0,
-            'raw'      => $d,
+            'balance'    => $balance,
+            'equity'     => $equity,
+            'pnl'        => $daily,
+            'cumulative' => round($cumulative, 2),   // total realized closed P&L
+            'floating'   => $floating,
+            'pnl_pct'    => $base > 0 ? round($daily / $base * 100, 4) : 0,
+            'raw'        => $d,
         ];
     }
 
@@ -92,12 +93,13 @@ class PoolApiClient
         $floating = round($opening * (mt_rand(-60, 180) / 100) / 100, 2);
 
         return [
-            'balance'  => $balance,
-            'equity'   => round($balance + $floating, 2),
-            'pnl'      => $pnl,
-            'floating' => $floating,
-            'pnl_pct'  => round($pct, 4),
-            'raw'      => ['simulated' => true, 'pct' => $pct],
+            'balance'    => $balance,
+            'equity'     => round($balance + $floating, 2),
+            'pnl'        => $pnl,
+            'cumulative' => round((float) $pool->distributed_pnl + $pnl, 2),   // grows so each sync distributes
+            'floating'   => $floating,
+            'pnl_pct'    => round($pct, 4),
+            'raw'        => ['simulated' => true, 'pct' => $pct],
         ];
     }
 }

@@ -22,6 +22,11 @@ class AccountType extends Model
         return $this->hasMany(User::class);
     }
 
+    public function poolAccount()
+    {
+        return $this->belongsTo(PoolAccount::class);
+    }
+
     /**
      * Pick the plan for a total invested amount.
      * Boundary goes to the lower tier (e.g. $250 -> Silver, $300 -> Gold).

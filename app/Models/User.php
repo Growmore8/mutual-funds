@@ -87,14 +87,40 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return round($this->totalProfit() - $paidOut, 2);
     }
 
-    /** Re-evaluate the plan from the current total deposit (upgrade or downgrade). */
+    /** Re-evaluate the plan from the current total deposit, and align the
+     *  Live ID (pool) to the plan's pool — moving the client's capital there. */
     public function recalcPlan(): void
     {
         $total = $this->totalDeposited();
         $plan = AccountType::forAmount($total);
+        if (! $plan) {
+            return;
+        }
 
-        if ($plan && (int) $this->account_type_id !== (int) $plan->id) {
-            $this->update(['account_type_id' => $plan->id]);
+        $planChanged = (int) $this->account_type_id !== (int) $plan->id;
+        $updates = [];
+
+        if ($planChanged) {
+            $updates['account_type_id'] = $plan->id;
+        }
+
+        // Auto-assign the plan's pool (Live ID) and move the client's capital there.
+        if ($plan->pool_account_id && (int) $this->pool_account_id !== (int) $plan->pool_account_id) {
+            $updates['pool_account_id'] = $plan->pool_account_id;
+        }
+
+        if (! $updates) {
+            return;
+        }
+
+        $this->update($updates);
+
+        if (isset($updates['pool_account_id'])) {
+            // Keep all the client's deposits in their current plan's pool (value_date preserved).
+            $this->deposits()->update(['pool_account_id' => $plan->pool_account_id]);
+        }
+
+        if ($planChanged) {
             AppNotification::notify(
                 $this->id, 'info', 'Plan updated to ' . $plan->name,
                 'Your plan is now ' . $plan->name . ' based on a total deposit of $' . number_format($total, 2) . '.',

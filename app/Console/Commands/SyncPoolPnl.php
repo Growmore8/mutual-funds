@@ -25,30 +25,34 @@ class SyncPoolPnl extends Command
         foreach (PoolAccount::where('is_active', true)->get() as $pool) {
             try {
                 $data = $api->snapshot($pool);
-                $opening = (float) $pool->balance;
+                $floating = (float) ($data['floating'] ?? 0);
+                $cumulative = (float) ($data['cumulative'] ?? 0);
 
-                $snapshot = PoolSnapshot::updateOrCreate(
+                // Newly-realized closed P&L since we last distributed.
+                $delta = round($cumulative - (float) $pool->distributed_pnl, 2);
+
+                $snapshot = PoolSnapshot::firstOrCreate(
                     ['pool_account_id' => $pool->id, 'snapshot_date' => $date],
-                    [
-                        'opening_balance' => $opening,
-                        'closing_balance' => $data['balance'],
-                        'pnl' => $data['pnl'],
-                        'floating_pnl' => $data['floating'] ?? 0,
-                        'pnl_pct' => $data['pnl_pct'],
-                        'raw' => $data['raw'],
-                    ]
+                    ['opening_balance' => (float) $pool->balance, 'closing_balance' => $data['balance'], 'pnl' => 0, 'floating_pnl' => $floating, 'pnl_pct' => 0, 'raw' => $data['raw']]
                 );
 
                 $pool->update([
                     'balance' => $data['balance'],
                     'equity' => $data['equity'],
-                    'floating_pnl' => $data['floating'] ?? 0,
+                    'floating_pnl' => $floating,
                     'last_synced_at' => now(),
                 ]);
+                $snapshot->update(['floating_pnl' => $floating, 'closing_balance' => $data['balance'], 'raw' => $data['raw']]);
 
-                // Only realized (closed) P&L is distributed; floating is informational.
-                $credited = $distributor->distribute($snapshot);
-                $this->line("  {$pool->account_ref}: closed {$data['pnl']}, floating " . ($data['floating'] ?? 0) . " → distributed to {$credited} client(s)");
+                $credited = 0;
+                if (abs($delta) >= 0.005) {
+                    // Distribute only the new realized increment, then mark it booked.
+                    $credited = $distributor->distributeDelta($snapshot, $delta);
+                    $snapshot->increment('pnl', $delta);
+                    $pool->update(['distributed_pnl' => $cumulative]);
+                }
+
+                $this->line("  {$pool->account_ref}: +{$delta} realized, floating {$floating} → distributed to {$credited} client(s)");
             } catch (\Throwable $e) {
                 $failed++;
                 $msg = $this->cubexError($e);

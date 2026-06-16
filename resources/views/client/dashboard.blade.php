@@ -210,13 +210,14 @@
 
     <script>
         (function () {
-            const POLL = 3000; // ms
+            const POLL = 6000; // ms
             const fmt = (n, signed) => (signed ? (n < 0 ? '-' : '+') : '') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             function animate(id, to, signed) {
                 const el = document.getElementById(id); if (el == null || to == null) return;
                 let from = parseFloat(el.dataset.val); if (isNaN(from)) from = to;
                 el.dataset.val = to;
-                const dur = POLL - 200, t0 = performance.now();
+                if (Math.abs(to - from) < 0.005) { el.textContent = fmt(to, signed); return; }
+                const dur = 800, t0 = performance.now();
                 function step(t) {
                     const p = Math.min(1, (t - t0) / dur);
                     const v = from + (to - from) * p;

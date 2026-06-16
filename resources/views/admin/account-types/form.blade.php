@@ -20,6 +20,14 @@
                 <div><label class="block text-sm font-medium text-gray-700">Max deposit ($, optional)</label><input type="number" step="0.01" name="max_deposit" value="{{ $f('max_deposit') }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                 <div><label class="block text-sm font-medium text-gray-700">Pool amount ($)</label><input type="number" step="0.01" name="pool_amount" value="{{ $f('pool_amount',0) }}" class="mt-1 w-full border-gray-300 rounded-md" required><p class="text-xs text-gray-400 mt-1">Profit share = invested ÷ pool amount.</p></div>
                 <div><label class="block text-sm font-medium text-gray-700">Daily profit (%)</label><input type="number" step="0.01" name="daily_return_pct" value="{{ $f('daily_return_pct',0) }}" class="mt-1 w-full border-gray-300 rounded-md" required><p class="text-xs text-gray-400 mt-1">“Up to $/day” = pool × this %.</p></div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Live pool account (CubeX)</label>
+                    <select name="pool_account_id" class="mt-1 w-full border-gray-300 rounded-md">
+                        <option value="">— none —</option>
+                        @foreach ($pools as $p)<option value="{{ $p->id }}" @selected($f('pool_account_id')==$p->id)>{{ $p->account_ref }} {{ $p->name ? '· '.$p->name : '' }}</option>@endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Clients on this plan are auto-assigned this Live ID.</p>
+                </div>
                 <div><label class="block text-sm font-medium text-gray-700">Profit share (%)</label><input type="number" step="0.01" name="profit_share_pct" value="{{ $f('profit_share_pct',100) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
                 <div><label class="block text-sm font-medium text-gray-700">Management fee (%)</label><input type="number" step="0.01" name="management_fee_pct" value="{{ $f('management_fee_pct',0) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
                 <div><label class="block text-sm font-medium text-gray-700">Lock-in (months)</label><input type="number" name="lock_in_months" value="{{ $f('lock_in_months',0) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>

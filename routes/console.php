@@ -8,5 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Pull pool PnL and distribute to clients every day (after market close).
-Schedule::command('pool:sync')->dailyAt('23:55')->withoutOverlapping();
+// Auto: pull pool PnL from CubeX every minute and distribute newly-realized
+// (closed) profit to clients automatically — no manual sync needed.
+Schedule::command('pool:sync')->everyMinute()->withoutOverlapping();

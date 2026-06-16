@@ -18,7 +18,10 @@ class AccountTypeController extends Controller
 
     public function create()
     {
-        return view('admin.account-types.form', ['type' => new AccountType(['is_active' => true, 'profit_share_pct' => 100])]);
+        return view('admin.account-types.form', [
+            'type' => new AccountType(['is_active' => true, 'profit_share_pct' => 100]),
+            'pools' => \App\Models\PoolAccount::orderBy('account_ref')->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -33,7 +36,10 @@ class AccountTypeController extends Controller
 
     public function edit(AccountType $account_type)
     {
-        return view('admin.account-types.form', ['type' => $account_type]);
+        return view('admin.account-types.form', [
+            'type' => $account_type,
+            'pools' => \App\Models\PoolAccount::orderBy('account_ref')->get(),
+        ]);
     }
 
     public function update(Request $request, AccountType $account_type)
@@ -60,6 +66,7 @@ class AccountTypeController extends Controller
             'min_deposit' => ['required', 'numeric', 'min:0'],
             'max_deposit' => ['nullable', 'numeric', 'min:0'],
             'pool_amount' => ['required', 'numeric', 'min:0'],
+            'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
             'daily_return_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'management_fee_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'profit_share_pct' => ['required', 'numeric', 'min:0', 'max:100'],

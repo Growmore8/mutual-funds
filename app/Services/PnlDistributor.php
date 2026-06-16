@@ -99,4 +99,76 @@ class PnlDistributor
 
         return $count;
     }
+
+    /**
+     * Distribute a specific newly-realized P&L increment to the pool's clients.
+     * Used by the automatic sync so closed trades pay out intraday, incrementally.
+     */
+    public function distributeDelta(PoolSnapshot $snapshot, float $delta): int
+    {
+        if (abs($delta) < 0.005) {
+            return 0;
+        }
+
+        $date = $snapshot->snapshot_date;
+
+        $rows = Deposit::query()
+            ->join('users', 'users.id', '=', 'deposits.user_id')
+            ->leftJoin('account_types', 'account_types.id', '=', 'users.account_type_id')
+            ->where('deposits.pool_account_id', $snapshot->pool_account_id)
+            ->where('deposits.status', 'approved')
+            ->whereDate('deposits.value_date', '<=', $date)
+            ->where('users.status', 'active')
+            ->groupBy('deposits.user_id', 'account_types.pool_amount')
+            ->selectRaw('deposits.user_id as user_id, SUM(deposits.amount) as capital, account_types.pool_amount as pool_amount')
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return 0;
+        }
+
+        $count = 0;
+
+        DB::transaction(function () use ($rows, $snapshot, $date, $delta, &$count) {
+            foreach ($rows as $row) {
+                $capital = (float) $row->capital;
+                $poolAmount = (float) $row->pool_amount;
+                $weight = $poolAmount > 0 ? min(1.0, $capital / $poolAmount) : 0.0;
+                $net = round($delta * $weight, 2);
+                if (abs($net) < 0.005) {
+                    continue;
+                }
+
+                $alloc = PnlAllocation::firstOrCreate(
+                    ['pool_snapshot_id' => $snapshot->id, 'user_id' => $row->user_id],
+                    ['allocation_date' => $date, 'eligible_capital' => $capital, 'weight' => $weight, 'gross_pnl' => 0, 'fee' => 0, 'net_pnl' => 0],
+                );
+                $alloc->increment('net_pnl', $net);
+                $alloc->increment('gross_pnl', $net);
+
+                $last = Transaction::where('user_id', $row->user_id)->latest('id')->first();
+                $balanceAfter = round((float) ($last->balance_after ?? 0) + $net, 2);
+
+                Transaction::create([
+                    'user_id' => $row->user_id,
+                    'type' => 'profit',
+                    'amount' => $net,
+                    'currency' => 'USD',
+                    'balance_after' => $balanceAfter,
+                    'status' => 'completed',
+                    'description' => 'Profit · ' . $date->format('d M Y'),
+                ]);
+
+                \App\Models\AppNotification::notify(
+                    $row->user_id, 'profit', 'Profit added',
+                    ($net < 0 ? '-' : '+') . '$' . number_format(abs($net), 2),
+                    route('client.profit'),
+                );
+
+                $count++;
+            }
+        });
+
+        return $count;
+    }
 }

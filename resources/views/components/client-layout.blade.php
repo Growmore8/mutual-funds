@@ -56,33 +56,10 @@
         <header class="bg-white border-b sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0">
-                    <img src="/logo.png" alt="" class="w-8 h-8 shrink-0 lg:hidden" onerror="this.style.display='none'">
-                    <span class="font-bold text-[#0a1730] truncate lg:hidden">Growth<span class="text-emerald-500">Capital</span></span>
-                    <h1 class="hidden lg:block text-lg font-semibold text-gray-900">{{ $title }}</h1>
+                    <img src="/logo.png" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
+                    <span class="font-bold text-[#0a1730] truncate">Growth<span class="text-emerald-500">Capital</span></span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <x-notification-bell />
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open=!open" class="flex items-center gap-1.5">
-                            <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
-                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 hidden sm:inline"></i>
-                        </button>
-                        <div x-show="open" @click.outside="open=false" x-transition style="display:none"
-                             class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
-                            <div class="px-4 py-2 border-b border-gray-100"><p class="font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p></div>
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-user w-5 text-gray-400"></i> Profile</a>
-                            <a href="{{ route('security.index') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-shield-halved w-5 text-gray-400"></i> Security</a>
-                            <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
-                                    class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
-                                <i class="fa-solid fa-moon w-5 text-gray-400 dark:hidden"></i><i class="fa-solid fa-sun w-5 text-gray-400 hidden dark:inline"></i>
-                                <span class="dark:hidden">Dark mode</span><span class="hidden dark:inline">Light mode</span>
-                            </button>
-                            <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">@csrf
-                                <button class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600"><i class="fa-solid fa-right-from-bracket w-5"></i> Log out</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <x-notification-bell />
             </div>
         </header>
 
