@@ -46,6 +46,13 @@ class WithdrawalController extends Controller
             'status' => 'pending',
         ]);
 
+        \App\Models\AppNotification::pushAdmins(
+            'withdrawal',
+            'New withdrawal request',
+            $user->name . ' · $' . number_format((float) $data['amount'], 2) . ' · ' . $data['method'],
+            route('admin.withdrawals.index'),
+        );
+
         return redirect()->route('withdraw.create')
             ->with('status', 'Withdrawal request submitted. Our team will review it shortly.');
     }

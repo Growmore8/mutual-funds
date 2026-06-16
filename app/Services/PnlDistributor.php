@@ -81,6 +81,16 @@ class PnlDistributor
                     'description' => 'Daily profit · ' . $date->format('d M Y'),
                 ]);
 
+                if (abs($net) > 0) {
+                    \App\Models\AppNotification::push(
+                        $row->user_id,
+                        'profit',
+                        'Daily profit added',
+                        ($net < 0 ? '-' : '+') . '$' . number_format(abs($net), 2) . ' · ' . $date->format('d M Y'),
+                        route('client.profit'),
+                    );
+                }
+
                 $count++;
             }
 

@@ -50,8 +50,10 @@ class PaymentMethodController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'type' => ['required', 'in:bank,crypto,card,ewallet'],
+            'type' => ['required', 'in:bank,crypto,upi,card,ewallet'],
+            'network' => ['nullable', 'string', 'max:40'],
             'currency' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
             'sort_order' => ['required', 'integer', 'min:0'],
         ]) + ['is_active' => (bool) $request->boolean('is_active')];

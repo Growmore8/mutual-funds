@@ -12,9 +12,40 @@
         $max = max(1.0, (float) ($pts->max('net_pnl') ?: 0));
     @endphp
 
-    <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Welcome, {{ $user->name }}</h2>
-        <p class="text-gray-500 text-sm">Here's your pool account overview.</p>
+    <style>
+        .atm-card{background:linear-gradient(135deg,#0a1730 0%,#0f3d2e 55%,#0e7a52 100%)}
+        .atm-card .shine{position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-20deg);animation:atmshine 4.5s ease-in-out infinite}
+        @keyframes atmshine{0%{left:-60%}55%,100%{left:130%}}
+        .atm-card{transition:transform .25s ease}
+        .atm-card:hover{transform:translateY(-3px) scale(1.01)}
+    </style>
+
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Welcome, {{ $user->name }}</h2>
+            <p class="text-gray-500 text-sm">Here's your pool account overview.</p>
+        </div>
+    </div>
+
+    {{-- Animated balance card --}}
+    <div class="mb-6 max-w-md">
+        <div class="atm-card relative overflow-hidden rounded-2xl p-6 text-white shadow-xl">
+            <div class="shine"></div>
+            <div class="relative flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <img src="/logo.png" alt="" class="w-7 h-7" onerror="this.style.display='none'">
+                    <span class="font-bold text-lg">Growth<span class="text-emerald-300">Capital</span></span>
+                </div>
+                <i class="fa-solid fa-wifi rotate-90 opacity-70"></i>
+            </div>
+            <div class="relative w-12 h-9 rounded-md mt-5" style="background:linear-gradient(135deg,#f6d365,#d4af37)"></div>
+            <p class="relative text-xs text-white/60 mt-4">Account Balance</p>
+            <p class="relative text-3xl font-bold tracking-wide">{{ $money($balanceAfter) }}</p>
+            <div class="relative flex items-center justify-between mt-5 text-sm">
+                <span class="tracking-[0.25em] text-white/80">{{ $liveRef ? '•••• ' . substr($liveRef, -4) : '•••• ••••' }}</span>
+                <span class="uppercase tracking-wide text-white/90">{{ $user->name }}</span>
+            </div>
+        </div>
     </div>
 
     {{-- Top stat cards --}}

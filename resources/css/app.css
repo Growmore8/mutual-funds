@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] { display: none !important; }
+
 /*
  | Dark theme
  | App-wide dark mode driven by a `.dark` class on <html>. Rather than tagging

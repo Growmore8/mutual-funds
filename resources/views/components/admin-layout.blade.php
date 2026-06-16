@@ -52,6 +52,7 @@
             <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                 <h1 class="text-lg font-semibold text-gray-900">{{ $title }}</h1>
                 <div class="flex items-center gap-3">
+                    <x-notification-bell :sound="true" />
                     <button type="button" aria-label="Toggle theme"
                             onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                             class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">

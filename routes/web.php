@@ -57,6 +57,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/kyc', [KycController::class, 'show'])->name('kyc.show');
     Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
 
+    // Notifications (bell) — admin + client share these
+    Route::get('/notifications/feed', [\App\Http\Controllers\NotificationController::class, 'feed'])->name('notifications.feed');
+    Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
+
     // App-lock screen + unlock (must stay OUTSIDE the 'locked' group)
     Route::get('/lock', [\App\Http\Controllers\SecurityController::class, 'showLock'])->name('lock.show');
     Route::post('/lock', [\App\Http\Controllers\SecurityController::class, 'unlock'])->name('lock.unlock');
@@ -83,6 +87,10 @@ Route::middleware('auth')->group(function () {
 
         // My account (read-only; account type is managed by admin)
         Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');
+
+        // Deposit (client submits with slip -> admin approves)
+        Route::get('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'create'])->name('client.deposit.create');
+        Route::post('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'store'])->name('client.deposit.store');
 
         // Withdrawals (profit only; request -> admin approval)
         Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');

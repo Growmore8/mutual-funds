@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} · GrowthCapital Funds</title>
     <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
     {{-- PWA --}}
@@ -11,15 +12,22 @@
     <meta name="theme-color" content="#0a1730">
     <link rel="apple-touch-icon" href="/logo.png">
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GrowthCapital">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .nav-link{transition:all .15s ease}
+        .nav-link:hover{transform:translateX(2px)}
+        .tab{transition:transform .15s ease, color .15s ease}
+        .tab.is-active{color:#059669}
+        .tab.is-active .tab-ico{transform:translateY(-2px) scale(1.08)}
+        .safe-b{padding-bottom:env(safe-area-inset-bottom)}
+    </style>
 </head>
-<body class="h-full bg-gray-50 text-gray-800">
+<body class="h-full bg-gray-50 text-gray-800" x-data="{ sheet: false }">
 <div class="min-h-full lg:flex">
 
     {{-- Desktop sidebar --}}
@@ -29,41 +37,45 @@
             <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-            <a href="{{ route('client.dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-gauge w-5"></i> Dashboard</a>
-            <a href="{{ route('client.profit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.profit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-chart-line w-5"></i> Profit History</a>
-            <a href="{{ route('client.transactions') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('client.transactions') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-receipt w-5"></i> Transactions</a>
-            <a href="{{ route('withdraw.create') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('withdraw.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw</a>
-            <a href="{{ route('accounts.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('accounts.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-layer-group w-5"></i> My Accounts</a>
-
+            @php $link = fn ($active) => 'nav-link flex items-center gap-3 px-3 py-2 rounded-lg ' . ($active ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10'); @endphp
+            <a href="{{ route('client.dashboard') }}" class="{{ $link(request()->routeIs('client.dashboard')) }}"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a>
+            <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
+            <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
+            <a href="{{ route('client.deposit.create') }}" class="{{ $link(request()->routeIs('client.deposit.*')) }}"><i class="fa-solid fa-arrow-down w-5 text-center"></i> Deposit</a>
+            <a href="{{ route('withdraw.create') }}" class="{{ $link(request()->routeIs('withdraw.*')) }}"><i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Withdraw</a>
+            <a href="{{ route('accounts.index') }}" class="{{ $link(request()->routeIs('accounts.*')) }}"><i class="fa-solid fa-layer-group w-5 text-center"></i> My Account</a>
             <div class="pt-2 mt-2 border-t border-white/10"></div>
-            <a href="{{ route('support.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Support</span></a>
+            <a href="{{ route('support.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Support</span></a>
         </nav>
     </aside>
 
     {{-- Main --}}
-    <div class="flex-1 lg:pl-64 pb-20 lg:pb-0">
-        {{-- Top bar --}}
-        <header class="bg-white border-b sticky top-0 z-10">
-            <div class="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-                <div class="lg:hidden flex items-center gap-2 font-bold text-[#0a1730]"><img src="/logo.png" alt="" class="w-7 h-7" onerror="this.style.display='none'">Growth<span class="text-emerald-500">Capital</span></div>
-                <h1 class="hidden lg:block text-lg font-semibold text-gray-900">{{ $title }}</h1>
-                <div class="flex items-center gap-2">
-                    <button type="button" aria-label="Toggle theme"
-                            onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
-                            class="w-9 h-9 rounded-full grid place-items-center text-gray-500 hover:bg-gray-100">
-                        <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i>
-                    </button>
+    <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
+        {{-- Top bar: logo+name left, notifications + profile right --}}
+        <header class="bg-white border-b sticky top-0 z-30">
+            <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <img src="/logo.png" alt="" class="w-8 h-8 shrink-0 lg:hidden" onerror="this.style.display='none'">
+                    <span class="font-bold text-[#0a1730] truncate lg:hidden">Growth<span class="text-emerald-500">Capital</span></span>
+                    <h1 class="hidden lg:block text-lg font-semibold text-gray-900">{{ $title }}</h1>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <x-notification-bell />
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open=!open" class="flex items-center gap-2">
-                            <span class="text-sm text-gray-500 hidden sm:inline">{{ auth()->user()->name }}</span>
+                        <button @click="open=!open" class="flex items-center gap-1.5">
                             <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-sm">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>
-                            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 hidden sm:inline"></i>
                         </button>
                         <div x-show="open" @click.outside="open=false" x-transition style="display:none"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
+                             class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm z-50">
                             <div class="px-4 py-2 border-b border-gray-100"><p class="font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p></div>
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-user w-5 text-gray-400"></i> Profile</a>
                             <a href="{{ route('security.index') }}" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"><i class="fa-solid fa-shield-halved w-5 text-gray-400"></i> Security</a>
+                            <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
+                                    class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50">
+                                <i class="fa-solid fa-moon w-5 text-gray-400 dark:hidden"></i><i class="fa-solid fa-sun w-5 text-gray-400 hidden dark:inline"></i>
+                                <span class="dark:hidden">Dark mode</span><span class="hidden dark:inline">Light mode</span>
+                            </button>
                             <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">@csrf
                                 <button class="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600"><i class="fa-solid fa-right-from-bracket w-5"></i> Log out</button>
                             </form>
@@ -81,27 +93,43 @@
         </main>
     </div>
 
-    {{-- Mobile app-style bottom tab bar --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t flex justify-around py-2 z-20">
-        @php $tab = 'flex flex-col items-center text-[11px] gap-0.5 px-3 py-1'; @endphp
-        <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
-        <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions','client.profit') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>History</a>
-        <a href="{{ route('withdraw.create') }}" class="{{ $tab }} {{ request()->routeIs('withdraw.*') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Withdraw</a>
-        <a href="{{ route('accounts.index') }}" class="{{ $tab }} {{ request()->routeIs('accounts.*') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/></svg>Accounts</a>
-        <a href="{{ route('support.index') }}" class="{{ $tab }} {{ request()->routeIs('support.*') ? 'text-emerald-600' : 'text-gray-400' }}">
-            <i class="fa-solid fa-headset text-[22px] leading-6"></i>Support</a>
+    {{-- Deposit/Withdraw action sheet (mobile +) --}}
+    <div x-show="sheet" x-transition.opacity @click="sheet=false" style="display:none" class="lg:hidden fixed inset-0 bg-black/40 z-40"></div>
+    <div x-show="sheet" x-transition x-cloak class="lg:hidden fixed inset-x-0 bottom-20 z-50 px-6 safe-b">
+        <div class="bg-white rounded-2xl shadow-xl p-3 max-w-sm mx-auto grid grid-cols-2 gap-3">
+            <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-emerald-50 text-emerald-700">
+                <i class="fa-solid fa-arrow-down text-xl"></i><span class="text-sm font-medium">Deposit</span>
+            </a>
+            <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700">
+                <i class="fa-solid fa-money-bill-transfer text-xl"></i><span class="text-sm font-medium">Withdraw</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- Mobile bottom tab bar --}}
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t z-40 safe-b">
+        <div class="grid grid-cols-5 items-end px-1">
+            @php $tab = 'tab flex flex-col items-center gap-0.5 text-[11px] py-2 text-gray-400'; @endphp
+            <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
+                <i class="fa-solid fa-house tab-ico text-lg"></i>Home</a>
+            <a href="{{ route('client.profit') }}" class="{{ $tab }} {{ request()->routeIs('client.profit') ? 'is-active' : '' }}">
+                <i class="fa-solid fa-chart-line tab-ico text-lg"></i>History</a>
+            <button type="button" @click="sheet=!sheet" class="flex flex-col items-center -mt-5">
+                <span class="w-14 h-14 rounded-full bg-emerald-600 text-white grid place-items-center shadow-lg shadow-emerald-600/30 ring-4 ring-gray-50 transition active:scale-95">
+                    <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                </span>
+            </button>
+            <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions') ? 'is-active' : '' }}">
+                <i class="fa-solid fa-receipt tab-ico text-lg"></i>Transactions</a>
+            <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'is-active' : '' }}">
+                <i class="fa-solid fa-user tab-ico text-lg"></i>Profile</a>
+        </div>
     </nav>
 </div>
 
 <script>
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-            navigator.serviceWorker.register('/sw.js').catch(function () {});
-        });
+        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
     }
 </script>
 </body>

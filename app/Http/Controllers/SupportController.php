@@ -47,6 +47,8 @@ class SupportController extends Controller
             'body' => $data['body'],
         ]);
 
+        \App\Models\AppNotification::pushAdmins('message', 'New support ticket', $request->user()->name . ': ' . $ticket->subject, route('admin.messages.show', $ticket));
+
         return redirect()->route('support.show', $ticket)->with('status', 'Ticket created. Our team will reply shortly.');
     }
 
@@ -76,6 +78,8 @@ class SupportController extends Controller
         ]);
 
         $ticket->update(['status' => 'open', 'last_reply_at' => now()]);
+
+        \App\Models\AppNotification::pushAdmins('message', 'New reply on ticket', $request->user()->name . ': ' . $ticket->subject, route('admin.messages.show', $ticket));
 
         return back()->with('status', 'Reply sent.');
     }

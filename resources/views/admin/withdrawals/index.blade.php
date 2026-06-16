@@ -40,7 +40,8 @@
                                     <form method="POST" action="{{ route('admin.withdrawals.approve', $w) }}" onsubmit="return confirm('Approve and debit {{ $money($w->amount) }}?')">@csrf
                                         <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md">Approve</button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.withdrawals.reject', $w) }}" onsubmit="return confirm('Reject this request?')">@csrf
+                                    <form method="POST" action="{{ route('admin.withdrawals.reject', $w) }}" onsubmit="this.admin_note.value=prompt('Reason for rejecting (optional):')||''">@csrf
+                                        <input type="hidden" name="admin_note">
                                         <button class="px-3 py-1.5 bg-red-600 text-white rounded-md">Reject</button>
                                     </form>
                                 </div>

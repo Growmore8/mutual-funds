@@ -14,16 +14,18 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Type</label>
                     <select name="type" class="mt-1 w-full border-gray-300 rounded-md">
-                        @foreach (['bank','crypto','card','ewallet'] as $ty)
-                            <option value="{{ $ty }}" @selected($f('type','bank')===$ty)>{{ ucfirst($ty) }}</option>
+                        @foreach (['crypto'=>'Crypto','bank'=>'Bank','upi'=>'UPI','card'=>'Card','ewallet'=>'E-wallet'] as $val=>$lbl)
+                            <option value="{{ $val }}" @selected($f('type','crypto')===$val)>{{ $lbl }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div><label class="block text-sm font-medium text-gray-700">Currency</label><input name="currency" value="{{ $f('currency') }}" class="mt-1 w-full border-gray-300 rounded-md" placeholder="USD / USDT"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Network (crypto)</label><input name="network" value="{{ $f('network') }}" class="mt-1 w-full border-gray-300 rounded-md" placeholder="BEP20 / ERC20 / TRC20"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Currency</label><input name="currency" value="{{ $f('currency') }}" class="mt-1 w-full border-gray-300 rounded-md" placeholder="USDT / USD / INR"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Wallet / account / UPI ID</label><input name="address" value="{{ $f('address') }}" class="mt-1 w-full border-gray-300 rounded-md" placeholder="Address shown to clients"></div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Instructions / account details</label>
-                <textarea name="instructions" rows="4" class="mt-1 w-full border-gray-300 rounded-md">{{ $f('instructions') }}</textarea>
+                <label class="block text-sm font-medium text-gray-700">Instructions (optional)</label>
+                <textarea name="instructions" rows="3" class="mt-1 w-full border-gray-300 rounded-md">{{ $f('instructions') }}</textarea>
             </div>
             <div><label class="block text-sm font-medium text-gray-700">Sort order</label><input type="number" name="sort_order" value="{{ $f('sort_order',0) }}" class="mt-1 w-full border-gray-300 rounded-md" required></div>
             <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked($f('is_active',true)) class="rounded"> Active</label>

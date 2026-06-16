@@ -61,6 +61,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Deposits (capital into pools)
     Route::get('/deposits', [DepositController::class, 'index'])->name('deposits.index');
     Route::post('/deposits', [DepositController::class, 'store'])->name('deposits.store');
+    Route::get('/deposits/{deposit}/slip', [DepositController::class, 'slip'])->name('deposits.slip');
     Route::post('/deposits/{deposit}/approve', [DepositController::class, 'approve'])->name('deposits.approve');
     Route::post('/deposits/{deposit}/reject', [DepositController::class, 'reject'])->name('deposits.reject');
 

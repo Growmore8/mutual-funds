@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
@@ -54,6 +55,13 @@ class DepositController extends Controller
         return back()->with('status', 'Deposit recorded.');
     }
 
+    public function slip(Deposit $deposit)
+    {
+        abort_if(! $deposit->proof_path || ! Storage::disk('local')->exists($deposit->proof_path), 404);
+
+        return Storage::disk('local')->response($deposit->proof_path);
+    }
+
     public function approve(Deposit $deposit)
     {
         if ($deposit->status === 'approved') {
@@ -68,12 +76,14 @@ class DepositController extends Controller
 
         $this->creditCapital($deposit);
 
+        $amt = '$' . number_format((float) $deposit->amount, 2);
+        \App\Models\AppNotification::push($deposit->user_id, 'deposit', 'Deposit approved', $amt . ' credited to your account.', route('client.dashboard'));
         Notifier::send(
             $deposit->user,
             'Your deposit has been approved',
             'Deposit approved',
             [
-                'Your deposit of $' . number_format((float) $deposit->amount, 2) . ' has been approved and credited to your account.',
+                'Your deposit of ' . $amt . ' has been approved and credited to your account.',
                 'Your capital is now active in the pool and will start earning daily profit.',
             ],
             route('client.dashboard'),
@@ -83,9 +93,22 @@ class DepositController extends Controller
         return back()->with('status', 'Deposit approved and capital credited.');
     }
 
-    public function reject(Deposit $deposit)
+    public function reject(Request $request, Deposit $deposit)
     {
-        $deposit->update(['status' => 'rejected']);
+        $reason = $request->input('admin_note');
+        $deposit->update(['status' => 'rejected', 'admin_note' => $reason]);
+
+        $amt = '$' . number_format((float) $deposit->amount, 2);
+        \App\Models\AppNotification::push($deposit->user_id, 'deposit', 'Deposit not approved', $amt . ($reason ? ' — ' . $reason : ''), route('client.deposit.create'));
+        Notifier::send(
+            $deposit->user,
+            'Update on your deposit',
+            'Deposit not approved',
+            [
+                'Your deposit of ' . $amt . ' was not approved.',
+                $reason ? 'Reason: ' . $reason : 'Please re-submit with a valid slip, or contact support.',
+            ],
+        );
 
         return back()->with('status', 'Deposit rejected.');
     }
