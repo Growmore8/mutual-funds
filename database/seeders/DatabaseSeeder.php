@@ -29,9 +29,9 @@ class DatabaseSeeder extends Seeder
 
         // Mutual-fund plans (manageable from the admin dashboard)
         $types = [
-            ['name' => 'Silver Plan',   'slug' => 'silver',   'min_deposit' => 50,  'max_deposit' => 250,  'pool_amount' => 10000, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 1, 'description' => 'Up to $500/day · ~5% daily return',   'features' => ['$10,000 managed pool', 'Up to $500/day profit', '~5% daily return', 'Funds stay client-owned']],
-            ['name' => 'Gold Plan',     'slug' => 'gold',     'min_deposit' => 250, 'max_deposit' => 500,  'pool_amount' => 25000, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 2, 'description' => 'Up to $1,500/day · ~6% daily return', 'features' => ['$25,000 managed pool', 'Up to $1,500/day profit', '~6% daily return', 'Funds stay client-owned']],
-            ['name' => 'Platinum Plan', 'slug' => 'platinum', 'min_deposit' => 500, 'max_deposit' => 2500, 'pool_amount' => 50000, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 3, 'description' => 'Up to $4,000/day · ~8% daily return', 'features' => ['$50,000 managed pool', 'Up to $4,000/day profit', '~8% daily return', 'Funds stay client-owned']],
+            ['name' => 'Silver',   'slug' => 'silver',   'min_deposit' => 50,  'max_deposit' => 250,  'pool_amount' => 10000, 'daily_return_pct' => 5, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 1, 'description' => 'Up to $500/day · 5% daily profit',   'features' => ['Funds stay client-owned']],
+            ['name' => 'Gold',     'slug' => 'gold',     'min_deposit' => 250, 'max_deposit' => 500,  'pool_amount' => 25000, 'daily_return_pct' => 6, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 2, 'description' => 'Up to $1,500/day · 6% daily profit', 'features' => ['Funds stay client-owned']],
+            ['name' => 'Platinum', 'slug' => 'platinum', 'min_deposit' => 500, 'max_deposit' => 2500, 'pool_amount' => 50000, 'daily_return_pct' => 8, 'profit_share_pct' => 100, 'management_fee_pct' => 0, 'lock_in_months' => 1, 'sort_order' => 3, 'description' => 'Up to $4,000/day · 8% daily profit', 'features' => ['Funds stay client-owned']],
         ];
         foreach ($types as $t) {
             AccountType::updateOrCreate(['slug' => $t['slug']], $t + ['is_active' => true]);

@@ -19,13 +19,15 @@ Route::get('/api/account-types', function () {
     $types = \Illuminate\Support\Facades\Cache::remember('public.account-types', 300, function () {
         return \App\Models\AccountType::where('is_active', true)
             ->orderBy('sort_order')
-            ->get(['name', 'slug', 'min_deposit', 'max_deposit', 'pool_amount', 'profit_share_pct', 'lock_in_months', 'description', 'features'])
+            ->get(['name', 'slug', 'min_deposit', 'max_deposit', 'pool_amount', 'daily_return_pct', 'profit_share_pct', 'lock_in_months', 'description', 'features'])
             ->map(fn ($t) => [
                 'name' => $t->name,
                 'slug' => $t->slug,
                 'min_deposit' => (float) $t->min_deposit,
                 'max_deposit' => $t->max_deposit !== null ? (float) $t->max_deposit : null,
                 'pool_amount' => (float) $t->pool_amount,
+                'daily_return_pct' => (float) $t->daily_return_pct,
+                'daily_profit_cap' => round((float) $t->pool_amount * (float) $t->daily_return_pct / 100, 2),
                 'profit_share_pct' => (float) $t->profit_share_pct,
                 'lock_in_months' => (int) $t->lock_in_months,
                 'description' => $t->description,
