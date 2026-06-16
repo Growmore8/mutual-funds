@@ -66,7 +66,6 @@
             <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
             <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
             <a href="{{ route('accounts.index') }}" class="{{ $link(request()->routeIs('accounts.*')) }}"><i class="fa-solid fa-layer-group w-5 text-center"></i> My Account</a>
-            <a href="{{ route('support.index') }}" class="{{ $link(request()->routeIs('support.*')) }}"><i class="fa-solid fa-headset w-5 text-center"></i> Support</a>
 
             {!! $head !!}Account</p>
             <a href="{{ route('security.index') }}" class="{{ $link(request()->routeIs('security.*')) }}"><i class="fa-solid fa-shield-halved w-5 text-center"></i> Security</a>
@@ -82,14 +81,14 @@
                 <p class="text-xs text-gray-400 mt-1">Our support team is here to help you.</p>
                 <a href="{{ route('support.index') }}" class="mt-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"><i class="fa-solid fa-headset"></i> Contact Support</a>
             </div>
-            <div class="text-[11px] text-gray-500 mt-3 px-1">
-                <p class="font-semibold text-gray-300">GrowthCapital Ltd.</p>
-                <p>© {{ date('Y') }} All rights reserved.</p>
-            </div>
         </div>
-        <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
+        <form method="POST" action="{{ route('logout') }}" class="px-3 pt-3 border-t border-white/10">@csrf
             <button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-red-300"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Log out</button>
         </form>
+        <div class="text-[11px] text-gray-500 px-4 pb-4 pt-1">
+            <p class="font-semibold text-gray-300">GrowthCapital Ltd.</p>
+            <p>© {{ date('Y') }} All rights reserved.</p>
+        </div>
     </aside>
 
     {{-- Main --}}

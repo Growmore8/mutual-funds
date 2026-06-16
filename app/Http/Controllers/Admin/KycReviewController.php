@@ -9,14 +9,24 @@ use Illuminate\Support\Facades\Storage;
 
 class KycReviewController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $documents = KycDocument::with('user')
-            ->where('status', 'submitted')
-            ->latest()
-            ->paginate(20);
+        $status = $request->get('status', 'submitted');
 
-        return view('admin.kyc.index', compact('documents'));
+        $documents = KycDocument::with('user')
+            ->when(in_array($status, ['submitted', 'approved', 'rejected']), fn ($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $counts = [
+            'submitted' => KycDocument::where('status', 'submitted')->count(),
+            'approved' => KycDocument::where('status', 'approved')->count(),
+            'rejected' => KycDocument::where('status', 'rejected')->count(),
+            'all' => KycDocument::count(),
+        ];
+
+        return view('admin.kyc.index', compact('documents', 'status', 'counts'));
     }
 
     public function file(KycDocument $document, string $side = 'front')
