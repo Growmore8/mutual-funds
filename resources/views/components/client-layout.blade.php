@@ -37,17 +37,34 @@
             <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
             <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
         </div>
-        <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-            @php $link = fn ($active) => 'nav-link flex items-center gap-3 px-3 py-2 rounded-lg ' . ($active ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10'); @endphp
+        <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
+            @php
+                $link = fn ($active) => 'nav-link flex items-center gap-3 px-3 py-2 rounded-lg ' . ($active ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10');
+                $head = '<p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">';
+            @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $link(request()->routeIs('client.dashboard')) }}"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a>
-            <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
-            <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
+
+            {!! $head !!}Money</p>
             <a href="{{ route('client.deposit.create') }}" class="{{ $link(request()->routeIs('client.deposit.*')) }}"><i class="fa-solid fa-arrow-down w-5 text-center"></i> Deposit</a>
             <a href="{{ route('withdraw.create') }}" class="{{ $link(request()->routeIs('withdraw.*')) }}"><i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Withdraw</a>
+
+            {!! $head !!}Activity</p>
+            <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
+            <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
             <a href="{{ route('accounts.index') }}" class="{{ $link(request()->routeIs('accounts.*')) }}"><i class="fa-solid fa-layer-group w-5 text-center"></i> My Account</a>
-            <div class="pt-2 mt-2 border-t border-white/10"></div>
-            <a href="{{ route('support.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset text-lg w-6 text-center"></i> <span class="font-medium">Support</span></a>
+            <a href="{{ route('support.index') }}" class="{{ $link(request()->routeIs('support.*')) }}"><i class="fa-solid fa-headset w-5 text-center"></i> Support</a>
+
+            {!! $head !!}Account</p>
+            <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.edit')) }}"><i class="fa-solid fa-user w-5 text-center"></i> Profile</a>
+            <a href="{{ route('security.index') }}" class="{{ $link(request()->routeIs('security.*')) }}"><i class="fa-solid fa-shield-halved w-5 text-center"></i> Security</a>
+            <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
+                    class="nav-link w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10">
+                <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i> Appearance
+            </button>
         </nav>
+        <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
+            <button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-red-300"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Log out</button>
+        </form>
     </aside>
 
     {{-- Main --}}
