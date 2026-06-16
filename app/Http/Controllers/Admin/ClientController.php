@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\StatementMail;
 use App\Models\AccountType;
 use App\Models\KycDocument;
 use App\Models\PoolAccount;
 use App\Models\User;
+use App\Services\StatementService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
@@ -172,16 +175,31 @@ class ClientController extends Controller
         return back()->with('status', 'KYC document uploaded for ' . $client->name . '.');
     }
 
-    /** Printable client statement (admin can save as PDF via the browser). */
-    public function statement(User $client)
+    /** Client PDF statement — download or email to the client, by period. */
+    public function statement(Request $request, User $client, StatementService $svc)
     {
         abort_unless($client->role === 'client', 404);
-        $client->load('accountType', 'poolAccount');
 
-        return view('admin.clients.statement', [
-            'client' => $client,
-            'transactions' => $client->transactions()->latest('id')->limit(200)->get(),
-        ]);
+        [$start, $end, $label] = $svc->period($request->get('period', 'month'), $request->get('from'), $request->get('to'));
+        $data = $svc->data($client, $start, $end, $label);
+
+        if ($request->get('action') === 'email') {
+            $pdf = $svc->pdf($data);
+            try {
+                Mail::to($client->email)->send(new StatementMail($data, $pdf?->output()));
+            } catch (\Throwable $e) {
+                return back()->with('status', 'Could not email statement: ' . $e->getMessage());
+            }
+
+            return back()->with('status', 'Statement emailed to ' . $client->email . '.');
+        }
+
+        $pdf = $svc->pdf($data);
+        if ($pdf) {
+            return $pdf->download($svc->filename($data));
+        }
+
+        return view('pdf.statement', $data + ['print' => true]);
     }
 
     public function destroy(User $client)

@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function () {
         // Statements
         Route::get('/transactions', [\App\Http\Controllers\StatementController::class, 'transactions'])->name('client.transactions');
         Route::get('/profit', [\App\Http\Controllers\StatementController::class, 'profit'])->name('client.profit');
+        Route::get('/statement', [\App\Http\Controllers\StatementController::class, 'statement'])->name('client.statement');
 
         // Support tickets / message center
         Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');

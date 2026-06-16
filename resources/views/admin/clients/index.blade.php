@@ -61,7 +61,7 @@
                                     <button title="{{ $c->status === 'pending' ? 'Activate' : 'Deactivate' }}" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600"><i class="fa-solid {{ $c->status === 'pending' ? 'fa-circle-check' : 'fa-user-slash' }}"></i></button>
                                 </form>
 
-                                <a href="{{ route('admin.clients.statement',$c) }}" target="_blank" title="Statement (PDF)" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800"><i class="fa-solid fa-file-pdf"></i></a>
+                                <x-statement-modal :base-url="route('admin.clients.statement',$c)" title="Statement (PDF) — download or email" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800"><i class="fa-solid fa-file-pdf"></i></x-statement-modal>
 
                                 <form method="POST" action="{{ route('admin.clients.destroy',$c) }}" onsubmit="return confirm('Delete {{ $c->name }} and all their data? This cannot be undone.')">@csrf @method('DELETE')
                                     <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>

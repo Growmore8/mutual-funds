@@ -2,12 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\StatementMail;
 use App\Models\PnlAllocation;
 use App\Models\Transaction;
+use App\Services\StatementService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class StatementController extends Controller
 {
+    /** Download or email the client's own PDF statement for a chosen period. */
+    public function statement(Request $request, StatementService $svc)
+    {
+        $user = $request->user();
+        [$start, $end, $label] = $svc->period($request->get('period', 'month'), $request->get('from'), $request->get('to'));
+        $data = $svc->data($user, $start, $end, $label);
+
+        if ($request->get('action') === 'email') {
+            $pdf = $svc->pdf($data);
+            try {
+                Mail::to($user->email)->send(new StatementMail($data, $pdf?->output()));
+            } catch (\Throwable $e) {
+                return back()->with('status', 'Could not send statement right now. Please try again later.');
+            }
+
+            return back()->with('status', 'Statement sent to ' . $user->email . '.');
+        }
+
+        $pdf = $svc->pdf($data);
+        if ($pdf) {
+            return $pdf->download($svc->filename($data));
+        }
+
+        return view('pdf.statement', $data + ['print' => true]);
+    }
+
     /** Deposit / withdrawal / profit transaction history. */
     public function transactions(Request $request)
     {
