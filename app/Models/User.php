@@ -36,6 +36,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function hasPin(): bool
+    {
+        return ! empty($this->pin_hash);
+    }
+
     public function accountType()
     {
         return $this->belongsTo(AccountType::class);
@@ -108,6 +113,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'pin_hash',
         'remember_token',
     ];
 

@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $title }} · GrowthCapital Funds</title>
     <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0a1730">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GrowthCapital">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -26,6 +35,7 @@
             <a href="{{ route('withdraw.create') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('withdraw.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw</a>
             <a href="{{ route('accounts.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('accounts.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-layer-group w-5"></i> My Accounts</a>
             <a href="{{ route('support.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('support.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-headset w-5"></i> Support</a>
+            <a href="{{ route('security.index') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('security.*') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}"><i class="fa-solid fa-shield-halved w-5"></i> Security</a>
             <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('profile.edit') ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">Profile</a>
         </nav>
         <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
@@ -75,5 +85,13 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 14a4 4 0 10-8 0M12 7a3 3 0 100 6 3 3 0 000-6z"/></svg>Profile</a>
     </nav>
 </div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+    }
+</script>
 </body>
 </html>

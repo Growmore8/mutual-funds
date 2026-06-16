@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0a1730"/>
+  <text x="50%" y="50%" dy="0.02em" text-anchor="middle" dominant-baseline="central"
+        font-family="Figtree, Arial, Helvetica, sans-serif" font-size="300" font-weight="800">
+    <tspan fill="#ffffff">G</tspan>
+  </text>
+  <circle cx="370" cy="356" r="34" fill="#16c784"/>
+</svg>

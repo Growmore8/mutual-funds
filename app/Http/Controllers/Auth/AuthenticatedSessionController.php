@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Password login counts as a fresh unlock, so the app-lock screen
+        // doesn't immediately prompt again right after signing in.
+        $request->session()->put('pin_unlocked_at', now()->timestamp);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
