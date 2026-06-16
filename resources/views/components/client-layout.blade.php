@@ -69,8 +69,8 @@
     {{-- Main --}}
     <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
         {{-- Top bar: logo+name left, notifications + profile right --}}
-        <header class="bg-white border-b dark:bg-[#0a1730]/80 dark:border-white/10 dark:backdrop-blur sticky top-0 z-30 safe-t">
-            <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+        <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/10 backdrop-blur sticky top-0 z-30 safe-t">
+            <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0 lg:hidden">
                     <img src="/logo.png" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
                     <span class="font-bold text-[#0a1730] dark:text-white truncate">Growth<span class="text-emerald-500">Capital</span></span>
@@ -102,15 +102,15 @@
     </div>
 
     {{-- Mobile bottom tab bar --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t dark:bg-[#0a1730] dark:border-white/10 z-40 safe-b">
-        <div class="grid grid-cols-5 items-end px-1">
-            @php $tab = 'tab flex flex-col items-center gap-0.5 text-[11px] py-2 text-gray-400'; @endphp
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 border-t border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/10 backdrop-blur z-40 safe-b">
+        <div class="grid grid-cols-5 items-center h-16 px-1">
+            @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
                 <i class="fa-solid fa-house tab-ico text-lg"></i>Home</a>
             <a href="{{ route('client.profit') }}" class="{{ $tab }} {{ request()->routeIs('client.profit') ? 'is-active' : '' }}">
                 <i class="fa-solid fa-chart-line tab-ico text-lg"></i>History</a>
-            <button type="button" @click="sheet=!sheet" class="flex flex-col items-center -mt-5">
-                <span class="w-14 h-14 rounded-full bg-emerald-600 text-white grid place-items-center shadow-lg shadow-emerald-600/30 ring-4 ring-gray-50 transition active:scale-95">
+            <button type="button" @click="sheet=!sheet" class="flex flex-col items-center justify-center -mt-7">
+                <span class="w-14 h-14 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-gray-50 dark:ring-[#0a1730] transition active:scale-95">
                     <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
                 </span>
             </button>
