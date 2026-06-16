@@ -21,6 +21,10 @@ class TransactionController extends Controller
                     if (ctype_digit($search)) {
                         $w->orWhere('id', (int) $search);
                     }
+                    // by client ID (GC000003 -> user 3)
+                    if (stripos($search, 'GC') === 0 && ($digits = ltrim(preg_replace('/\D/', '', $search), '0')) !== '') {
+                        $w->orWhere('user_id', (int) $digits);
+                    }
                     // by client name / email
                     $w->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'like', "%{$search}%")

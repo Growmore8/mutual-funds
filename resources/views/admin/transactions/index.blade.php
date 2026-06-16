@@ -9,7 +9,7 @@
                     <label class="block text-gray-700">Client</label>
                     <select name="user_id" class="mt-1 w-full border-gray-300 rounded-md" required>
                         <option value="">Select…</option>
-                        @foreach ($clients as $c)<option value="{{ $c->id }}">{{ $c->name }} ({{ $c->email }})</option>@endforeach
+                        @foreach ($clients as $c)<option value="{{ $c->id }}">{{ $c->clientCode() }} — {{ $c->name }}</option>@endforeach
                     </select>
                     @error('user_id')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -45,14 +45,14 @@
             </div>
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-left">
-                    <tr><th class="px-4 py-3">#</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3 text-right">Actions</th></tr>
+                    <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">#</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3 text-right">Actions</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($transactions as $t)
                         <tr>
+                            <td class="px-4 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}</td>
                             <td class="px-4 py-3 text-gray-400">{{ $t->id }}</td>
-                            <td class="px-4 py-3 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3"><div>{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs">{{ $t->user->email ?? '' }}</div></td>
+                            <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $t->user?->clientCode() }}</div><div class="text-gray-400 text-xs">{{ $t->user->email ?? '' }}</div></td>
                             <td class="px-4 py-3">{{ ucfirst($t->type) }}</td>
                             <td class="px-4 py-3 {{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
                             <td class="px-4 py-3">{{ number_format((float)$t->balance_after,2) }}</td>
