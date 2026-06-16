@@ -41,7 +41,7 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
-            'type' => ['required', 'in:deposit,withdrawal,profit,fee,adjustment'],
+            'type' => ['required', 'in:deposit,withdrawal,profit,fee,reversal,adjustment'],
             'amount' => ['required', 'numeric'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);
@@ -65,7 +65,7 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         $data = $request->validate([
-            'type' => ['required', 'in:deposit,withdrawal,profit,fee,adjustment'],
+            'type' => ['required', 'in:deposit,withdrawal,profit,fee,reversal,adjustment'],
             'amount' => ['required', 'numeric'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);

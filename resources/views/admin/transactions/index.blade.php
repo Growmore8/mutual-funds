@@ -16,7 +16,7 @@
                 <div>
                     <label class="block text-gray-700">Type</label>
                     <select name="type" class="mt-1 w-full border-gray-300 rounded-md">
-                        @foreach (['deposit','withdrawal','profit','fee','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
+                        @foreach (['deposit','withdrawal','reversal','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
                     </select>
                 </div>
                 <div><label class="block text-gray-700">Amount (use − for debit)</label><input type="number" step="0.01" name="amount" class="mt-1 w-full border-gray-300 rounded-md" required></div>
@@ -85,7 +85,7 @@
                         <div>
                             <label class="block text-gray-700 mb-1">Type</label>
                             <select name="type" x-model="f.type" class="w-full border-gray-300 rounded-md">
-                                @foreach (['deposit','withdrawal','profit','fee','adjustment'] as $ty)<option value="{{ $ty }}">{{ ucfirst($ty) }}</option>@endforeach
+                                @foreach (['deposit','withdrawal','reversal','adjustment','profit','fee'] as $ty)<option value="{{ $ty }}">{{ ucfirst($ty) }}</option>@endforeach
                             </select>
                         </div>
                         <div><label class="block text-gray-700 mb-1">Amount (use − for debit)</label><input type="number" step="0.01" name="amount" x-model="f.amount" class="w-full border-gray-300 rounded-md" required></div>
