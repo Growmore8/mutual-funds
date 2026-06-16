@@ -36,10 +36,14 @@
         }
         html.dark .gcard,html.dark aside{background-color:rgba(255,255,255,.035)!important}
         html.dark aside{background-color:#0a1228!important}
+        /* Smooth page-in transition on every navigation */
+        @keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+        .page-in{animation:pagein .32s cubic-bezier(.22,1,.36,1) both}
+        @media (prefers-reduced-motion: reduce){.page-in{animation:none}}
     </style>
 </head>
-<body class="h-full bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
-<div class="min-h-full lg:flex">
+<body class="min-h-[100dvh] bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
+<div class="min-h-[100dvh] lg:flex">
 
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
@@ -71,13 +75,25 @@
                 <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i> Appearance
             </button>
         </nav>
+        {{-- Need Help card --}}
+        <div class="px-3 pb-2">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p class="font-semibold text-white text-sm">Need Help?</p>
+                <p class="text-xs text-gray-400 mt-1">Our support team is here to help you.</p>
+                <a href="{{ route('support.index') }}" class="mt-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"><i class="fa-solid fa-headset"></i> Contact Support</a>
+            </div>
+            <div class="text-[11px] text-gray-500 mt-3 px-1">
+                <p class="font-semibold text-gray-300">GrowthCapital Ltd.</p>
+                <p>© {{ date('Y') }} All rights reserved.</p>
+            </div>
+        </div>
         <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-white/10">@csrf
             <button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-red-300"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Log out</button>
         </form>
     </aside>
 
     {{-- Main --}}
-    <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
+    <div class="flex-1 lg:pl-64 pb-32 lg:pb-0">
         {{-- Top bar: logo+name left, notifications + profile right --}}
         <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
@@ -90,11 +106,24 @@
             </div>
         </header>
 
-        <main class="px-4 sm:px-6 lg:px-8 py-6">
+        <main class="px-4 sm:px-6 lg:px-8 py-6 page-in">
             @if (session('status'))
                 <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg p-3">{{ session('status') }}</div>
             @endif
             {{ $slot }}
+
+            {{-- Need Help card + footer (mobile; sidebar shows its own on desktop) --}}
+            <div class="lg:hidden mt-8 space-y-3">
+                <div class="rounded-2xl border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.04] p-4">
+                    <p class="font-semibold text-gray-900 dark:text-white text-sm">Need Help?</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Our support team is here to help you.</p>
+                    <a href="{{ route('support.index') }}" class="mt-3 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"><i class="fa-solid fa-headset"></i> Contact Support</a>
+                </div>
+                <div class="text-xs text-gray-400 dark:text-gray-500 px-1">
+                    <p class="font-semibold text-gray-600 dark:text-gray-300">GrowthCapital Ltd.</p>
+                    <p>© {{ date('Y') }} All rights reserved.</p>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -111,23 +140,26 @@
         </div>
     </div>
 
-    {{-- Mobile bottom tab bar --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 border-t border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur z-40 safe-b">
-        <div class="grid grid-cols-5 items-center h-16 px-1">
-            @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
-            <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
-                <i class="fa-solid fa-house tab-ico text-lg"></i>Home</a>
-            <a href="{{ route('client.profit') }}" class="{{ $tab }} {{ request()->routeIs('client.profit') ? 'is-active' : '' }}">
-                <i class="fa-solid fa-chart-line tab-ico text-lg"></i>History</a>
-            <button type="button" @click="sheet=!sheet" class="flex flex-col items-center justify-center -mt-7">
-                <span class="w-14 h-14 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-gray-50 dark:ring-[#0a1730] transition active:scale-95">
-                    <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
-                </span>
-            </button>
-            <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions') ? 'is-active' : '' }}">
-                <i class="fa-solid fa-receipt tab-ico text-lg"></i>Transactions</a>
-            <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'is-active' : '' }}">
-                <i class="fa-solid fa-user tab-ico text-lg"></i>Profile</a>
+    {{-- Mobile bottom tab bar (floating pill) --}}
+    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pointer-events-none"
+         style="padding-bottom:max(0.75rem,env(safe-area-inset-bottom))">
+        <div class="pointer-events-auto mx-auto max-w-md rounded-2xl bg-white/90 border border-gray-200 dark:bg-[#0d1834]/85 dark:border-white/10 backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,.35)]">
+            <div class="grid grid-cols-5 items-center h-16 px-1">
+                @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
+                <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-house tab-ico text-lg"></i>Home</a>
+                <a href="{{ route('client.profit') }}" class="{{ $tab }} {{ request()->routeIs('client.profit') ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-chart-line tab-ico text-lg"></i>History</a>
+                <button type="button" @click="sheet=!sheet" class="flex flex-col items-center justify-center -mt-7">
+                    <span class="w-14 h-14 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-gray-50 dark:ring-[#0d1834] transition active:scale-95">
+                        <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                    </span>
+                </button>
+                <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions') ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-receipt tab-ico text-lg"></i>Transactions</a>
+                <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-user tab-ico text-lg"></i>Profile</a>
+            </div>
         </div>
     </nav>
 </div>
