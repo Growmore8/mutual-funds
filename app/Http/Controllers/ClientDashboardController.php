@@ -25,9 +25,10 @@ class ClientDashboardController extends Controller
         $pool = $pools->first() ?? $user->poolAccount ?? PoolAccount::where('is_active', true)->first();   // display pool
         $latestSnap = $pool?->snapshots()->latest('snapshot_date')->first();
 
-        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
+        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');   // principal (locked)
         $balanceAfter = (float) (Transaction::where('user_id', $user->id)->latest('id')->value('balance_after') ?? 0);
-        $totalEarned = (float) Transaction::where('user_id', $user->id)->where('type', 'profit')->sum('amount');
+        $totalEarned = (float) Transaction::where('user_id', $user->id)->where('type', 'profit')->sum('amount'); // running PnL (net of losses)
+        $withdrawable = $user->availableToWithdraw();   // profit only
 
         $today = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today())->sum('net_pnl');
         $yesterday = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today()->subDay())->sum('net_pnl');
@@ -65,7 +66,7 @@ class ClientDashboardController extends Controller
         return view('client.dashboard', compact(
             'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare', 'liveRef'
+            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable'
         ));
     }
 
