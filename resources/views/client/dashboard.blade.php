@@ -39,9 +39,8 @@
                 <i class="fa-solid fa-wifi rotate-90 opacity-70"></i>
             </div>
             <div class="relative w-12 h-9 rounded-md mt-5" style="background:linear-gradient(135deg,#f6d365,#d4af37)"></div>
-            <p class="relative text-xs text-white/60 mt-4">Capital (Balance)</p>
-            <p class="relative text-3xl font-bold tracking-wide">{{ $money($investment) }}</p>
-            <p class="relative text-[11px] text-white/70 mt-1">PnL {{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }} · Withdrawable {{ $money($withdrawable) }}</p>
+            <p class="relative text-xs text-white/60 mt-4">Balance</p>
+            <p class="relative text-3xl font-bold tracking-wide">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</p>
             <div class="relative flex items-center justify-between mt-5 text-sm">
                 <span class="tracking-[0.25em] text-white/80">{{ $liveRef ? '•••• ' . substr($liveRef, -4) : '•••• ••••' }}</span>
                 <span class="uppercase tracking-wide text-white/90">{{ $user->name }}</span>
