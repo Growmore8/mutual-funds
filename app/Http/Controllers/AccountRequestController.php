@@ -10,14 +10,10 @@ class AccountRequestController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->load('accountType', 'accountRequests.accountType');
+        $user = $request->user()->load('accountType', 'poolAccount');
+        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
 
-        return view('client.accounts.index', [
-            'user' => $user,
-            'requests' => $user->accountRequests->sortByDesc('id'),
-            'accountTypes' => AccountType::orderBy('sort_order')->get(),
-            'hasPending' => $user->accountRequests->where('status', 'pending')->isNotEmpty(),
-        ]);
+        return view('client.accounts.index', compact('user', 'investment'));
     }
 
     public function store(Request $request)

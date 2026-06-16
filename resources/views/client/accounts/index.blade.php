@@ -1,86 +1,31 @@
-<x-client-layout title="My Accounts">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Current accounts --}}
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Your accounts</h2>
+<x-client-layout title="My Account">
+    @php
+        $money = fn ($n) => '$' . number_format((float) $n, 2);
+        $at = $user->accountType;
+    @endphp
 
-                {{-- Primary account --}}
-                <div class="flex items-center gap-4 p-4 rounded-xl border border-emerald-200 bg-emerald-50/50">
-                    <div class="w-10 h-10 rounded-full bg-emerald-600 text-white grid place-items-center"><i class="fa-solid fa-star"></i></div>
-                    <div class="flex-1">
-                        <p class="font-medium text-gray-900">{{ $user->accountType->name ?? 'No plan selected' }}</p>
-                        <p class="text-xs text-gray-500">Primary account</p>
-                    </div>
-                    <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">Active</span>
-                </div>
-
-                {{-- Approved additional accounts --}}
-                @foreach ($requests->where('status', 'approved') as $r)
-                    <div class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 mt-3">
-                        <div class="w-10 h-10 rounded-full bg-gray-700 text-white grid place-items-center"><i class="fa-solid fa-layer-group"></i></div>
-                        <div class="flex-1">
-                            <p class="font-medium text-gray-900">{{ $r->accountType->name ?? '—' }}</p>
-                            <p class="text-xs text-gray-500">Additional account · approved {{ $r->processed_at?->format('d M Y') }}</p>
-                        </div>
-                        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">Active</span>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Request additional account --}}
-            <div class="bg-white rounded-2xl shadow-sm p-6">
-                <h3 class="font-semibold text-gray-900 mb-1">Open an additional account</h3>
-                <p class="text-sm text-gray-500 mb-4">Your first account is active. Opening another account requires admin approval.</p>
-
-                @if ($errors->any())
-                    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">{{ $errors->first() }}</div>
-                @endif
-
-                @if ($hasPending)
-                    <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-4">
-                        <i class="fa-solid fa-hourglass-half"></i> You have a pending request awaiting admin approval.
-                    </div>
-                @else
-                    <form method="POST" action="{{ route('accounts.request') }}" class="space-y-4 text-sm">
-                        @csrf
-                        <div>
-                            <label class="block text-gray-700 mb-1">Account type</label>
-                            <select name="account_type_id" class="w-full border-gray-300 rounded-md" required>
-                                <option value="">Select…</option>
-                                @foreach ($accountTypes as $at)
-                                    <option value="{{ $at->id }}">{{ $at->name }} (min ${{ number_format((float)$at->min_deposit) }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-1">Reason (optional)</label>
-                            <textarea name="reason" rows="2" maxlength="500" class="w-full border-gray-300 rounded-md" placeholder="Why do you want a second account?"></textarea>
-                        </div>
-                        <button class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700">
-                            <i class="fa-solid fa-plus"></i> Request account
-                        </button>
-                    </form>
-                @endif
-            </div>
-        </div>
-
-        {{-- Request history --}}
+    <div class="max-w-2xl">
         <div class="bg-white rounded-2xl shadow-sm p-6">
-            <h3 class="font-semibold text-gray-900 mb-3">Request history</h3>
-            <div class="divide-y divide-gray-100 text-sm">
-                @forelse ($requests as $r)
-                    <div class="py-3 flex items-center justify-between">
-                        <div>
-                            <p class="font-medium text-gray-900">{{ $r->accountType->name ?? '—' }}</p>
-                            <p class="text-xs text-gray-400">{{ $r->created_at->format('d M Y') }}</p>
-                        </div>
-                        @php $b = ['pending'=>'bg-amber-100 text-amber-800','approved'=>'bg-emerald-100 text-emerald-800','rejected'=>'bg-red-100 text-red-700'][$r->status]; @endphp
-                        <span class="text-xs px-2.5 py-1 rounded-full capitalize {{ $b }}">{{ $r->status }}</span>
-                    </div>
-                @empty
-                    <p class="py-6 text-center text-gray-400">No requests yet.</p>
-                @endforelse
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-emerald-600 text-white grid place-items-center text-lg"><i class="fa-solid fa-star"></i></div>
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-900 text-lg">{{ $at->name ?? 'No plan assigned' }}</p>
+                    <p class="text-xs text-gray-500">Your investment plan</p>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">Active</span>
+            </div>
+
+            <dl class="text-sm divide-y divide-gray-100">
+                <div class="flex justify-between py-2.5"><dt class="text-gray-500">Live ID / Pool account</dt><dd class="font-semibold">{{ $user->poolAccount->account_ref ?? '—' }}</dd></div>
+                <div class="flex justify-between py-2.5"><dt class="text-gray-500">Pool account size</dt><dd class="font-semibold">{{ $money($at->pool_amount ?? 0) }}</dd></div>
+                <div class="flex justify-between py-2.5"><dt class="text-gray-500">Eligible deposit</dt><dd class="font-semibold">{{ $at ? $money($at->min_deposit) . ($at->max_deposit ? ' – ' . $money($at->max_deposit) : '+') : '—' }}</dd></div>
+                <div class="flex justify-between py-2.5"><dt class="text-gray-500">Daily profit</dt><dd class="font-semibold">{{ $at ? rtrim(rtrim(number_format($at->daily_return_pct,2),'0'),'.') . '%' : '—' }}</dd></div>
+                <div class="flex justify-between py-2.5 bg-emerald-50 -mx-2 px-2 rounded"><dt class="text-gray-600">Your invested amount</dt><dd class="font-bold text-emerald-700">{{ $money($investment) }}</dd></div>
+            </dl>
+
+            <div class="mt-5 bg-blue-50 border border-blue-100 text-blue-800 text-sm rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-circle-info mt-0.5"></i>
+                <span>Your plan is managed by GrowthCapital. To change your plan or open another account, please contact us via <a href="{{ route('support.index') }}" class="font-semibold underline">Support</a>.</span>
             </div>
         </div>
     </div>
