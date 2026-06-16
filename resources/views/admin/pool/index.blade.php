@@ -33,7 +33,7 @@
         <div class="bg-white shadow rounded-xl overflow-hidden lg:col-span-2">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-left">
-                    <tr><th class="px-4 py-3">Account</th><th class="px-4 py-3">Capacity</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3">Synced</th><th class="px-4 py-3 text-right">Actions</th></tr>
+                    <tr><th class="px-4 py-3">Account</th><th class="px-4 py-3">Capacity</th><th class="px-4 py-3">Balance</th><th class="px-4 py-3">Floating P/L</th><th class="px-4 py-3">Synced</th><th class="px-4 py-3 text-right">Actions</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($pools as $p)
@@ -41,6 +41,7 @@
                             <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $p->account_ref }}</div><div class="text-gray-400">{{ $p->name }}</div></td>
                             <td class="px-4 py-3">${{ number_format((float)$p->capacity) }}</td>
                             <td class="px-4 py-3">${{ number_format((float)$p->balance,2) }}</td>
+                            <td class="px-4 py-3 {{ (float)$p->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ((float)$p->floating_pnl < 0 ? '' : '+') . '$' . number_format((float)$p->floating_pnl,2) }}</td>
                             <td class="px-4 py-3 text-gray-400">{{ $p->last_synced_at?->diffForHumans() ?? 'never' }}</td>
                             <td class="px-4 py-3">
                                 <form method="POST" action="{{ route('admin.pool.destroy',$p) }}" class="text-right" onsubmit="return confirm('Delete this pool account?')">@csrf @method('DELETE')
@@ -49,7 +50,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No pool accounts. Add your CubeX account on the left.</td></tr>
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No pool accounts. Add your CubeX account on the left.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -61,7 +62,7 @@
     <div class="bg-white shadow rounded-xl overflow-hidden">
         <table class="min-w-full text-sm">
             <thead class="bg-gray-50 text-gray-500 text-left">
-                <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">Pool</th><th class="px-4 py-3">PnL</th><th class="px-4 py-3">%</th><th class="px-4 py-3">Distributed</th></tr>
+                <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">Pool</th><th class="px-4 py-3">Closed PnL</th><th class="px-4 py-3">Floating</th><th class="px-4 py-3">%</th><th class="px-4 py-3">Distributed</th></tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($snapshots as $s)
@@ -69,11 +70,12 @@
                         <td class="px-4 py-3">{{ $s->snapshot_date->format('d M Y') }}</td>
                         <td class="px-4 py-3">{{ $s->poolAccount->account_ref ?? '—' }}</td>
                         <td class="px-4 py-3 {{ $s->pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$s->pnl,2) }}</td>
+                        <td class="px-4 py-3 {{ (float)$s->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$s->floating_pnl,2) }}</td>
                         <td class="px-4 py-3">{{ number_format((float)$s->pnl_pct,2) }}%</td>
                         <td class="px-4 py-3">{!! $s->distributed ? '<span class="text-green-600">Yes</span>' : '<span class="text-gray-400">No</span>' !!} ({{ $s->allocations()->count() }})</td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No snapshots yet — add a pool, then “Sync now”.</td></tr>
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No snapshots yet — add a pool, then “Sync now”.</td></tr>
                 @endforelse
             </tbody>
         </table>

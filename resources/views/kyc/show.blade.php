@@ -1,10 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Identity Verification (KYC)') }}</h2>
-    </x-slot>
-
-    <div class="py-10">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+<x-client-layout title="Identity Verification (KYC)">
+    <div>
+        <div class="max-w-3xl mx-auto space-y-6">
 
             {{-- Status banner --}}
             <div class="bg-white shadow sm:rounded-lg p-6">
@@ -84,4 +80,4 @@
 
         </div>
     </div>
-</x-app-layout>
+</x-client-layout>

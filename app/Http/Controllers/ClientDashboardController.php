@@ -39,6 +39,10 @@ class ClientDashboardController extends Controller
             ->sum('pnl');
         $poolBalance = $poolsBalance;
 
+        // Open (floating, unrealized) P/L — the client's proportional share.
+        $poolsFloating = (float) $pools->sum('floating_pnl');
+        $floatingShare = $poolsBalance > 0 ? round($poolsFloating * $investment / $poolsBalance, 2) : 0.0;
+
         // last 14 days of the client's net profit for the chart
         $chart = PnlAllocation::where('user_id', $user->id)
             ->where('allocation_date', '>=', today()->subDays(14))
@@ -51,7 +55,8 @@ class ClientDashboardController extends Controller
 
         return view('client.dashboard', compact(
             'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
-            'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent'
+            'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
+            'poolsFloating', 'floatingShare'
         ));
     }
 }

@@ -38,9 +38,12 @@
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Your Earnings Overview</h3>
             <div class="grid grid-cols-2 gap-4">
-                <div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs text-gray-500">Today's Profit</p><p class="text-xl font-bold text-emerald-600">{{ $money($today) }}</p></div>
+                <div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs text-gray-500">Today's Profit (closed)</p><p class="text-xl font-bold text-emerald-600">{{ $money($today) }}</p></div>
+                <div class="rounded-xl bg-gray-50 p-4">
+                    <p class="text-xs text-gray-500">Open P/L (unrealized)</p>
+                    <p class="text-xl font-bold {{ $floatingShare < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</p>
+                </div>
                 <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-500">Total Earned</p><p class="text-xl font-bold text-gray-900">{{ $money($totalEarned) }}</p></div>
-                <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-500">Yesterday's Profit</p><p class="text-xl font-bold text-gray-900">{{ $money($yesterday) }}</p></div>
                 <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-500">This Month</p><p class="text-xl font-bold text-gray-900">{{ $money($month) }}</p></div>
             </div>
 

@@ -33,6 +33,7 @@ class SyncPoolPnl extends Command
                         'opening_balance' => $opening,
                         'closing_balance' => $data['balance'],
                         'pnl' => $data['pnl'],
+                        'floating_pnl' => $data['floating'] ?? 0,
                         'pnl_pct' => $data['pnl_pct'],
                         'raw' => $data['raw'],
                     ]
@@ -41,11 +42,13 @@ class SyncPoolPnl extends Command
                 $pool->update([
                     'balance' => $data['balance'],
                     'equity' => $data['equity'],
+                    'floating_pnl' => $data['floating'] ?? 0,
                     'last_synced_at' => now(),
                 ]);
 
+                // Only realized (closed) P&L is distributed; floating is informational.
                 $credited = $distributor->distribute($snapshot);
-                $this->line("  {$pool->account_ref}: PnL {$data['pnl']} → distributed to {$credited} client(s)");
+                $this->line("  {$pool->account_ref}: closed {$data['pnl']}, floating " . ($data['floating'] ?? 0) . " → distributed to {$credited} client(s)");
             } catch (\Throwable $e) {
                 $failed++;
                 $msg = $this->cubexError($e);

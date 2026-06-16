@@ -64,12 +64,18 @@ class PoolApiClient
         $opening = (float) $pool->balance;
         $balance = round($opening + $daily, 2);
 
+        // Floating (unrealized) P&L — present only if CubeX adds it to the
+        // response (floating_pnl / floatingPnl / flt_pnl), else 0.
+        $floating = (float) ($d['floating_pnl'] ?? $d['floatingPnl'] ?? $d['flt_pnl'] ?? 0);
+        $equity   = isset($d['equity']) ? (float) $d['equity'] : round($balance + $floating, 2);
+
         return [
-            'balance' => $balance,
-            'equity'  => $balance,
-            'pnl'     => $daily,
-            'pnl_pct' => $opening > 0 ? round($daily / $opening * 100, 4) : 0,
-            'raw'     => $d,
+            'balance'  => $balance,
+            'equity'   => $equity,
+            'pnl'      => $daily,
+            'floating' => $floating,
+            'pnl_pct'  => $opening > 0 ? round($daily / $opening * 100, 4) : 0,
+            'raw'      => $d,
         ];
     }
 
@@ -81,12 +87,15 @@ class PoolApiClient
         $pnl = round($opening * $pct / 100, 2);
         $balance = round($opening + $pnl, 2);
 
+        $floating = round($opening * (mt_rand(-60, 180) / 100) / 100, 2);
+
         return [
-            'balance' => $balance,
-            'equity'  => $balance,
-            'pnl'     => $pnl,
-            'pnl_pct' => round($pct, 4),
-            'raw'     => ['simulated' => true, 'pct' => $pct],
+            'balance'  => $balance,
+            'equity'   => round($balance + $floating, 2),
+            'pnl'      => $pnl,
+            'floating' => $floating,
+            'pnl_pct'  => round($pct, 4),
+            'raw'      => ['simulated' => true, 'pct' => $pct],
         ];
     }
 }
