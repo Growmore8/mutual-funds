@@ -27,6 +27,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         'role',
         'phone',
         'country',
+        'address',
         'account_type_id',
         'status',
         'kyc_status',

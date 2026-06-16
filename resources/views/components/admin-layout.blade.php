@@ -32,6 +32,7 @@
                 ['admin.transactions.index','Transactions'],
                 ['admin.messages.index','Message Center'],
                 ['admin.pool.index','Pool / PnL'],
+                ['admin.settings.edit','Settings'],
             ]; @endphp
             @foreach ($nav as [$route, $label])
                 <a href="{{ route($route) }}"

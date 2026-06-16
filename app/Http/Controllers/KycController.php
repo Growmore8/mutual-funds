@@ -18,18 +18,21 @@ class KycController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'doc_type' => ['required', 'in:national_id,passport,proof_of_address'],
             'document_number' => ['nullable', 'string', 'max:100'],
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'front' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'back' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
-        $path = $request->file('file')->store('kyc', 'local'); // private storage
+        $front = $request->file('front')->store('kyc', 'local'); // private storage
+        $back = $request->file('back')->store('kyc', 'local');
 
         KycDocument::create([
             'user_id' => $request->user()->id,
-            'doc_type' => $data['doc_type'],
+            'doc_type' => 'identity',
             'document_number' => $data['document_number'] ?? null,
-            'file_path' => $path,
+            'front_path' => $front,
+            'back_path' => $back,
+            'file_path' => $front,
             'status' => 'submitted',
         ]);
 

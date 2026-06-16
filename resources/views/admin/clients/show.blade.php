@@ -32,6 +32,7 @@
                     <div><label class="block text-gray-700">Phone</label><input name="phone" value="{{ old('phone',$client->phone) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                     <div><label class="block text-gray-700">Country</label><input name="country" value="{{ old('country',$client->country) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                 </div>
+                <div><label class="block text-gray-700">Address</label><input name="address" value="{{ old('address',$client->address) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                 <div>
                     <label class="block text-gray-700">Account type</label>
                     <select name="account_type_id" class="mt-1 w-full border-gray-300 rounded-md">
@@ -98,6 +99,44 @@
                 @empty
                     <p class="text-sm text-gray-400">No additional-account requests.</p>
                 @endforelse
+            </div>
+
+            {{-- KYC documents --}}
+            <div class="bg-white shadow rounded-xl p-6">
+                <h3 class="font-semibold text-gray-900 mb-3">KYC — National ID / Passport</h3>
+
+                @forelse ($client->kycDocuments as $doc)
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-900">{{ $doc->document_number ?: 'ID document' }}</span>
+                            <span class="text-gray-400">· {{ $doc->created_at->format('d M Y') }}</span>
+                            <div class="mt-1 flex gap-3">
+                                @if ($doc->front_path ?? $doc->file_path)
+                                    <a href="{{ route('admin.kyc.file', [$doc, 'front']) }}" target="_blank" class="text-emerald-600 hover:underline"><i class="fa-regular fa-image"></i> Front</a>
+                                @endif
+                                @if ($doc->back_path)
+                                    <a href="{{ route('admin.kyc.file', [$doc, 'back']) }}" target="_blank" class="text-emerald-600 hover:underline"><i class="fa-regular fa-image"></i> Back</a>
+                                @endif
+                            </div>
+                        </div>
+                        @php $kb = ['submitted'=>'bg-amber-100 text-amber-800','approved'=>'bg-emerald-100 text-emerald-800','rejected'=>'bg-red-100 text-red-700'][$doc->status] ?? 'bg-gray-100 text-gray-600'; @endphp
+                        <span class="text-xs px-2.5 py-1 rounded-full capitalize {{ $kb }}">{{ $doc->status }}</span>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-400 mb-3">No documents uploaded.</p>
+                @endforelse
+
+                {{-- Upload on behalf of the client --}}
+                <form method="POST" action="{{ route('admin.clients.kyc.upload', $client) }}" enctype="multipart/form-data" class="mt-4 space-y-3 text-sm border-t border-gray-100 pt-4">
+                    @csrf
+                    <p class="text-xs text-gray-500">Upload the client's National ID / Passport on their behalf.</p>
+                    <div><label class="block text-gray-700 mb-1">Document number (optional)</label><input name="document_number" class="w-full border-gray-300 rounded-md"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-gray-700 mb-1">Front</label><input type="file" name="front" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
+                        <div><label class="block text-gray-700 mb-1">Back</label><input type="file" name="back" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
+                    </div>
+                    <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-upload mr-1"></i> Upload KYC</button>
+                </form>
             </div>
 
             {{-- Recent transactions --}}

@@ -35,28 +35,29 @@
             {{-- Upload form --}}
             @if (in_array($user->kyc_status, ['not_submitted', 'rejected']))
             <div class="bg-white shadow sm:rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Upload a document</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">National ID / Passport</h3>
+                <p class="text-sm text-gray-500 mb-4">Upload a clear photo of the <strong>front</strong> and <strong>back</strong> of your National ID or Passport.</p>
                 <form method="POST" action="{{ route('kyc.store') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
                     <div>
-                        <x-input-label for="doc_type" value="Document type" />
-                        <select id="doc_type" name="doc_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            <option value="national_id">National ID</option>
-                            <option value="passport">Passport</option>
-                            <option value="proof_of_address">Proof of address</option>
-                        </select>
-                        <x-input-error :messages="$errors->get('doc_type')" class="mt-2" />
-                    </div>
-                    <div>
                         <x-input-label for="document_number" value="Document number (optional)" />
-                        <x-text-input id="document_number" class="block mt-1 w-full" type="text" name="document_number" />
+                        <x-text-input id="document_number" class="block mt-1 w-full" type="text" name="document_number" placeholder="National ID / Passport number" />
                     </div>
-                    <div>
-                        <x-input-label for="file" value="File (JPG, PNG or PDF, max 5 MB)" />
-                        <input id="file" name="file" type="file" accept=".jpg,.jpeg,.png,.pdf" required
-                               class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700" />
-                        <x-input-error :messages="$errors->get('file')" class="mt-2" />
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="front" value="Front side" />
+                            <input id="front" name="front" type="file" accept=".jpg,.jpeg,.png,.pdf" required
+                                   class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700" />
+                            <x-input-error :messages="$errors->get('front')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="back" value="Back side" />
+                            <input id="back" name="back" type="file" accept=".jpg,.jpeg,.png,.pdf" required
+                                   class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700" />
+                            <x-input-error :messages="$errors->get('back')" class="mt-2" />
+                        </div>
                     </div>
+                    <p class="text-xs text-gray-400">JPG, PNG or PDF · max 5 MB each.</p>
                     <x-primary-button>Submit for review</x-primary-button>
                 </form>
             </div>
@@ -69,7 +70,7 @@
                 <ul class="divide-y divide-gray-100 text-sm">
                     @foreach ($documents as $doc)
                         <li class="py-2 flex items-center justify-between">
-                            <span class="text-gray-700">{{ ucwords(str_replace('_',' ', $doc->doc_type)) }}</span>
+                            <span class="text-gray-700">National ID / Passport{{ $doc->document_number ? ' · '.$doc->document_number : '' }}</span>
                             <span class="text-gray-400">{{ $doc->created_at->diffForHumans() }}</span>
                             <span class="px-2 py-0.5 rounded-full text-xs font-medium
                                 {{ ['submitted'=>'bg-amber-100 text-amber-800','approved'=>'bg-green-100 text-green-800','rejected'=>'bg-red-100 text-red-800'][$doc->status] ?? 'bg-gray-100' }}">

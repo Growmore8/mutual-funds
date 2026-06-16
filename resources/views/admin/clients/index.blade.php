@@ -1,15 +1,18 @@
 <x-admin-layout title="Clients">
-    <form method="GET" class="mb-5 flex flex-wrap gap-3">
-        <input name="q" value="{{ request('q') }}" placeholder="Search name or email"
-               class="border-gray-300 rounded-md text-sm w-64">
-        <select name="status" class="border-gray-300 rounded-md text-sm">
-            <option value="">All statuses</option>
-            @foreach (['pending','active','suspended'] as $s)
-                <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
-            @endforeach
-        </select>
-        <button class="px-4 py-2 bg-gray-900 text-white rounded-md text-sm">Filter</button>
-    </form>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <form method="GET" class="flex flex-wrap gap-3">
+            <input name="q" value="{{ request('q') }}" placeholder="Search name or email"
+                   class="border-gray-300 rounded-md text-sm w-64">
+            <select name="status" class="border-gray-300 rounded-md text-sm">
+                <option value="">All statuses</option>
+                @foreach (['pending','active','suspended'] as $s)
+                    <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
+                @endforeach
+            </select>
+            <button class="px-4 py-2 bg-gray-900 text-white rounded-md text-sm">Filter</button>
+        </form>
+        <a href="{{ route('admin.clients.create') }}" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium"><i class="fa-solid fa-user-plus mr-1"></i> New client</a>
+    </div>
 
     <div class="bg-white shadow rounded-xl overflow-hidden">
         <table class="min-w-full text-sm">

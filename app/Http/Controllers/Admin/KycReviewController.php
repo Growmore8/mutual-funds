@@ -19,11 +19,15 @@ class KycReviewController extends Controller
         return view('admin.kyc.index', compact('documents'));
     }
 
-    public function file(KycDocument $document)
+    public function file(KycDocument $document, string $side = 'front')
     {
-        abort_unless(Storage::disk('local')->exists($document->file_path), 404);
+        $path = $side === 'back'
+            ? $document->back_path
+            : ($document->front_path ?? $document->file_path);
 
-        return Storage::disk('local')->response($document->file_path);
+        abort_if(! $path || ! Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path);
     }
 
     public function approve(Request $request, KycDocument $document)

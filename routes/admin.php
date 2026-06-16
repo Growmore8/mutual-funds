@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\KycReviewController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PoolController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\WithdrawalController;
 use App\Models\PoolAccount;
@@ -29,9 +30,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Clients
     Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
+    Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
     Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
     Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::patch('/clients/{client}/status', [ClientController::class, 'updateStatus'])->name('clients.status');
+    Route::post('/clients/{client}/kyc', [ClientController::class, 'uploadKyc'])->name('clients.kyc.upload');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
 
     // Additional-account requests
@@ -41,7 +45,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // KYC review
     Route::get('/kyc', [KycReviewController::class, 'index'])->name('kyc.index');
-    Route::get('/kyc/{document}/file', [KycReviewController::class, 'file'])->name('kyc.file');
+    Route::get('/kyc/{document}/file/{side?}', [KycReviewController::class, 'file'])->name('kyc.file');
     Route::post('/kyc/{document}/approve', [KycReviewController::class, 'approve'])->name('kyc.approve');
     Route::post('/kyc/{document}/reject', [KycReviewController::class, 'reject'])->name('kyc.reject');
 
@@ -69,6 +73,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
     Route::post('/withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
     Route::post('/withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
+
+    // Admin settings (own profile + password)
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');
