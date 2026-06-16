@@ -71,6 +71,13 @@ class TransactionController extends Controller
         ]);
 
         $transaction->update($data);
+
+        // Keep the linked deposit/withdrawal record's amount in sync.
+        $cls = $transaction->source_type;
+        if ($cls && $transaction->source_id && class_exists($cls)) {
+            optional($cls::find($transaction->source_id))->update(['amount' => abs((float) $data['amount'])]);
+        }
+
         $this->recalc($transaction->user_id);
 
         return back()->with('status', 'Transaction updated.');
@@ -79,6 +86,14 @@ class TransactionController extends Controller
     public function destroy(Transaction $transaction)
     {
         $userId = $transaction->user_id;
+
+        // Deleting a deposit/withdrawal ledger entry also removes its source
+        // record, so Total Deposit / requests stay consistent with the balance.
+        $cls = $transaction->source_type;
+        if ($cls && $transaction->source_id && class_exists($cls)) {
+            $cls::where('id', $transaction->source_id)->delete();
+        }
+
         $transaction->delete();
         $this->recalc($userId);
 
