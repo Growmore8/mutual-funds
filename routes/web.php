@@ -14,6 +14,29 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Public, read-only feed of active account types (consumed by the marketing site).
+Route::get('/api/account-types', function () {
+    $types = \Illuminate\Support\Facades\Cache::remember('public.account-types', 300, function () {
+        return \App\Models\AccountType::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['name', 'slug', 'min_deposit', 'max_deposit', 'profit_share_pct', 'lock_in_months', 'description', 'features'])
+            ->map(fn ($t) => [
+                'name' => $t->name,
+                'slug' => $t->slug,
+                'min_deposit' => (float) $t->min_deposit,
+                'max_deposit' => $t->max_deposit !== null ? (float) $t->max_deposit : null,
+                'profit_share_pct' => (float) $t->profit_share_pct,
+                'lock_in_months' => (int) $t->lock_in_months,
+                'description' => $t->description,
+                'features' => $t->features ?? [],
+            ])
+            ->values();
+    });
+
+    return response()->json(['data' => $types])
+        ->header('Access-Control-Allow-Origin', '*');
+})->name('api.account-types');
+
 // Post-login landing: admins -> admin, clients -> client dashboard (gated by onboarding).
 Route::get('/dashboard', function () {
     return Auth::user()?->isAdmin()
