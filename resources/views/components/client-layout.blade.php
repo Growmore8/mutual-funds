@@ -55,7 +55,6 @@
             <a href="{{ route('support.index') }}" class="{{ $link(request()->routeIs('support.*')) }}"><i class="fa-solid fa-headset w-5 text-center"></i> Support</a>
 
             {!! $head !!}Account</p>
-            <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.edit')) }}"><i class="fa-solid fa-user w-5 text-center"></i> Profile</a>
             <a href="{{ route('security.index') }}" class="{{ $link(request()->routeIs('security.*')) }}"><i class="fa-solid fa-shield-halved w-5 text-center"></i> Security</a>
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                     class="nav-link w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10">

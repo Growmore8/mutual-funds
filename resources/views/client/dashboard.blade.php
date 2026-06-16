@@ -23,7 +23,7 @@
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
             <h2 class="text-2xl font-bold text-gray-900">Welcome, {{ $user->name }}</h2>
-            <p class="text-gray-500 text-sm">Here's your pool account overview.</p>
+            <p class="text-gray-500 text-sm">{{ $user->email }} · <span class="font-mono">{{ $user->clientCode() }}</span></p>
         </div>
     </div>
 
