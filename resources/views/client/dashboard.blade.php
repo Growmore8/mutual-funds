@@ -14,12 +14,12 @@
         <div class="bg-white rounded-2xl shadow-sm p-5">
             <p class="text-xs text-gray-500">Pool Account Size</p>
             <p class="text-2xl font-bold text-gray-900 mt-1">{{ $money($poolsCapacity > 0 ? $poolsCapacity : ($pool->capacity ?? 0)) }}</p>
-            <p class="text-[11px] text-gray-400 mt-1">Total managed pool</p>
+            <p class="text-[11px] text-gray-400 mt-1">Live ID: <span class="font-medium text-gray-500">{{ $liveRef ?? '—' }}</span></p>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5">
-            <p class="text-xs text-gray-500">Pool Profit (Today)</p>
-            <p class="text-2xl font-bold {{ $poolToday < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ $money($poolToday) }}</p>
-            <p class="text-[11px] text-gray-400 mt-1">{{ $latestSnap?->snapshot_date?->format('d M Y') ?? '—' }}</p>
+            <p class="text-xs text-gray-500 flex items-center gap-1">Pool P/L (Live) <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span></p>
+            <p id="live-pool" class="text-2xl font-bold {{ $poolsFloating < 0 ? 'text-red-600' : 'text-emerald-600' }} mt-1">{{ ($poolsFloating < 0 ? '-' : '+') . $money(abs($poolsFloating)) }}</p>
+            <p class="text-[11px] text-gray-400 mt-1">Running, updates live</p>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-5">
             <p class="text-xs text-gray-500">Your Investment</p>
@@ -116,6 +116,12 @@
                     }
                     const td = document.getElementById('live-today');
                     if (td) td.textContent = '$' + Number(d.today).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    const pl = document.getElementById('live-pool');
+                    if (pl && d.poolFloating !== undefined) {
+                        pl.textContent = (d.poolFloating < 0 ? '-' : '+') + money(d.poolFloating);
+                        pl.classList.toggle('text-red-600', d.poolFloating < 0);
+                        pl.classList.toggle('text-emerald-600', d.poolFloating >= 0);
+                    }
                 } catch (e) { /* ignore */ }
             }
             tick();

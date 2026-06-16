@@ -14,12 +14,15 @@ class ClientDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->load('accountType');
+        $user = $request->user()->load('accountType', 'poolAccount');
 
-        // The pools this client has capital in (a client can be in several).
+        // Pools the client is tied to: their deposits' pools + the admin-assigned Live ID.
         $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
+        if ($user->pool_account_id) {
+            $poolIds = $poolIds->push($user->pool_account_id)->unique()->values();
+        }
         $pools = PoolAccount::whereIn('id', $poolIds)->get();
-        $pool = $pools->first() ?? PoolAccount::first();   // for display fallback
+        $pool = $pools->first() ?? $user->poolAccount ?? PoolAccount::where('is_active', true)->first();   // display pool
         $latestSnap = $pool?->snapshots()->latest('snapshot_date')->first();
 
         $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
@@ -44,9 +47,10 @@ class ClientDashboardController extends Controller
         $poolBalance = $poolsBalance;
 
         // Open (floating, unrealized) P/L — the client's proportional share.
-        $poolsFloating = (float) $pools->sum('floating_pnl');
+        $poolsFloating = $pools->isNotEmpty() ? (float) $pools->sum('floating_pnl') : (float) ($pool->floating_pnl ?? 0);
         $shareWeight = $planPool > 0 ? min(1.0, $investment / $planPool) : 0.0;
         $floatingShare = round($poolsFloating * $shareWeight, 2);
+        $liveRef = $pool->account_ref ?? null;   // assigned Live ID / pool account
 
         // last 14 days of the client's net profit for the chart
         $chart = PnlAllocation::where('user_id', $user->id)
@@ -61,7 +65,7 @@ class ClientDashboardController extends Controller
         return view('client.dashboard', compact(
             'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare'
+            'poolsFloating', 'floatingShare', 'liveRef'
         ));
     }
 
@@ -71,20 +75,27 @@ class ClientDashboardController extends Controller
         $user = $request->user()->load('accountType');
 
         $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
+        if ($user->pool_account_id) {
+            $poolIds = $poolIds->push($user->pool_account_id)->unique()->values();
+        }
         $pools = PoolAccount::whereIn('id', $poolIds)->get();
+        if ($pools->isEmpty() && ($first = PoolAccount::where('is_active', true)->first())) {
+            $pools = collect([$first]);   // show the managed pool's live P/L even before investing
+        }
         $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
         $planPool = (float) ($user->accountType->pool_amount ?? 0);
         $shareWeight = $planPool > 0 ? min(1.0, $investment / $planPool) : 0.0;
 
-        $floatingTotal = 0.0;
+        $poolFloating = 0.0;
         foreach ($pools as $pool) {
-            $floatingTotal += (float) (PoolController::liveFigures($api, $pool)['floating'] ?? 0);
+            $poolFloating += (float) (PoolController::liveFigures($api, $pool)['floating'] ?? 0);
         }
 
-        $floatingShare = round($floatingTotal * $shareWeight, 2);
+        $floatingShare = round($poolFloating * $shareWeight, 2);
         $today = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today())->sum('net_pnl');
 
         return response()->json([
+            'poolFloating' => round($poolFloating, 2),
             'floatingShare' => $floatingShare,
             'today' => $today,
             'at' => now()->format('H:i:s'),
