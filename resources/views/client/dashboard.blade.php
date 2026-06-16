@@ -41,7 +41,7 @@
         $hline = implode(' ', $hcoords);
         $harea = $n ? ('0,120 ' . $hline . ' 600,120') : '';
     @endphp
-    <div class="mb-6 rounded-2xl p-6 bg-white dark:bg-white/[0.04] shadow-sm border border-transparent dark:border-white/10 dark:backdrop-blur">
+    <div class="mb-6 rounded-2xl p-6 bg-white dark:bg-white/[0.04] shadow-sm border border-transparent dark:border-white/[0.06] dark:backdrop-blur">
         <div class="flex items-start justify-between gap-4" x-data="{ show: true }">
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Balance
@@ -78,7 +78,7 @@
     </div>
 
     @php
-        $card = 'gcard bg-white dark:bg-white/[0.04] rounded-2xl shadow-sm dark:shadow-none border border-transparent dark:border-white/10 dark:backdrop-blur';
+        $card = 'gcard bg-white dark:bg-white/[0.04] rounded-2xl shadow-sm dark:shadow-none border border-transparent dark:border-white/[0.06] dark:backdrop-blur';
         $sub  = 'text-gray-400 dark:text-gray-500';
         $lbl  = 'text-gray-500 dark:text-gray-400';
         $head = 'font-semibold text-gray-900 dark:text-white';
@@ -125,22 +125,22 @@
         <div class="{{ $card }} p-6">
             <h3 class="{{ $head }} mb-4">Your Earnings Overview</h3>
             <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-xl border border-gray-100 dark:border-white/10 p-4">
+                <div class="rounded-xl border border-gray-100 dark:border-white/[0.06] p-4">
                     <div class="flex items-center justify-between"><p class="text-xs {{ $lbl }}">Today's Profit</p><span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300 grid place-items-center"><i class="fa-solid fa-dollar-sign"></i></span></div>
                     <p id="live-today" class="text-lg font-bold text-gray-900 dark:text-white mt-2">{{ $money($today) }}</p>
                     <p class="text-[11px] {{ $sub }}">From today's pool profit</p>
                 </div>
-                <div class="rounded-xl border border-gray-100 dark:border-white/10 p-4">
+                <div class="rounded-xl border border-gray-100 dark:border-white/[0.06] p-4">
                     <div class="flex items-center justify-between"><p class="text-xs {{ $lbl }}">Total Earned</p><span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300 grid place-items-center"><i class="fa-solid fa-sack-dollar"></i></span></div>
                     <p class="text-lg font-bold text-gray-900 dark:text-white mt-2">{{ $money($totalEarned) }}</p>
                     <p class="text-[11px] {{ $sub }}">All time earnings</p>
                 </div>
-                <div class="rounded-xl border border-gray-100 dark:border-white/10 p-4">
+                <div class="rounded-xl border border-gray-100 dark:border-white/[0.06] p-4">
                     <div class="flex items-center justify-between"><p class="text-xs {{ $lbl }}">Yesterday's Profit</p><span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300 grid place-items-center"><i class="fa-solid fa-dollar-sign"></i></span></div>
                     <p class="text-lg font-bold text-gray-900 dark:text-white mt-2">{{ $money($yesterday) }}</p>
                     <p class="text-[11px] {{ $sub }}">From yesterday's pool profit</p>
                 </div>
-                <div class="rounded-xl border border-gray-100 dark:border-white/10 p-4">
+                <div class="rounded-xl border border-gray-100 dark:border-white/[0.06] p-4">
                     <div class="flex items-center justify-between"><p class="text-xs {{ $lbl }}">This Month's Profit</p><span class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300 grid place-items-center"><i class="fa-solid fa-chart-column"></i></span></div>
                     <p class="text-lg font-bold text-gray-900 dark:text-white mt-2">{{ $money($month) }}</p>
                     <p class="text-[11px] {{ $sub }}">Total profit this month</p>

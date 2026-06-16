@@ -22,10 +22,18 @@
         .nav-link{transition:all .15s ease}
         .nav-link:hover{transform:translateX(2px)}
         .tab{transition:transform .15s ease, color .15s ease}
-        .tab.is-active{color:#059669}
+        .tab.is-active{color:#10b981}
         .tab.is-active .tab-ico{transform:translateY(-2px) scale(1.08)}
         .safe-b{padding-bottom:env(safe-area-inset-bottom)}
         .safe-t{padding-top:env(safe-area-inset-top)}
+        /* Premium dark backdrop: near-black with a soft emerald glow up top */
+        html.dark body{
+            background-color:#070b16;
+            background-image:radial-gradient(1100px 520px at 50% -12%, rgba(16,185,129,.12), transparent 60%);
+            background-attachment:fixed;
+        }
+        html.dark .gcard,html.dark aside{background-color:rgba(255,255,255,.035)!important}
+        html.dark aside{background-color:#0a1228!important}
     </style>
 </head>
 <body class="h-full bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
@@ -33,7 +41,7 @@
 
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
-        <div class="px-6 py-5 border-b border-white/10 flex items-center gap-2.5">
+        <div class="px-6 h-16 shrink-0 border-b border-white/[0.06] flex items-center gap-2.5">
             <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
             <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
         </div>
@@ -69,7 +77,7 @@
     {{-- Main --}}
     <div class="flex-1 lg:pl-64 pb-24 lg:pb-0">
         {{-- Top bar: logo+name left, notifications + profile right --}}
-        <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/10 backdrop-blur sticky top-0 z-30 safe-t">
+        <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0 lg:hidden">
                     <img src="/logo.png" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
@@ -102,7 +110,7 @@
     </div>
 
     {{-- Mobile bottom tab bar --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 border-t border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/10 backdrop-blur z-40 safe-b">
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 border-t border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur z-40 safe-b">
         <div class="grid grid-cols-5 items-center h-16 px-1">
             @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
