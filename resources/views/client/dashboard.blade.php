@@ -225,17 +225,26 @@
                     reg[id].target = target; reg[id].signed = signed;
                 }
                 el.dataset.val = target;
+                kick();
             }
-            setInterval(() => {
-                if (document.hidden) return;
+            // rAF easing: syncs to the display, auto-pauses when the tab is hidden,
+            // and does NO DOM writes once every value has reached its target.
+            let raf = null;
+            function frame() {
+                raf = null;
+                let moving = false;
                 for (const id in reg) {
                     const o = reg[id];
                     const diff = o.target - o.cur;
-                    o.cur = Math.abs(diff) < 0.01 ? o.target : o.cur + diff * 0.18;   // ease
+                    if (Math.abs(diff) < 0.01) { if (o.cur !== o.target) { o.cur = o.target; } else continue; }
+                    else { o.cur += diff * 0.18; moving = true; }
                     o.el.textContent = fmt(o.cur, o.signed);
                     if (o.signed) { o.el.classList.toggle('text-red-600', o.cur < 0); o.el.classList.toggle('text-emerald-600', o.cur >= 0); }
                 }
-            }, 90);
+                if (moving && !document.hidden) raf = requestAnimationFrame(frame);
+            }
+            function kick() { if (!raf && !document.hidden) raf = requestAnimationFrame(frame); }
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
 
             async function tick() {
                 if (document.hidden) return;

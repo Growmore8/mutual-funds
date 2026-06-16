@@ -1,6 +1,6 @@
 {
-    "name": "GrowthCapital Mutual Funds",
-    "short_name": "GrowthCapital",
+    "name": "GC Fund",
+    "short_name": "GC Fund",
     "description": "Your managed mutual-fund pool account — invest, track daily profit, and withdraw.",
     "start_url": "/app",
     "scope": "/",
