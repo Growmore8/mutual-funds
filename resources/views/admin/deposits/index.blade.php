@@ -17,7 +17,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse ($deposits as $d)
                     <tr>
-                        <td class="px-4 py-3 text-gray-400 text-xs">{{ $d->created_at->format('d M Y') }}</td>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ $d->created_at->format('d M Y') }}<br>{{ $d->created_at->format('h:i A') }}</td>
                         <td class="px-4 py-3">
                             <div class="font-medium text-gray-900">{{ $d->user->name ?? '—' }}</div>
                             <div class="text-gray-400 text-xs font-mono">{{ $d->user?->clientCode() }}</div>

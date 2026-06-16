@@ -25,7 +25,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse ($transactions as $t)
                     <tr>
-                        <td class="px-4 py-3 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}<br>{{ $t->created_at->format('h:i A') }}</td>
                         <td class="px-4 py-3 capitalize">
                             @php $ti = ['deposit'=>'fa-arrow-down text-emerald-600','withdrawal'=>'fa-arrow-up text-red-500','profit'=>'fa-chart-line text-emerald-600'][$t->type] ?? 'fa-circle text-gray-400'; @endphp
                             <i class="fa-solid {{ $ti }} mr-1"></i> {{ $t->type }}

@@ -26,7 +26,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse ($withdrawals as $w)
                     <tr>
-                        <td class="px-4 py-3 text-gray-400">{{ $w->created_at->format('d M Y') }}</td>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ $w->created_at->format('d M Y') }}<br>{{ $w->created_at->format('h:i A') }}</td>
                         <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $w->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $w->user?->clientCode() }}</div><div class="text-gray-400 text-xs">{{ $w->user->email ?? '' }}</div></td>
                         <td class="px-4 py-3 font-semibold">{{ $money($w->amount) }}</td>
                         <td class="px-4 py-3 text-gray-600"><div>{{ $w->method }}</div><div class="text-xs text-gray-400 max-w-xs whitespace-pre-line">{{ $w->payout_details }}</div></td>
