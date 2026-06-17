@@ -154,6 +154,11 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function withdrawalMethods()
+    {
+        return $this->hasMany(WithdrawalMethod::class)->latest('id');
+    }
+
     public function appNotifications()
     {
         return $this->hasMany(AppNotification::class)->latest();

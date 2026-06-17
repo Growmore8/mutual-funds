@@ -33,23 +33,28 @@
                                class="w-full border-gray-300 rounded-md" placeholder="0.00" {{ $available <= 0 ? 'disabled' : '' }}>
                     </div>
                     <div>
-                        <label class="block text-gray-700 mb-1">Payout method</label>
-                        <select name="method" class="w-full border-gray-300 rounded-md" required {{ $available <= 0 ? 'disabled' : '' }}>
-                            @forelse ($methods as $m)
-                                <option value="{{ trim($m->name . ($m->network ? ' · '.$m->network : '')) }}">{{ $m->name }}{{ $m->network ? ' · '.$m->network : '' }} ({{ $m->currency }})</option>
-                            @empty
-                                <option value="Bank Wire">Bank Wire</option>
-                                <option value="USDT (TRC20)">USDT (TRC20)</option>
-                            @endforelse
-                        </select>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-gray-700">Send to</label>
+                            <a href="{{ route('payout.index') }}" class="text-xs text-emerald-600 font-medium">Manage payout methods</a>
+                        </div>
+                        @forelse ($payoutMethods as $pm)
+                            <label class="flex items-center gap-3 p-3 mb-2 rounded-xl border border-gray-200 hover:border-emerald-400 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/40">
+                                <input type="radio" name="withdrawal_method_id" value="{{ $pm->id }}" required {{ $loop->first ? 'checked' : '' }} class="text-emerald-600">
+                                <span class="w-9 h-9 rounded-lg grid place-items-center text-white shrink-0 {{ $pm->type==='crypto' ? 'bg-amber-500' : ($pm->type==='upi' ? 'bg-purple-500' : 'bg-blue-600') }}">
+                                    <i class="fa-solid {{ $pm->type==='crypto' ? 'fa-coins' : ($pm->type==='upi' ? 'fa-mobile-screen' : 'fa-building-columns') }} text-sm"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="font-medium text-gray-900">{{ $pm->title() }}</p>
+                                    <p class="text-xs text-gray-400 truncate">{{ $pm->summary() }}</p>
+                                </div>
+                            </label>
+                        @empty
+                            <div class="rounded-xl border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
+                                No payout methods saved. <a href="{{ route('payout.index') }}" class="text-emerald-600 font-medium">Add one first</a> to withdraw.
+                            </div>
+                        @endforelse
                     </div>
-                    <div>
-                        <label class="block text-gray-700 mb-1">Your payout details</label>
-                        <textarea name="payout_details" rows="3" required maxlength="1000"
-                                  class="w-full border-gray-300 rounded-md"
-                                  placeholder="Bank account / IBAN / SWIFT, or your USDT wallet address" {{ $available <= 0 ? 'disabled' : '' }}>{{ old('payout_details') }}</textarea>
-                    </div>
-                    <button {{ $available <= 0 ? 'disabled' : '' }} class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button {{ $available <= 0 || $payoutMethods->isEmpty() ? 'disabled' : '' }} class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fa-solid fa-money-bill-transfer"></i> Submit request
                     </button>
                 </form>

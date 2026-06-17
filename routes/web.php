@@ -97,6 +97,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');
         Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->name('withdraw.store');
 
+        // Client payout (withdrawal) methods
+        Route::get('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'index'])->name('payout.index');
+        Route::post('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'store'])->name('payout.store');
+        Route::delete('/payout-methods/{payout}', [\App\Http\Controllers\WithdrawalMethodController::class, 'destroy'])->name('payout.destroy');
+
         // Statements
         Route::get('/transactions', [\App\Http\Controllers\StatementController::class, 'transactions'])->name('client.transactions');
         Route::get('/profit', [\App\Http\Controllers\StatementController::class, 'profit'])->name('client.profit');

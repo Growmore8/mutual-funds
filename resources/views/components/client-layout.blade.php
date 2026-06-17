@@ -71,6 +71,7 @@
             {!! $head !!}Money</p>
             <a href="{{ route('client.deposit.create') }}" class="{{ $link(request()->routeIs('client.deposit.*')) }}"><i class="fa-solid fa-arrow-down w-5 text-center"></i> Deposit</a>
             <a href="{{ route('withdraw.create') }}" class="{{ $link(request()->routeIs('withdraw.*')) }}"><i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Withdraw</a>
+            <a href="{{ route('payout.index') }}" class="{{ $link(request()->routeIs('payout.*')) }}"><i class="fa-solid fa-money-check-dollar w-5 text-center"></i> Payout Methods</a>
 
             {!! $head !!}Activity</p>
             <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>

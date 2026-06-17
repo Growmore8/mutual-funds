@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaymentMethod;
 use App\Models\Withdrawal;
+use App\Models\WithdrawalMethod;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -15,7 +15,7 @@ class WithdrawalController extends Controller
 
         return view('client.withdraw.create', [
             'available' => $user->availableToWithdraw(),
-            'methods' => PaymentMethod::orderBy('sort_order')->get(),
+            'payoutMethods' => $user->withdrawalMethods,
             'withdrawals' => $user->withdrawals()->latest()->limit(10)->get(),
         ]);
     }
@@ -27,9 +27,13 @@ class WithdrawalController extends Controller
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
-            'method' => ['required', 'string', 'max:120'],
-            'payout_details' => ['required', 'string', 'max:1000'],
+            'withdrawal_method_id' => ['required', 'exists:withdrawal_methods,id'],
         ]);
+
+        $method = WithdrawalMethod::where('id', $data['withdrawal_method_id'])->where('user_id', $user->id)->first();
+        if (! $method) {
+            throw ValidationException::withMessages(['withdrawal_method_id' => 'Please choose one of your saved payout methods.']);
+        }
 
         if ($data['amount'] > $available) {
             throw ValidationException::withMessages([
@@ -41,15 +45,16 @@ class WithdrawalController extends Controller
             'user_id' => $user->id,
             'amount' => $data['amount'],
             'currency' => 'USD',
-            'method' => $data['method'],
-            'payout_details' => $data['payout_details'],
+            'method' => $method->title(),
+            'withdrawal_method_id' => $method->id,
+            'payout_details' => $method->summary(),
             'status' => 'pending',
         ]);
 
         \App\Models\AppNotification::notifyAdmins(
             'withdrawal',
             'New withdrawal request',
-            $user->name . ' · $' . number_format((float) $data['amount'], 2) . ' · ' . $data['method'],
+            $user->name . ' · $' . number_format((float) $data['amount'], 2) . ' · ' . $method->title(),
             route('admin.withdrawals.index'),
         );
 
