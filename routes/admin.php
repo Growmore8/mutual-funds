@@ -18,13 +18,41 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', function () {
+        $pendingKyc = \App\Models\KycDocument::where('status', 'submitted')->count();
+        $pendingDeposits = \App\Models\Deposit::where('status', 'pending')->count();
+        $pendingWithdrawals = \App\Models\Withdrawal::where('status', 'pending')->count();
+        $pendingAccountRequests = \App\Models\AccountRequest::where('status', 'pending')->count();
+
+        // Pool-account-wise cumulative PnL growth over the last 14 days.
+        $pools = PoolAccount::orderBy('account_ref')->get();
+        $days = collect(range(0, 13))->map(fn ($i) => now()->subDays(13 - $i)->toDateString());
+        $snaps = \App\Models\PoolSnapshot::where('snapshot_date', '>=', $days->first())
+            ->get(['pool_account_id', 'snapshot_date', 'pnl']);
+
+        $series = $pools->map(function ($p) use ($snaps, $days) {
+            $cum = 0.0;
+            $points = $days->map(function ($d) use ($snaps, $p, &$cum) {
+                $cum += (float) $snaps->where('pool_account_id', $p->id)
+                    ->filter(fn ($s) => $s->snapshot_date->toDateString() === $d)->sum('pnl');
+
+                return round($cum, 2);
+            })->values();
+
+            return ['id' => $p->id, 'ref' => $p->account_ref, 'name' => $p->name, 'points' => $points];
+        })->values();
+
         return view('admin.dashboard', [
             'clients' => User::where('role', 'client')->count(),
-            'pendingKyc' => User::where('kyc_status', 'submitted')->count(),
-            'pendingWithdrawals' => \App\Models\Withdrawal::where('status', 'pending')->count(),
-            'pendingAccountRequests' => \App\Models\AccountRequest::where('status', 'pending')->count(),
-            'openTickets' => \App\Models\SupportTicket::whereIn('status', ['open', 'answered'])->count(),
-            'pool' => PoolAccount::first(),
+            'totalDeposits' => (float) \App\Models\Deposit::where('status', 'approved')->sum('amount'),
+            'totalWithdrawals' => (float) \App\Models\Withdrawal::where('status', 'approved')->sum('amount'),
+            'poolCount' => $pools->count(),
+            'pendingRequests' => $pendingKyc + $pendingDeposits + $pendingWithdrawals + $pendingAccountRequests,
+            'pendingKyc' => $pendingKyc,
+            'pendingDeposits' => $pendingDeposits,
+            'pendingWithdrawals' => $pendingWithdrawals,
+            'pendingAccountRequests' => $pendingAccountRequests,
+            'chartLabels' => $days->map(fn ($d) => \Illuminate\Support\Carbon::parse($d)->format('d M')),
+            'chartSeries' => $series,
         ]);
     })->name('dashboard');
 

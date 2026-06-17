@@ -1,32 +1,97 @@
 <x-admin-layout title="Dashboard">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <a href="{{ route('admin.clients.index') }}" class="bg-white shadow rounded-xl p-6 hover:shadow-md transition">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-users text-gray-400 mr-1"></i> Clients</p>
-            <p class="text-3xl font-bold text-gray-900">{{ $clients }}</p>
+    @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
+
+    {{-- Stat cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        <a href="{{ route('admin.clients.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-users text-gray-400 mr-1"></i> Total clients</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $clients }}</p>
         </a>
-        <a href="{{ route('admin.kyc.index') }}" class="bg-white shadow rounded-xl p-6 hover:shadow-md transition">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-id-card text-gray-400 mr-1"></i> KYC pending review</p>
-            <p class="text-3xl font-bold text-amber-600">{{ $pendingKyc }}</p>
+        <a href="{{ route('admin.deposits.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-arrow-down-to-bracket text-gray-400 mr-1"></i> Total deposits</p>
+            <p class="text-3xl font-bold text-emerald-600 mt-1">{{ $money($totalDeposits) }}</p>
         </a>
-        <a href="{{ route('admin.withdrawals.index', ['status' => 'pending']) }}" class="bg-white shadow rounded-xl p-6 hover:shadow-md transition">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-money-bill-transfer text-gray-400 mr-1"></i> Withdrawals pending</p>
-            <p class="text-3xl font-bold text-amber-600">{{ $pendingWithdrawals }}</p>
+        <a href="{{ route('admin.withdrawals.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-money-bill-transfer text-gray-400 mr-1"></i> Total withdrawals</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $money($totalWithdrawals) }}</p>
         </a>
-        <a href="{{ route('admin.messages.index', ['status' => 'open']) }}" class="bg-white shadow rounded-xl p-6 hover:shadow-md transition">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-headset text-gray-400 mr-1"></i> Open tickets</p>
-            <p class="text-3xl font-bold text-emerald-600">{{ $openTickets }}</p>
+        <a href="{{ route('admin.pool.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-layer-group text-gray-400 mr-1"></i> Pool accounts</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $poolCount }}</p>
+        </a>
+        <a href="{{ route('admin.deposits.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-inbox text-gray-400 mr-1"></i> Requests pending</p>
+            <p class="text-3xl font-bold text-amber-600 mt-1">{{ $pendingRequests }}</p>
+            <p class="text-[11px] text-gray-400 mt-1">KYC {{ $pendingKyc }} · Dep {{ $pendingDeposits }} · Wd {{ $pendingWithdrawals }} · Acc {{ $pendingAccountRequests }}</p>
         </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-        <a href="{{ route('admin.account-requests.index', ['status' => 'pending']) }}" class="bg-white shadow rounded-xl p-6 hover:shadow-md transition">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-folder-plus text-gray-400 mr-1"></i> Account requests pending</p>
-            <p class="text-3xl font-bold text-amber-600">{{ $pendingAccountRequests }}</p>
-        </a>
-        <div class="bg-white shadow rounded-xl p-6">
-            <p class="text-sm text-gray-500"><i class="fa-solid fa-layer-group text-gray-400 mr-1"></i> Pool account</p>
-            <p class="text-3xl font-bold text-gray-900">{{ $pool?->account_ref ?? '—' }}</p>
-            <p class="text-xs text-gray-400">Capacity {{ number_format((float)($pool?->capacity ?? 0)) }} {{ $pool?->currency }}</p>
+    {{-- Pool-account PnL growth chart (last 14 days) --}}
+    <div class="bg-white shadow rounded-xl p-6 mt-6" x-data="poolChart()">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+                <h3 class="font-semibold text-gray-900">Pool PnL growth</h3>
+                <p class="text-xs text-gray-400">Cumulative closed PnL · last 14 days</p>
+            </div>
+            <select x-model="sel" @change="draw()" class="border-gray-300 rounded-md text-sm">
+                <option value="all">All pools (combined)</option>
+                @foreach ($chartSeries as $s)
+                    <option value="{{ $s['id'] }}">{{ $s['ref'] }}{{ $s['name'] ? ' · ' . $s['name'] : '' }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="relative">
+            <svg viewBox="0 0 600 200" preserveAspectRatio="none" class="w-full h-56">
+                <defs>
+                    <linearGradient id="poolfill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(16,185,129,.25)"/>
+                        <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+                    </linearGradient>
+                </defs>
+                <polygon :points="area" fill="url(#poolfill)"></polygon>
+                <polyline :points="line" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+            </svg>
+        </div>
+        <div class="flex justify-between text-[11px] text-gray-400 mt-2">
+            <span>{{ $chartLabels->first() }}</span>
+            <span x-text="'High: ' + hi + '  ·  Low: ' + lo"></span>
+            <span>{{ $chartLabels->last() }}</span>
         </div>
     </div>
+
+    <script>
+        function poolChart() {
+            const series = @json($chartSeries);
+            const W = 600, H = 200, PAD = 8;
+            return {
+                sel: 'all', line: '', area: '', hi: '0', lo: '0',
+                init() { this.draw(); },
+                points() {
+                    if (this.sel === 'all') {
+                        const n = series.length ? series[0].points.length : 0;
+                        const sum = Array(n).fill(0);
+                        series.forEach(s => s.points.forEach((v, i) => sum[i] += Number(v)));
+                        return sum;
+                    }
+                    const s = series.find(x => String(x.id) === String(this.sel));
+                    return s ? s.points.map(Number) : [];
+                },
+                draw() {
+                    const pts = this.points();
+                    if (!pts.length) { this.line = ''; this.area = ''; return; }
+                    const max = Math.max(...pts), min = Math.min(...pts);
+                    const range = (max - min) || 1;
+                    this.hi = '$' + max.toLocaleString(); this.lo = '$' + min.toLocaleString();
+                    const coords = pts.map((v, i) => {
+                        const x = pts.length > 1 ? (i / (pts.length - 1)) * W : W / 2;
+                        const y = PAD + (1 - (v - min) / range) * (H - PAD * 2);
+                        return x.toFixed(1) + ',' + y.toFixed(1);
+                    });
+                    this.line = coords.join(' ');
+                    this.area = '0,' + H + ' ' + this.line + ' ' + W + ',' + H;
+                },
+            };
+        }
+    </script>
 </x-admin-layout>
