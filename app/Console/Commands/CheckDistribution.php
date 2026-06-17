@@ -84,7 +84,7 @@ class CheckDistribution extends Command
         if ($snapshots->isEmpty()) {
             $this->warn("No pool snapshots for {$date} — nothing was synced/distributed that day.");
 
-            return self::SUCCESS;
+            return;
         }
 
         foreach ($snapshots as $snap) {
