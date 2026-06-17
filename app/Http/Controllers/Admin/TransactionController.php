@@ -104,12 +104,22 @@ class TransactionController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $oldAmount = (float) $transaction->getOriginal('amount');
         $transaction->update($data);
 
         // Keep the linked deposit/withdrawal record's amount in sync.
         $cls = $transaction->source_type;
         if ($cls && $transaction->source_id && class_exists($cls)) {
             optional($cls::find($transaction->source_id))->update(['amount' => abs((float) $data['amount'])]);
+        }
+
+        // Keep the PnL allocation in sync when a profit/loss row is edited.
+        if ($transaction->type === 'profit' && $transaction->pnl_allocation_id) {
+            $delta = round((float) $data['amount'] - $oldAmount, 2);
+            if (abs($delta) >= 0.005 && ($alloc = \App\Models\PnlAllocation::find($transaction->pnl_allocation_id))) {
+                $alloc->increment('net_pnl', $delta);
+                $alloc->increment('gross_pnl', $delta);
+            }
         }
 
         $this->recalc($transaction->user_id);
@@ -127,6 +137,17 @@ class TransactionController extends Controller
         $cls = $transaction->source_type;
         if ($cls && $transaction->source_id && class_exists($cls)) {
             $cls::where('id', $transaction->source_id)->delete();
+        }
+
+        // Deleting a profit/loss row reverses its share from the PnL allocation,
+        // so profit history and the distributed total stay consistent.
+        if ($transaction->type === 'profit' && $transaction->pnl_allocation_id
+            && ($alloc = \App\Models\PnlAllocation::find($transaction->pnl_allocation_id))) {
+            $alloc->decrement('net_pnl', (float) $transaction->amount);
+            $alloc->decrement('gross_pnl', (float) $transaction->amount);
+            if (abs((float) $alloc->fresh()->net_pnl) < 0.005 && abs((float) $alloc->fresh()->gross_pnl) < 0.005) {
+                $alloc->delete();
+            }
         }
 
         $transaction->delete();
