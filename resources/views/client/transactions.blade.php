@@ -8,7 +8,6 @@
                 <a href="{{ route('client.transactions', array_filter(['type' => $key])) }}"
                    class="px-3 py-1.5 rounded-md {{ (string)$type === (string)$key ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50 dark:bg-white/5 dark:border-white/10 dark:text-gray-300' }}">{{ $label }}</a>
             @endforeach
-            <x-statement-modal :base-url="route('client.statement')" class="ml-1 px-3 py-1.5 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700"><i class="fa-solid fa-file-pdf mr-1"></i> Statement</x-statement-modal>
         </div>
     </div>
 
