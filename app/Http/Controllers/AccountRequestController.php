@@ -12,8 +12,11 @@ class AccountRequestController extends Controller
     {
         $user = $request->user()->load('accountType', 'poolAccount');
         $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
+        $accountTypes = AccountType::orderBy('min_deposit')->get();
+        $pendingRequest = $user->accountRequests()->with('accountType')->where('status', 'pending')->latest()->first();
+        $pastRequests = $user->accountRequests()->with('accountType')->whereIn('status', ['approved', 'rejected'])->latest()->limit(5)->get();
 
-        return view('client.accounts.index', compact('user', 'investment'));
+        return view('client.accounts.index', compact('user', 'investment', 'accountTypes', 'pendingRequest', 'pastRequests'));
     }
 
     public function store(Request $request)
@@ -32,11 +35,19 @@ class AccountRequestController extends Controller
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $user->accountRequests()->create([
+        $req = $user->accountRequests()->create([
             'account_type_id' => $data['account_type_id'],
             'reason' => $data['reason'] ?? null,
             'status' => 'pending',
         ]);
+
+        $plan = AccountType::find($data['account_type_id']);
+        \App\Models\AppNotification::notifyAdmins(
+            'info',
+            'New account request',
+            $user->name . ' requested a new ' . ($plan->name ?? 'account') . '.',
+            route('admin.account-requests.index'),
+        );
 
         return redirect()->route('accounts.index')
             ->with('status', 'Request submitted. An admin will review your additional account shortly.');

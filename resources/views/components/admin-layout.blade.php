@@ -32,13 +32,22 @@
 
             {!! $heading('Clients') !!}
             {!! $link('admin.clients.index', 'Clients', 'fa-users') !!}
-            {!! $link('admin.account-requests.index', 'Account Requests', 'fa-folder-plus') !!}
             {!! $link('admin.kyc.index', 'KYC Review', 'fa-id-card') !!}
             {!! $link('admin.account-types.index', 'Account Types', 'fa-layer-group') !!}
 
             {!! $heading('Finance') !!}
-            {!! $link('admin.deposits.index', 'Deposits', 'fa-arrow-down-to-bracket') !!}
-            {!! $link('admin.withdrawals.index', 'Withdrawals', 'fa-money-bill-transfer') !!}
+            @php
+                $reqCount = \App\Models\Deposit::where('status', 'pending')->count()
+                    + \App\Models\Withdrawal::where('status', 'pending')->count()
+                    + \App\Models\AccountRequest::where('status', 'pending')->count();
+                $reqActive = request()->routeIs('admin.deposits.*', 'admin.withdrawals.*', 'admin.account-requests.*');
+            @endphp
+            <a href="{{ route('admin.deposits.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md {{ $reqActive ? 'bg-emerald-500 text-[#04231a] font-semibold' : 'hover:bg-white/10' }}">
+                <i class="fa-solid fa-inbox w-5 text-center"></i><span>Requests</span>
+                @if ($reqCount > 0)
+                    <span class="ml-auto text-[11px] min-w-5 h-5 px-1.5 grid place-items-center rounded-full bg-red-500 text-white font-semibold">{{ $reqCount }}</span>
+                @endif
+            </a>
             {!! $link('admin.transactions.index', 'Transactions', 'fa-receipt') !!}
             {!! $link('admin.payment-methods.index', 'Payment Methods', 'fa-credit-card') !!}
 

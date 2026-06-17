@@ -1,6 +1,7 @@
-<x-admin-layout title="Withdrawal Requests">
+<x-admin-layout title="Requests · Withdrawals">
     @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
+    @include('admin.partials.request-tabs')
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <p class="text-sm text-gray-500">Client withdrawal requests (profit only). Approving debits the client's balance.</p>
         <div class="flex gap-1 text-sm">

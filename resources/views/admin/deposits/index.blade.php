@@ -1,4 +1,5 @@
-<x-admin-layout title="Deposits">
+<x-admin-layout title="Requests · Deposits">
+    @include('admin.partials.request-tabs')
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <p class="text-sm text-gray-500">Client deposit requests — review the slip, then approve or reject.</p>
         <div class="flex gap-1 text-sm">

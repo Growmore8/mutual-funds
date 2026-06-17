@@ -1,4 +1,5 @@
-<x-admin-layout title="Account Requests">
+<x-admin-layout title="Requests · Account Requests">
+    @include('admin.partials.request-tabs')
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <p class="text-sm text-gray-500">Clients requesting an additional account (the 1st account is free at registration).</p>
         <div class="flex gap-1 text-sm">

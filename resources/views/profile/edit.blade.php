@@ -12,6 +12,9 @@
 
         {{-- Settings --}}
         <div class="p-2 bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm divide-y divide-gray-100 dark:divide-white/[0.06] text-sm">
+            <a href="{{ route('accounts.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
+                <i class="fa-solid fa-circle-plus w-5 text-gray-400"></i> Open another account <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
+            </a>
             <a href="{{ route('security.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
                 <i class="fa-solid fa-shield-halved w-5 text-gray-400"></i> Security (PIN, biometric) <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
             </a>

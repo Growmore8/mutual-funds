@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
 
         // My account (read-only; account type is managed by admin)
         Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');
+        Route::post('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'store'])->name('accounts.store');
 
         // Deposit (client submits with slip -> admin approves)
         Route::get('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'create'])->name('client.deposit.create');
