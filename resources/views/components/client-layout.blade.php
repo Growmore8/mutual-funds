@@ -135,28 +135,32 @@
         </div>
     </div>
 
-    {{-- Mobile floating bottom nav (evenly spaced, locked to bottom by flex layout) --}}
-    <nav class="lg:hidden shrink-0 relative z-10 px-4 pt-1" style="padding-bottom:max(0.25rem,env(safe-area-inset-bottom))">
-        <div class="mx-auto max-w-sm rounded-[26px] bg-[#101d3d] border border-white/10 shadow-[0_12px_34px_rgba(0,0,0,.55)] grid grid-cols-5 items-center h-[68px] px-2">
-            @php $nav = 'flex items-center justify-center'; @endphp
+    {{-- Mobile bottom nav: active item expands into a labeled pill (ref style) --}}
+    @php
+        $navLinks = [
+            ['route' => 'client.dashboard',    'match' => 'client.dashboard',    'icon' => 'fa-house',                 'label' => 'Home'],
+            ['route' => 'client.profit',       'match' => 'client.profit',       'icon' => 'fa-chart-pie',             'label' => 'History'],
+            ['route' => 'client.transactions', 'match' => 'client.transactions', 'icon' => 'fa-arrow-right-arrow-left','label' => 'Transactions'],
+            ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
+        ];
+    @endphp
+    <nav class="lg:hidden shrink-0 relative z-10 px-3 pt-1" style="padding-bottom:max(0.4rem,calc(env(safe-area-inset-bottom) - 14px))">
+        <div class="mx-auto w-fit max-w-full flex items-center gap-1.5 rounded-full bg-[#0e1a35] border border-white/10 shadow-[0_12px_34px_rgba(0,0,0,.6)] px-2 py-2">
+            @foreach ($navLinks as $i => $it)
+                @php $active = request()->routeIs($it['match']); @endphp
+                <a href="{{ route($it['route']) }}"
+                   class="flex items-center justify-center rounded-full transition-all duration-200 {{ $active ? 'gap-2 px-4 h-12 bg-white/12 text-white' : 'w-12 h-12 text-gray-400 hover:text-gray-200' }}">
+                    <i class="fa-solid {{ $it['icon'] }} text-lg"></i>
+                    @if ($active)<span class="text-sm font-semibold whitespace-nowrap">{{ $it['label'] }}</span>@endif
+                </a>
 
-            <a href="{{ route('client.dashboard') }}" class="{{ $nav }}">
-                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-house text-lg"></i></span>
-            </a>
-            <a href="{{ route('client.profit') }}" class="{{ $nav }}">
-                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.profit') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-chart-pie text-lg"></i></span>
-            </a>
-            <div class="{{ $nav }}">
-                <button type="button" @click="sheet=!sheet" class="w-14 h-14 -mt-6 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-[#070d1f] active:scale-95 transition">
-                    <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
-                </button>
-            </div>
-            <a href="{{ route('client.transactions') }}" class="{{ $nav }}">
-                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.transactions') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-arrow-right-arrow-left text-lg"></i></span>
-            </a>
-            <a href="{{ route('profile.edit') }}" class="{{ $nav }}">
-                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('profile.edit') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-user text-lg"></i></span>
-            </a>
+                @if ($i === 1)
+                    {{-- center action (+) --}}
+                    <button type="button" @click="sheet=!sheet" class="w-12 h-12 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 active:scale-95 transition">
+                        <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                    </button>
+                @endif
+            @endforeach
         </div>
     </nav>
 
