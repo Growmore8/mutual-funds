@@ -40,6 +40,13 @@
         @keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         .page-in{animation:pagein .32s cubic-bezier(.22,1,.36,1) both}
         @media (prefers-reduced-motion: reduce){.page-in{animation:none}}
+        /* Gooey bead-chain bottom nav */
+        .goo{filter:url(#goofilter)}
+        .bead{width:58px;height:58px;border-radius:9999px;background:#0d1834;flex:0 0 auto}
+        html:not(.dark) .bead{background:#0f1b38}
+        .bead + .bead{margin-left:-14px}
+        .beadcell{width:58px;height:58px;flex:0 0 auto;display:grid;place-items:center}
+        .beadcell + .beadcell{margin-left:-14px}
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200 h-[100dvh] overflow-hidden flex flex-col lg:h-auto lg:min-h-[100dvh] lg:overflow-visible lg:block" x-data="{ sheet: false }">
@@ -128,28 +135,58 @@
         </div>
     </div>
 
-    {{-- Mobile bottom tab bar (locked to bottom by flex layout, not position:fixed) --}}
-    <nav class="lg:hidden shrink-0 relative z-10 px-3 pt-1"
-         style="padding-bottom:max(0.5rem,env(safe-area-inset-bottom))">
-        <div class="mx-auto max-w-md rounded-2xl bg-white/95 border border-gray-200 dark:bg-[#0d1834] dark:border-white/10 backdrop-blur-lg shadow-[0_-4px_24px_rgba(0,0,0,.35)]">
-            <div class="grid grid-cols-5 items-center h-16 px-1">
-                @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
-                <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
-                    <i class="fa-solid fa-house tab-ico text-lg"></i>Home</a>
-                <a href="{{ route('client.profit') }}" class="{{ $tab }} {{ request()->routeIs('client.profit') ? 'is-active' : '' }}">
-                    <i class="fa-solid fa-chart-line tab-ico text-lg"></i>History</a>
-                <button type="button" @click="sheet=!sheet" class="flex flex-col items-center justify-center -mt-7">
-                    <span class="w-14 h-14 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-gray-50 dark:ring-[#0d1834] transition active:scale-95">
-                        <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
-                    </span>
-                </button>
-                <a href="{{ route('client.transactions') }}" class="{{ $tab }} {{ request()->routeIs('client.transactions') ? 'is-active' : '' }}">
-                    <i class="fa-solid fa-receipt tab-ico text-lg"></i>Transactions</a>
-                <a href="{{ route('profile.edit') }}" class="{{ $tab }} {{ request()->routeIs('profile.edit') ? 'is-active' : '' }}">
-                    <i class="fa-solid fa-user tab-ico text-lg"></i>Profile</a>
+    {{-- Mobile gooey bead-chain nav (locked to bottom by flex layout) --}}
+    @php
+        $navItems = [
+            ['route' => 'client.dashboard',    'match' => 'client.dashboard',    'icon' => 'fa-house',                 'off' => 0],
+            ['route' => 'client.profit',       'match' => 'client.profit',       'icon' => 'fa-chart-pie',             'off' => 6],
+            ['action' => true,                                                    'icon' => 'fa-plus',                  'off' => 10],
+            ['route' => 'client.transactions', 'match' => 'client.transactions', 'icon' => 'fa-arrow-right-arrow-left','off' => 6],
+            ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'off' => 0],
+        ];
+    @endphp
+    <nav class="lg:hidden shrink-0 relative z-10 pt-2" style="padding-bottom:max(0.25rem,env(safe-area-inset-bottom))">
+        <div class="relative w-fit mx-auto">
+            {{-- gooey dark chain --}}
+            <div class="goo flex items-center px-3">
+                @foreach ($navItems as $it)
+                    <span class="bead" style="transform:translateY({{ $it['off'] }}px)"></span>
+                @endforeach
+            </div>
+            {{-- icons / links on top --}}
+            <div class="absolute inset-0 flex items-center px-3">
+                @foreach ($navItems as $it)
+                    @php $active = isset($it['match']) && request()->routeIs($it['match']); @endphp
+                    @if (!empty($it['action']))
+                        <button type="button" @click="sheet=!sheet" class="beadcell" style="transform:translateY({{ $it['off'] }}px)">
+                            <span class="w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 -translate-y-1.5 active:scale-95 transition">
+                                <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                            </span>
+                        </button>
+                    @else
+                        <a href="{{ route($it['route']) }}" class="beadcell" style="transform:translateY({{ $it['off'] }}px)">
+                            @if ($active)
+                                <span class="w-12 h-12 rounded-full bg-white text-[#0a1730] grid place-items-center shadow-lg -translate-y-1.5"><i class="fa-solid {{ $it['icon'] }} text-lg"></i></span>
+                            @else
+                                <i class="fa-solid {{ $it['icon'] }} text-lg text-gray-300"></i>
+                            @endif
+                        </a>
+                    @endif
+                @endforeach
             </div>
         </div>
     </nav>
+
+    {{-- SVG goo filter (merges the dark beads into a connected chain) --}}
+    <svg width="0" height="0" class="absolute" aria-hidden="true">
+        <defs>
+            <filter id="goofilter">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"/>
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo"/>
+                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+            </filter>
+        </defs>
+    </svg>
 
 <script>
     if ('serviceWorker' in navigator) {
