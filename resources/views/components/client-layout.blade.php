@@ -40,6 +40,9 @@
         @keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         .page-in{animation:pagein .32s cubic-bezier(.22,1,.36,1) both}
         @media (prefers-reduced-motion: reduce){.page-in{animation:none}}
+        /* App shell height: 100vh fallback, 100dvh where supported (fixes nav drift on webviews without dvh) */
+        .app-shell{height:100vh;height:100dvh}
+        @media (min-width:1024px){.app-shell{height:auto;min-height:100vh;min-height:100dvh}}
         /* Gooey bead-chain bottom nav */
         .goo{filter:url(#goofilter)}
         .bead{width:58px;height:58px;border-radius:9999px;background:#0d1834;flex:0 0 auto}
@@ -49,7 +52,7 @@
         .beadcell + .beadcell{margin-left:-14px}
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200 h-[100dvh] overflow-hidden flex flex-col lg:h-auto lg:min-h-[100dvh] lg:overflow-visible lg:block" x-data="{ sheet: false }">
+<body class="app-shell bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200 overflow-hidden flex flex-col lg:overflow-visible lg:block" x-data="{ sheet: false }">
 <div class="flex-1 min-h-0 overflow-y-auto lg:flex-none lg:min-h-[100dvh] lg:overflow-visible lg:flex">
 
     {{-- Desktop sidebar --}}
