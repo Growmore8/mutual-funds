@@ -135,58 +135,30 @@
         </div>
     </div>
 
-    {{-- Mobile gooey bead-chain nav (locked to bottom by flex layout) --}}
-    @php
-        $navItems = [
-            ['route' => 'client.dashboard',    'match' => 'client.dashboard',    'icon' => 'fa-house',                 'off' => 0],
-            ['route' => 'client.profit',       'match' => 'client.profit',       'icon' => 'fa-chart-pie',             'off' => 6],
-            ['action' => true,                                                    'icon' => 'fa-plus',                  'off' => 10],
-            ['route' => 'client.transactions', 'match' => 'client.transactions', 'icon' => 'fa-arrow-right-arrow-left','off' => 6],
-            ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'off' => 0],
-        ];
-    @endphp
-    <nav class="lg:hidden shrink-0 relative z-10 pt-2" style="padding-bottom:max(0.25rem,env(safe-area-inset-bottom))">
-        <div class="relative w-fit mx-auto">
-            {{-- gooey dark chain --}}
-            <div class="goo flex items-center px-3">
-                @foreach ($navItems as $it)
-                    <span class="bead" style="transform:translateY({{ $it['off'] }}px)"></span>
-                @endforeach
+    {{-- Mobile floating bottom nav (evenly spaced, locked to bottom by flex layout) --}}
+    <nav class="lg:hidden shrink-0 relative z-10 px-4 pt-1" style="padding-bottom:max(0.25rem,env(safe-area-inset-bottom))">
+        <div class="mx-auto max-w-sm rounded-[26px] bg-[#101d3d] border border-white/10 shadow-[0_12px_34px_rgba(0,0,0,.55)] grid grid-cols-5 items-center h-[68px] px-2">
+            @php $nav = 'flex items-center justify-center'; @endphp
+
+            <a href="{{ route('client.dashboard') }}" class="{{ $nav }}">
+                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.dashboard') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-house text-lg"></i></span>
+            </a>
+            <a href="{{ route('client.profit') }}" class="{{ $nav }}">
+                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.profit') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-chart-pie text-lg"></i></span>
+            </a>
+            <div class="{{ $nav }}">
+                <button type="button" @click="sheet=!sheet" class="w-14 h-14 -mt-6 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-[#070d1f] active:scale-95 transition">
+                    <i class="fa-solid fa-plus text-xl" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                </button>
             </div>
-            {{-- icons / links on top --}}
-            <div class="absolute inset-0 flex items-center px-3">
-                @foreach ($navItems as $it)
-                    @php $active = isset($it['match']) && request()->routeIs($it['match']); @endphp
-                    @if (!empty($it['action']))
-                        <button type="button" @click="sheet=!sheet" class="beadcell" style="transform:translateY({{ $it['off'] }}px)">
-                            <span class="w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 -translate-y-1.5 active:scale-95 transition">
-                                <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
-                            </span>
-                        </button>
-                    @else
-                        <a href="{{ route($it['route']) }}" class="beadcell" style="transform:translateY({{ $it['off'] }}px)">
-                            @if ($active)
-                                <span class="w-12 h-12 rounded-full bg-white text-[#0a1730] grid place-items-center shadow-lg -translate-y-1.5"><i class="fa-solid {{ $it['icon'] }} text-lg"></i></span>
-                            @else
-                                <i class="fa-solid {{ $it['icon'] }} text-lg text-gray-300"></i>
-                            @endif
-                        </a>
-                    @endif
-                @endforeach
-            </div>
+            <a href="{{ route('client.transactions') }}" class="{{ $nav }}">
+                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('client.transactions') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-arrow-right-arrow-left text-lg"></i></span>
+            </a>
+            <a href="{{ route('profile.edit') }}" class="{{ $nav }}">
+                <span class="w-11 h-11 rounded-full grid place-items-center {{ request()->routeIs('profile.edit') ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400' }}"><i class="fa-solid fa-user text-lg"></i></span>
+            </a>
         </div>
     </nav>
-
-    {{-- SVG goo filter (merges the dark beads into a connected chain) --}}
-    <svg width="0" height="0" class="absolute" aria-hidden="true">
-        <defs>
-            <filter id="goofilter">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"/>
-                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo"/>
-                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-            </filter>
-        </defs>
-    </svg>
 
 <script>
     if ('serviceWorker' in navigator) {
