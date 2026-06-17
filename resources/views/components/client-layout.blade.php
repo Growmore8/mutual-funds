@@ -147,19 +147,19 @@
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
-    <nav class="lg:hidden shrink-0 relative z-10 px-3" style="padding-top:0.2rem;padding-bottom:max(0.15rem,calc(env(safe-area-inset-bottom) - 34px))">
-        <div class="mx-auto w-fit max-w-full flex items-center gap-1.5 rounded-full bg-[#0e1a35] border border-white/10 px-2 py-2">
+    <nav class="lg:hidden shrink-0 relative z-10 px-2" style="padding-top:0.2rem;padding-bottom:max(0.15rem,calc(env(safe-area-inset-bottom) - 34px))">
+        <div class="flex items-center justify-around gap-1">
             @foreach ($navLinks as $i => $it)
                 @php $active = request()->routeIs($it['match']); @endphp
                 <a href="{{ route($it['route']) }}"
-                   class="flex items-center justify-center rounded-full transition-all duration-200 {{ $active ? 'gap-2 px-4 h-12 bg-white/12 text-white' : 'w-12 h-12 text-gray-400 hover:text-gray-200' }}">
+                   class="flex items-center justify-center rounded-full transition-all duration-200 {{ $active ? 'gap-2 px-4 h-12 bg-emerald-500/15 text-emerald-400' : 'w-12 h-12 text-gray-400 hover:text-gray-200' }}">
                     <i class="fa-solid {{ $it['icon'] }} text-lg"></i>
                     @if ($active)<span class="text-sm font-semibold whitespace-nowrap">{{ $it['label'] }}</span>@endif
                 </a>
 
                 @if ($i === 1)
                     {{-- center action (+) --}}
-                    <button type="button" @click="sheet=!sheet" class="w-12 h-12 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 active:scale-95 transition">
+                    <button type="button" @click="sheet=!sheet" class="w-12 h-12 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center active:scale-95 transition">
                         <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
                     </button>
                 @endif
