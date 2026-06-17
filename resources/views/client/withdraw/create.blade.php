@@ -32,10 +32,14 @@
                         <input type="number" step="0.01" min="1" @if($available > 0) max="{{ $available }}" @endif name="amount" value="{{ old('amount') }}" required
                                class="w-full border-gray-300 rounded-md" placeholder="0.00" {{ $available <= 0 ? 'disabled' : '' }}>
                     </div>
+                    <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3 flex items-start gap-2">
+                        <i class="fa-solid fa-shield-halved mt-0.5"></i>
+                        <span>For your security, withdrawals are sent only to an account in <strong>your own name</strong>. Third-party accounts are not allowed.</span>
+                    </div>
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label class="block text-gray-700">Send to</label>
-                            <a href="{{ route('payout.index') }}" class="text-xs text-emerald-600 font-medium">Manage payout methods</a>
+                            <a href="{{ route('payout.index') }}" class="text-xs text-emerald-600 font-medium">Manage withdrawal methods</a>
                         </div>
                         @forelse ($payoutMethods as $pm)
                             <label class="flex items-center gap-3 p-3 mb-2 rounded-xl border border-gray-200 hover:border-emerald-400 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/40">

@@ -35,7 +35,11 @@
 
         {{-- Add new --}}
         <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] p-5">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Add a withdrawal method</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Add a withdrawal method</h3>
+            <div class="mb-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-200 text-xs rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-shield-halved mt-0.5"></i>
+                <span>The bank account name must match <strong>your own registered name</strong>. Third-party accounts are not allowed for withdrawals.</span>
+            </div>
             <form method="POST" action="{{ route('payout.store') }}" class="space-y-3 text-sm" x-data="{ type: 'crypto' }">
                 @csrf
                 @php $inp = 'w-full border-gray-300 rounded-lg dark:bg-white/10 dark:border-white/10 dark:text-white'; @endphp
