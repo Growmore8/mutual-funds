@@ -17,10 +17,30 @@
         {{-- Compact list --}}
         <div class="space-y-2.5">
             @forelse ($transactions as $t)
-                @php $credit = (float) $t->amount >= 0; @endphp
+                @php
+                    $credit = (float) $t->amount >= 0;
+                    $loss = $t->type === 'profit' && ! $credit;
+                    [$icon, $tone] = match (true) {
+                        $t->type === 'deposit' => ['fa-arrow-down-to-bracket', 'emerald'],
+                        $t->type === 'withdrawal' => ['fa-arrow-up-from-bracket', 'amber'],
+                        $t->type === 'profit' && $credit => ['fa-arrow-trend-up', 'emerald'],
+                        $loss => ['fa-arrow-trend-down', 'rose'],
+                        $t->type === 'fee' => ['fa-receipt', 'gray'],
+                        $t->type === 'reversal' => ['fa-rotate-left', 'gray'],
+                        $t->type === 'adjustment' => ['fa-sliders', 'gray'],
+                        default => [$credit ? 'fa-arrow-down-left' : 'fa-arrow-up-right', $credit ? 'emerald' : 'violet'],
+                    };
+                    $toneCls = [
+                        'emerald' => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
+                        'amber' => 'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300',
+                        'rose' => 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300',
+                        'violet' => 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300',
+                        'gray' => 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300',
+                    ][$tone];
+                @endphp
                 <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] px-4 py-3 flex items-center gap-3">
-                    <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 {{ $credit ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300' }}">
-                        <i class="fa-solid {{ $credit ? 'fa-arrow-down-left' : 'fa-arrow-up-right' }}"></i>
+                    <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 {{ $toneCls }}">
+                        <i class="fa-solid {{ $icon }}"></i>
                     </span>
                     <div class="min-w-0 flex-1">
                         <p class="font-semibold text-gray-900 dark:text-white truncate leading-tight">{{ $t->description ?? ucfirst($t->type) }}</p>
