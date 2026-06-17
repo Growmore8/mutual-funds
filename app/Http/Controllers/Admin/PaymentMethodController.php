@@ -48,14 +48,41 @@ class PaymentMethodController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $v = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'type' => ['required', 'in:bank,crypto,upi,card,ewallet'],
-            'network' => ['nullable', 'string', 'max:40'],
-            'currency' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
+            'type' => ['required', 'in:crypto,upi,bank'],
             'instructions' => ['nullable', 'string'],
             'sort_order' => ['required', 'integer', 'min:0'],
-        ]) + ['is_active' => (bool) $request->boolean('is_active')];
+            // crypto
+            'network' => ['nullable', 'string', 'max:40'],
+            'currency' => ['nullable', 'string', 'max:20'],
+            'wallet' => ['nullable', 'string', 'max:255'],
+            // upi
+            'provider' => ['nullable', 'string', 'max:60'],
+            'upi_id' => ['nullable', 'string', 'max:140'],
+            // bank
+            'account_name' => ['nullable', 'string', 'max:140'],
+            'account_number' => ['nullable', 'string', 'max:60'],
+            'bank_name' => ['nullable', 'string', 'max:140'],
+            'ifsc' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        [$details, $address] = match ($v['type']) {
+            'crypto' => [['network' => $v['network'] ?? null, 'currency' => $v['currency'] ?? null, 'wallet' => $v['wallet'] ?? null], $v['wallet'] ?? null],
+            'upi' => [['provider' => $v['provider'] ?? null, 'upi_id' => $v['upi_id'] ?? null], $v['upi_id'] ?? null],
+            default => [['account_name' => $v['account_name'] ?? null, 'account_number' => $v['account_number'] ?? null, 'bank_name' => $v['bank_name'] ?? null, 'ifsc' => $v['ifsc'] ?? null], $v['account_number'] ?? null],
+        };
+
+        return [
+            'name' => $v['name'],
+            'type' => $v['type'],
+            'network' => $v['network'] ?? null,
+            'currency' => $v['currency'] ?? null,
+            'address' => $address,
+            'details' => $details,
+            'instructions' => $v['instructions'] ?? null,
+            'sort_order' => $v['sort_order'],
+            'is_active' => (bool) $request->boolean('is_active'),
+        ];
     }
 }

@@ -8,10 +8,14 @@
             'currency' => $m->currency,
             'address' => $m->address,
             'instructions' => $m->instructions,
+            'details' => $m->details ?? [],
         ])->values();
     @endphp
 
-    <div class="max-w-2xl mx-auto" x-data="{ sel: null, methods: {{ Illuminate\Support\Js::from($methodsJson) }} }">
+    <div class="max-w-2xl mx-auto"
+         x-data="{ sel: null, methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+                   qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
+         x-effect="qr()">
         <div class="bg-white rounded-2xl shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds</h2>
             <p class="text-sm text-gray-500 mb-5">Choose a method, send the funds, then upload your slip. Your balance updates once an admin approves.</p>
@@ -48,13 +52,35 @@
                 <div class="flex items-center gap-2 mb-3"><span class="font-semibold text-gray-900" x-text="sel?.label"></span></div>
 
                 <div class="bg-gray-50 rounded-xl p-4 mb-4">
-                    <p class="text-xs text-gray-500 mb-1">Send to this address</p>
-                    <div class="flex items-center gap-2">
-                        <code class="text-sm text-gray-800 break-all flex-1" x-text="sel?.address || '—'"></code>
-                        <button type="button" @click="navigator.clipboard.writeText(sel?.address || '')" class="w-8 h-8 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                    {{-- QR for crypto / UPI --}}
+                    <div x-show="sel && (sel.type==='crypto' || sel.type==='upi')" class="flex justify-center mb-3">
+                        <div id="pm-qr" class="bg-white p-2 rounded-lg border border-gray-200"></div>
                     </div>
-                    <p class="text-xs text-amber-600 mt-2" x-show="sel?.network" x-text="'Send only on the ' + (sel?.network||'') + ' network.'"></p>
-                    <p class="text-xs text-gray-400 mt-1" x-text="sel?.instructions"></p>
+
+                    {{-- Crypto / UPI: address + copy --}}
+                    <template x-if="sel && sel.type!=='bank'">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1" x-text="sel?.type==='upi' ? 'UPI ID' : 'Wallet address'"></p>
+                            <div class="flex items-center gap-2">
+                                <code class="text-sm text-gray-800 break-all flex-1" x-text="sel?.address || '—'"></code>
+                                <button type="button" @click="navigator.clipboard.writeText(sel?.address || '')" class="w-8 h-8 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-amber-600 mt-2" x-show="sel?.network" x-text="'Send only on the ' + (sel?.network||'') + ' network.'"></p>
+                            <p class="text-xs text-gray-500 mt-1" x-show="sel?.type==='upi' && sel?.details?.provider" x-text="'Provider: ' + (sel?.details?.provider||'')"></p>
+                        </div>
+                    </template>
+
+                    {{-- Bank: structured details --}}
+                    <template x-if="sel && sel.type==='bank'">
+                        <dl class="text-sm space-y-1.5">
+                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Account name</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.account_name || '—'"></dd></div>
+                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Account number</dt><dd class="font-medium text-gray-800 text-right break-all" x-text="sel?.details?.account_number || '—'"></dd></div>
+                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Bank</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.bank_name || '—'"></dd></div>
+                            <div class="flex justify-between gap-3"><dt class="text-gray-500">IFSC</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.ifsc || '—'"></dd></div>
+                        </dl>
+                    </template>
+
+                    <p class="text-xs text-gray-400 mt-2" x-text="sel?.instructions"></p>
                 </div>
 
                 <form method="POST" action="{{ route('client.deposit.store') }}" enctype="multipart/form-data" class="space-y-4 text-sm">
@@ -86,4 +112,5 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@gh-pages/qrcode.min.js"></script>
 </x-client-layout>
