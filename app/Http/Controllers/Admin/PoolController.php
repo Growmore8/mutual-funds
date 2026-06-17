@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PoolAccount;
 use App\Models\PoolSnapshot;
+use App\Models\Transaction;
+use App\Models\User;
 use App\Services\PoolApiClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class PoolController extends Controller
@@ -26,6 +29,51 @@ class PoolController extends Controller
         return view('admin.pool.pnl', [
             'snapshots' => PoolSnapshot::with('poolAccount')->latest('snapshot_date')->limit(60)->get(),
         ]);
+    }
+
+    /**
+     * Delete a PnL record and reverse its client-side distribution:
+     * remove the profit transactions + allocations it created, then rebuild
+     * each affected client's balance. The pool's distributed baseline is left
+     * intact so a future sync does not re-create the same payout.
+     */
+    public function destroyPnl(PoolSnapshot $snapshot)
+    {
+        $allocs = $snapshot->allocations()->get();
+        $userIds = $allocs->pluck('user_id')->unique()->values();
+
+        DB::transaction(function () use ($snapshot, $allocs, $userIds) {
+            // Remove the profit transactions this PnL created (precise link)…
+            Transaction::whereIn('pnl_allocation_id', $allocs->pluck('id'))->delete();
+            // …plus legacy unlinked profit transactions for these clients on the same day.
+            Transaction::whereNull('pnl_allocation_id')
+                ->where('type', 'profit')
+                ->whereIn('user_id', $userIds)
+                ->whereDate('created_at', $snapshot->snapshot_date)
+                ->delete();
+
+            $snapshot->allocations()->delete();
+            $snapshot->delete();
+        });
+
+        foreach ($userIds as $uid) {
+            $this->recalcUserBalance((int) $uid);
+            optional(User::find($uid))->recalcPlan();
+        }
+
+        return back()->with('status', 'PnL record deleted and client distributions reversed.');
+    }
+
+    /** Rebuild a client's running balance_after after profit rows are removed. */
+    private function recalcUserBalance(int $userId): void
+    {
+        $running = 0.0;
+        Transaction::where('user_id', $userId)->orderBy('id')->get()->each(function ($t) use (&$running) {
+            $running = round($running + (float) $t->amount, 2);
+            if ((float) $t->balance_after !== $running) {
+                $t->update(['balance_after' => $running]);
+            }
+        });
     }
 
     public function store(Request $request)

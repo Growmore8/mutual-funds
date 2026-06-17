@@ -9,7 +9,7 @@
     <div class="bg-white shadow rounded-xl overflow-x-auto">
         <table class="min-w-full text-sm whitespace-nowrap">
             <thead class="bg-gray-50 text-gray-500 text-left">
-                <tr><th class="px-4 py-3">Date &amp; time</th><th class="px-4 py-3">ID</th><th class="px-4 py-3">Pool account</th><th class="px-4 py-3">Closed PnL</th><th class="px-4 py-3">Floating (running)</th><th class="px-4 py-3">Status</th></tr>
+                <tr><th class="px-4 py-3">Date &amp; time</th><th class="px-4 py-3">ID</th><th class="px-4 py-3">Pool account</th><th class="px-4 py-3">Net PnL (day)</th><th class="px-4 py-3">Floating (running)</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Actions</th></tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($snapshots as $s)
@@ -26,9 +26,15 @@
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Open · running</span>
                             @endif
                         </td>
+                        <td class="px-4 py-3 text-right">
+                            <form method="POST" action="{{ route('admin.pool.pnl.destroy', $s) }}" onsubmit="return confirm('Delete this PnL record? The profit/loss distributed to clients for this day will be reversed and their balances recalculated.')">
+                                @csrf @method('DELETE')
+                                <button class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No P&L records yet.</td></tr>
+                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No P&L records yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -56,7 +56,7 @@ class PnlDistributor
                 $weight = $poolAmount > 0 ? min(1.0, $capital / $poolAmount) : 0.0;
                 $net = round((float) $snapshot->pnl * $weight, 2);   // 100% of their share
 
-                PnlAllocation::updateOrCreate(
+                $alloc = PnlAllocation::updateOrCreate(
                     ['pool_snapshot_id' => $snapshot->id, 'user_id' => $row->user_id],
                     [
                         'allocation_date' => $date,
@@ -79,6 +79,7 @@ class PnlDistributor
                     'balance_after' => $balanceAfter,
                     'status' => 'completed',
                     'description' => 'Daily profit · ' . $date->format('d M Y'),
+                    'pnl_allocation_id' => $alloc->id,
                 ]);
 
                 if (abs($net) > 0) {
@@ -157,6 +158,7 @@ class PnlDistributor
                     'balance_after' => $balanceAfter,
                     'status' => 'completed',
                     'description' => 'Profit · ' . $date->format('d M Y'),
+                    'pnl_allocation_id' => $alloc->id,
                 ]);
 
                 \App\Models\AppNotification::notify(
