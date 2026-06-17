@@ -54,11 +54,15 @@ class ClientDashboardController extends Controller
         $floatingShare = round($poolsFloating * $shareWeight, 2);
         $liveRef = $pool->account_ref ?? null;   // assigned Live ID / pool account
 
-        // last 14 days of the client's net profit for the chart
-        $chart = PnlAllocation::where('user_id', $user->id)
-            ->where('allocation_date', '>=', today()->subDays(14))
+        // last 14 days of the client's net profit for the chart — from profit
+        // transactions (same source as balance/profit history), summed per day.
+        $chart = Transaction::where('user_id', $user->id)
+            ->where('type', 'profit')
+            ->where('created_at', '>=', today()->subDays(14))
+            ->selectRaw('DATE(created_at) as allocation_date, SUM(amount) as net_pnl')
+            ->groupBy('allocation_date')
             ->orderBy('allocation_date')
-            ->get(['allocation_date', 'net_pnl']);
+            ->get();
 
         $recent = Transaction::where('user_id', $user->id)
             ->whereIn('type', ['profit', 'deposit', 'withdrawal'])
