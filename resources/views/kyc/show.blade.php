@@ -18,7 +18,7 @@
         <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <img src="/logo.png" alt="" class="w-8 h-8" onerror="this.style.display='none'">
-                <div class="font-bold text-[#0a1730]">Growth<span class="text-emerald-500">Capital</span></div>
+                <div class="font-bold text-[#0a1730] dark:text-white">Growth<span class="text-emerald-500">Capital</span></div>
             </div>
             <form method="POST" action="{{ route('logout') }}">@csrf
                 <button class="text-sm text-gray-500 hover:text-gray-800"><i class="fa-solid fa-right-from-bracket mr-1"></i> Log out</button>

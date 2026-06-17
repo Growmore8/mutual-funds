@@ -178,7 +178,7 @@
             <h3 class="{{ $head }} mb-4">Investment Summary</h3>
             <dl class="text-sm divide-y divide-gray-100 dark:divide-white/10">
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Pool Account Size</dt><dd class="font-semibold dark:text-gray-100">{{ $money($poolsCapacity > 0 ? $poolsCapacity : ($pool->capacity ?? 0)) }}</dd></div>
-                <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Daily Pool Profit</dt><dd class="font-semibold dark:text-gray-100">{{ $money($dailyPoolProfit) }}</dd></div>
+                <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Daily pool profit (est.)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($dailyPoolProfit) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}"><i class="fa-solid fa-lock text-[10px] text-gray-400"></i> Principal (locked)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($investment) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Your Profit Share</dt><dd class="font-semibold dark:text-gray-100">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Running PnL</dt><dd class="font-semibold {{ $runningPnl < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</dd></div>

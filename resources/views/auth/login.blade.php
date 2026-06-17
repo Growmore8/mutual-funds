@@ -42,7 +42,7 @@
             {{-- mobile brand --}}
             <div class="lg:hidden text-center mb-8">
                 <img src="/logo.png" alt="GrowthCapital" class="w-16 h-16 mx-auto mb-2" onerror="this.style.display='none'">
-                <div class="text-2xl font-bold text-[#0a1730]">Growth<span class="text-emerald-500">Capital</span></div>
+                <div class="text-2xl font-bold text-[#0a1730] dark:text-white">Growth<span class="text-emerald-500">Capital</span></div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </div>
 
