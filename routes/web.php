@@ -97,6 +97,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');
         Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->name('withdraw.store');
 
+        // Referrals
+        Route::get('/referrals', function (\Illuminate\Http\Request $request) {
+            $user = $request->user();
+
+            return view('client.referrals', [
+                'user' => $user,
+                'referrals' => $user->referrals()->latest()->get(),
+                'earned' => $user->referralEarned(),
+            ]);
+        })->name('client.referrals');
+
         // Client payout (withdrawal) methods
         Route::get('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'index'])->name('payout.index');
         Route::post('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'store'])->name('payout.store');

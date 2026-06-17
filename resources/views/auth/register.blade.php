@@ -1,6 +1,12 @@
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}">
         @csrf
+        <input type="hidden" name="ref" value="{{ $ref ?? request('ref') }}">
+        @if (!empty($ref))
+            <div class="mb-4 text-sm bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg p-3">
+                <i class="fa-solid fa-gift"></i> You were referred — you're joining with referral code <strong>{{ $ref }}</strong>.
+            </div>
+        @endif
 
         <!-- Full Name (as per National ID) -->
         <div>

@@ -24,6 +24,9 @@
             <a href="{{ route('payout.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
                 <i class="fa-solid fa-money-check-dollar w-5 text-gray-400"></i> Payout methods <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
             </a>
+            <a href="{{ route('client.referrals') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
+                <i class="fa-solid fa-gift w-5 text-gray-400"></i> Refer &amp; Earn <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
+            </a>
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                     class="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
                 <i class="fa-solid fa-moon w-5 text-gray-400 dark:hidden"></i><i class="fa-solid fa-sun w-5 text-gray-400 hidden dark:inline"></i>

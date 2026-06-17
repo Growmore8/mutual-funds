@@ -20,10 +20,11 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('auth.register', [
             'accountTypes' => AccountType::where('is_active', true)->orderBy('sort_order')->get(),
+            'ref' => $request->query('ref'),
         ]);
     }
 
@@ -43,6 +44,10 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $referrer = $request->filled('ref')
+            ? User::where('referral_code', $request->input('ref'))->where('role', 'client')->first()
+            : null;
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -53,7 +58,16 @@ class RegisteredUserController extends Controller
             'role' => 'client',
             'status' => 'pending',
             'kyc_status' => 'not_submitted',
+            'referred_by' => $referrer?->id,
         ]);
+
+        if ($referrer) {
+            \App\Models\AppNotification::notify(
+                $referrer->id, 'info', 'New referral joined',
+                $user->name . ' signed up using your referral link. You\'ll earn 1% of their deposits.',
+                route('client.referrals'),
+            );
+        }
 
         event(new Registered($user));
 

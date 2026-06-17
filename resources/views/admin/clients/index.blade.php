@@ -34,7 +34,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 font-mono text-xs text-gray-600">{{ $c->clientCode() }}</td>
                         <td class="px-3 py-2 text-gray-400 text-xs">{{ $c->created_at->format('d M Y') }}</td>
-                        <td class="px-3 py-2"><div class="font-medium text-gray-900 leading-tight">{{ $c->name }}</div><div class="text-gray-400 text-xs">{{ $c->email }}</div></td>
+                        <td class="px-3 py-2"><div class="font-medium text-gray-900 leading-tight">{{ $c->name }}</div><div class="text-gray-400 text-xs">{{ $c->email }}</div>@if ($c->referrer)<div class="text-[11px] text-emerald-600 mt-0.5"><i class="fa-solid fa-gift text-[9px]"></i> Referred by {{ $c->referrer->name }}</div>@endif</td>
                         <td class="px-3 py-2 font-medium text-gray-700">{{ $c->poolAccount->account_ref ?? '—' }}</td>
                         <td class="px-3 py-2">
                             @if ($c->accountType)

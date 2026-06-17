@@ -34,7 +34,43 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         'status',
         'kyc_status',
         'otp_verified_at',
+        'referral_code',
+        'referred_by',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (empty($user->referral_code)) {
+                do {
+                    $code = 'GC' . strtoupper(\Illuminate\Support\Str::random(6));
+                } while (static::where('referral_code', $code)->exists());
+                $user->referral_code = $code;
+            }
+        });
+    }
+
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    /** Shareable referral link. */
+    public function referralLink(): string
+    {
+        return url('/register?ref=' . $this->referral_code);
+    }
+
+    /** Total referral commission earned (1% of referred clients' deposits). */
+    public function referralEarned(): float
+    {
+        return (float) $this->transactions()->where('type', 'referral')->sum('amount');
+    }
 
     public function isAdmin(): bool
     {
@@ -80,12 +116,12 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return (float) $this->deposits()->where('status', 'approved')->sum('amount');
     }
 
-    /** Running PnL = all profit/loss credited − profit already paid out (can be negative). */
+    /** Running PnL = profit/loss + referral commission − profit already paid out (can be negative). */
     public function runningPnl(): float
     {
         $paidOut = (float) $this->withdrawals()->where('status', 'approved')->sum('amount');
 
-        return round($this->totalProfit() - $paidOut, 2);
+        return round($this->totalProfit() + $this->referralEarned() - $paidOut, 2);
     }
 
     /** Re-evaluate the plan from the current total deposit, and align the
@@ -178,7 +214,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
     {
         $locked = (float) $this->withdrawals()->whereIn('status', ['pending', 'approved'])->sum('amount');
 
-        return round(max(0, $this->totalProfit() - $locked), 2);
+        return round(max(0, $this->totalProfit() + $this->referralEarned() - $locked), 2);
     }
 
     /**

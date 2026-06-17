@@ -133,11 +133,46 @@ class DepositController extends Controller
         });
 
         $this->autoAssignPlan($deposit->user);
+        $this->creditReferral($deposit);
     }
 
     /** Auto-set the client's plan based on their total approved deposits. */
     private function autoAssignPlan(User $user): void
     {
         $user->recalcPlan();
+    }
+
+    /** Pay the client's referrer 1% of this deposit (on every deposit). */
+    private function creditReferral(Deposit $deposit): void
+    {
+        $client = $deposit->user;
+        if (! $client || ! $client->referred_by) {
+            return;
+        }
+
+        $referrer = User::find($client->referred_by);
+        $bonus = round((float) $deposit->amount * 0.01, 2);
+        if (! $referrer || $bonus <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($referrer, $bonus, $client) {
+            $last = Transaction::where('user_id', $referrer->id)->latest('id')->first();
+            Transaction::create([
+                'user_id' => $referrer->id,
+                'type' => 'referral',
+                'amount' => $bonus,
+                'currency' => 'USD',
+                'balance_after' => round((float) ($last->balance_after ?? 0) + $bonus, 2),
+                'status' => 'completed',
+                'description' => 'Referral bonus · ' . $client->name,
+            ]);
+        });
+
+        \App\Models\AppNotification::notify(
+            $referrer->id, 'info', 'Referral bonus earned',
+            '+$' . number_format($bonus, 2) . " from {$client->name}'s deposit.",
+            route('client.referrals'),
+        );
     }
 }

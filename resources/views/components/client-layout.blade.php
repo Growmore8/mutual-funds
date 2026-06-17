@@ -77,6 +77,7 @@
             <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
             <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
             <a href="{{ route('accounts.index') }}" class="{{ $link(request()->routeIs('accounts.*')) }}"><i class="fa-solid fa-layer-group w-5 text-center"></i> My Account</a>
+            <a href="{{ route('client.referrals') }}" class="{{ $link(request()->routeIs('client.referrals')) }}"><i class="fa-solid fa-gift w-5 text-center"></i> Refer &amp; Earn</a>
             <x-statement-modal :base-url="route('client.statement')" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition"><i class="fa-solid fa-file-pdf w-5 text-center"></i> Statement</x-statement-modal>
 
             {!! $head !!}Account</p>
