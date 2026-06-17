@@ -42,8 +42,8 @@
         @media (prefers-reduced-motion: reduce){.page-in{animation:none}}
     </style>
 </head>
-<body class="min-h-[100dvh] bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
-<div class="min-h-[100dvh] lg:flex">
+<body class="bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200 h-[100dvh] overflow-hidden flex flex-col lg:h-auto lg:min-h-[100dvh] lg:overflow-visible lg:block" x-data="{ sheet: false }">
+<div class="flex-1 min-h-0 overflow-y-auto lg:flex-none lg:min-h-[100dvh] lg:overflow-visible lg:flex">
 
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
@@ -93,7 +93,7 @@
     </aside>
 
     {{-- Main --}}
-    <div class="flex-1 lg:pl-64 pb-32 lg:pb-0">
+    <div class="flex-1 lg:pl-64">
         {{-- Top bar: logo+name left, notifications + profile right --}}
         <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
@@ -117,7 +117,7 @@
 
     {{-- Deposit/Withdraw action sheet (mobile +) --}}
     <div x-show="sheet" x-transition.opacity @click="sheet=false" style="display:none" class="lg:hidden fixed inset-0 bg-black/40 z-40"></div>
-    <div x-show="sheet" x-transition x-cloak class="lg:hidden fixed inset-x-0 bottom-20 z-50 px-6 safe-b">
+    <div x-show="sheet" x-transition x-cloak class="lg:hidden fixed inset-x-0 bottom-24 z-50 px-6 safe-b">
         <div class="bg-white dark:bg-[#0f1b38] dark:ring-1 dark:ring-white/10 rounded-2xl shadow-xl p-3 max-w-sm mx-auto grid grid-cols-2 gap-3">
             <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                 <i class="fa-solid fa-arrow-down text-xl"></i><span class="text-sm font-medium">Deposit</span>
@@ -128,10 +128,10 @@
         </div>
     </div>
 
-    {{-- Mobile bottom tab bar (floating pill) --}}
-    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pointer-events-none"
-         style="padding-bottom:max(0.75rem,env(safe-area-inset-bottom))">
-        <div class="pointer-events-auto mx-auto max-w-md rounded-2xl bg-white/90 border border-gray-200 dark:bg-[#0d1834]/85 dark:border-white/10 backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,.35)]">
+    {{-- Mobile bottom tab bar (locked to bottom by flex layout, not position:fixed) --}}
+    <nav class="lg:hidden shrink-0 relative z-10 px-3 pt-1"
+         style="padding-bottom:max(0.5rem,env(safe-area-inset-bottom))">
+        <div class="mx-auto max-w-md rounded-2xl bg-white/95 border border-gray-200 dark:bg-[#0d1834] dark:border-white/10 backdrop-blur-lg shadow-[0_-4px_24px_rgba(0,0,0,.35)]">
             <div class="grid grid-cols-5 items-center h-16 px-1">
                 @php $tab = 'tab flex flex-col items-center justify-center gap-0.5 text-[11px] h-full text-gray-400 dark:text-gray-500'; @endphp
                 <a href="{{ route('client.dashboard') }}" class="{{ $tab }} {{ request()->routeIs('client.dashboard') ? 'is-active' : '' }}">
