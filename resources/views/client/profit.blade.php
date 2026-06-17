@@ -32,25 +32,25 @@
             </form>
         </div>
 
-        {{-- Full list --}}
+        {{-- Every profit/loss event --}}
         <div class="space-y-2.5">
             @forelse ($rows as $r)
-                @php $gain = (float) $r->net_pnl >= 0; @endphp
+                @php $gain = (float) $r->amount >= 0; @endphp
                 <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] px-4 py-3 flex items-center gap-3">
                     <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 {{ $gain ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300' }}">
                         <i class="fa-solid {{ $gain ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
                     </span>
                     <div class="min-w-0 flex-1">
-                        <p class="font-semibold text-gray-900 dark:text-white truncate leading-tight">Daily profit · {{ number_format((float) $r->weight * 100, 2) }}% share</p>
-                        <p class="text-xs text-gray-400 mt-1">{{ $r->allocation_date->format('d-M-Y') }} · capital {{ $money($r->eligible_capital) }}</p>
+                        <p class="font-semibold text-gray-900 dark:text-white truncate leading-tight">{{ $gain ? 'Profit credited' : 'Trading loss' }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ $r->created_at->format('d-M-Y') }} : {{ $r->created_at->format('H:i:s') }}</p>
                     </div>
                     <div class="text-right shrink-0">
-                        <p class="font-bold {{ $gain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}"><span class="text-[10px] text-gray-400 font-normal mr-1">USD</span>{{ $money($r->net_pnl) }}</p>
+                        <p class="font-bold {{ $gain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}"><span class="text-[10px] text-gray-400 font-normal mr-1">USD</span>{{ $money($r->amount) }}</p>
                         <p class="text-[11px] text-gray-400 mt-0.5">{{ $gain ? 'Credit' : 'Debit' }}</p>
                     </div>
                 </div>
             @empty
-                <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] px-4 py-12 text-center text-gray-400">No profit in this period.</div>
+                <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] px-4 py-12 text-center text-gray-400">No profit/loss in this period.</div>
             @endforelse
         </div>
 
