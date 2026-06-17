@@ -63,8 +63,8 @@
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
             @php
-                $link = fn ($active) => 'nav-link flex items-center gap-3 px-3 py-2 rounded-lg ' . ($active ? 'bg-emerald-500 text-[#04231a] font-semibold shadow' : 'hover:bg-white/10');
-                $head = '<p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">';
+                $link = fn ($active) => 'nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ' . ($active ? 'bg-white/[0.08] text-white font-semibold ring-1 ring-white/10' : 'text-gray-400 hover:bg-white/[0.05] hover:text-white');
+                $head = '<p class="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">';
             @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $link(request()->routeIs('client.dashboard')) }}"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a>
 
@@ -76,12 +76,12 @@
             <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
             <a href="{{ route('client.transactions') }}" class="{{ $link(request()->routeIs('client.transactions')) }}"><i class="fa-solid fa-receipt w-5 text-center"></i> Transactions</a>
             <a href="{{ route('accounts.index') }}" class="{{ $link(request()->routeIs('accounts.*')) }}"><i class="fa-solid fa-layer-group w-5 text-center"></i> My Account</a>
-            <x-statement-modal :base-url="route('client.statement')" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-file-pdf w-5 text-center"></i> Statement</x-statement-modal>
+            <x-statement-modal :base-url="route('client.statement')" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition"><i class="fa-solid fa-file-pdf w-5 text-center"></i> Statement</x-statement-modal>
 
             {!! $head !!}Account</p>
             <a href="{{ route('security.index') }}" class="{{ $link(request()->routeIs('security.*')) }}"><i class="fa-solid fa-shield-halved w-5 text-center"></i> Security</a>
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
-                    class="nav-link w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10">
+                    class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition">
                 <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i> Appearance
             </button>
         </nav>
@@ -93,12 +93,19 @@
                 <a href="{{ route('support.index') }}" class="mt-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"><i class="fa-solid fa-headset"></i> Contact Support</a>
             </div>
         </div>
-        <form method="POST" action="{{ route('logout') }}" class="px-3 pt-3 border-t border-white/10">@csrf
-            <button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-red-300"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Log out</button>
-        </form>
-        <div class="text-[11px] text-gray-500 px-4 pb-4 pt-1">
-            <p class="font-semibold text-gray-300">GrowthCapital Ltd.</p>
-            <p>© {{ date('Y') }} All rights reserved.</p>
+        {{-- User profile card + logout --}}
+        <div class="p-3 border-t border-white/[0.06]">
+            <div class="flex items-center gap-3 rounded-xl bg-white/[0.04] ring-1 ring-white/10 p-2.5">
+                <div class="w-9 h-9 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold shrink-0">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-white truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-[11px] text-gray-400 truncate font-mono">{{ auth()->user()->clientCode() }}</p>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">@csrf
+                    <button title="Log out" class="w-8 h-8 grid place-items-center rounded-lg text-gray-400 hover:text-red-300 hover:bg-white/10"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </form>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-2 px-1">GrowthCapital Ltd. · © {{ date('Y') }}</p>
         </div>
     </aside>
 
