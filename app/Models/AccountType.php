@@ -39,13 +39,18 @@ class AccountType extends Model
             return null;
         }
 
+        // Exact range match first (respects each plan's min/max cap).
         foreach ($types as $t) {
             if ($amount >= (float) $t->min_deposit && ($t->max_deposit === null || $amount <= (float) $t->max_deposit)) {
                 return $t;
             }
         }
 
-        // Below the cheapest plan -> lowest; otherwise above all -> highest.
-        return $amount < (float) $types->first()->min_deposit ? $types->first() : $types->last();
+        // No exact match (a gap between plans, or above the top plan):
+        // take the highest plan whose minimum the amount still meets.
+        $eligible = $types->filter(fn ($t) => $amount >= (float) $t->min_deposit);
+
+        // Below the cheapest plan -> the cheapest plan.
+        return $eligible->isNotEmpty() ? $eligible->last() : $types->first();
     }
 }

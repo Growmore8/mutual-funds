@@ -9,6 +9,7 @@ use App\Services\PoolApiClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 
 class PoolController extends Controller
 {
@@ -102,8 +103,10 @@ class PoolController extends Controller
 
     private function validated(Request $request): array
     {
+        $poolId = optional($request->route('pool'))->id;
+
         return $request->validate([
-            'account_ref' => ['required', 'string', 'max:100'],
+            'account_ref' => ['required', 'string', 'max:100', Rule::unique('pool_accounts', 'account_ref')->ignore($poolId)],
             'name' => ['nullable', 'string', 'max:120'],
             'capacity' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'max:10'],
