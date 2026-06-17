@@ -4,6 +4,10 @@
 
 [x-cloak] { display: none !important; }
 
+/* Hide scrollbars everywhere but keep scrolling (mouse wheel / touch / trackpad). */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
 /*
  | Dark theme
  | App-wide dark mode driven by a `.dark` class on <html>. Rather than tagging
