@@ -25,6 +25,7 @@
                         $t->type === 'withdrawal' => ['fa-arrow-up-from-bracket', 'amber'],
                         $t->type === 'profit' && $credit => ['fa-arrow-trend-up', 'emerald'],
                         $loss => ['fa-arrow-trend-down', 'rose'],
+                        $t->type === 'referral' => ['fa-gift', 'emerald'],
                         $t->type === 'fee' => ['fa-receipt', 'gray'],
                         $t->type === 'reversal' => ['fa-rotate-left', 'gray'],
                         $t->type === 'adjustment' => ['fa-sliders', 'gray'],

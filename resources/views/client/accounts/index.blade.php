@@ -6,6 +6,7 @@
     @endphp
 
     <div class="max-w-2xl space-y-6">
+        <x-back-link />
         {{-- Current account --}}
         <div class="{{ $card }} p-6">
             <div class="flex items-center gap-4 mb-5">

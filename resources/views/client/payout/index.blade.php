@@ -1,7 +1,8 @@
-<x-client-layout title="Payout Methods">
+<x-client-layout title="Withdrawal Methods">
     <div class="max-w-2xl mx-auto space-y-6">
+        <x-back-link />
         <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Payout methods</h2>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Withdrawal methods</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Save where you want withdrawals sent. You'll pick one when requesting a withdrawal.</p>
         </div>
 
@@ -34,7 +35,7 @@
 
         {{-- Add new --}}
         <div class="rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] p-5">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Add a payout method</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Add a withdrawal method</h3>
             <form method="POST" action="{{ route('payout.store') }}" class="space-y-3 text-sm" x-data="{ type: 'crypto' }">
                 @csrf
                 @php $inp = 'w-full border-gray-300 rounded-lg dark:bg-white/10 dark:border-white/10 dark:text-white'; @endphp

@@ -3,6 +3,7 @@
 
     <div class="max-w-2xl mx-auto space-y-6" x-data="{ link: @js($user->referralLink()), copied: false,
             copy(){ navigator.clipboard.writeText(this.link); this.copied=true; setTimeout(()=>this.copied=false,1500); } }">
+        <x-back-link />
         <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Refer &amp; Earn</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Share your link. You earn <strong>1% of every deposit</strong> anyone makes after joining through it.</p>

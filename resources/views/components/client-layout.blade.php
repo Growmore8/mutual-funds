@@ -71,7 +71,7 @@
             {!! $head !!}Money</p>
             <a href="{{ route('client.deposit.create') }}" class="{{ $link(request()->routeIs('client.deposit.*')) }}"><i class="fa-solid fa-arrow-down w-5 text-center"></i> Deposit</a>
             <a href="{{ route('withdraw.create') }}" class="{{ $link(request()->routeIs('withdraw.*')) }}"><i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Withdraw</a>
-            <a href="{{ route('payout.index') }}" class="{{ $link(request()->routeIs('payout.*')) }}"><i class="fa-solid fa-money-check-dollar w-5 text-center"></i> Payout Methods</a>
+            <a href="{{ route('payout.index') }}" class="{{ $link(request()->routeIs('payout.*')) }}"><i class="fa-solid fa-money-check-dollar w-5 text-center"></i> Withdrawal Methods</a>
 
             {!! $head !!}Activity</p>
             <a href="{{ route('client.profit') }}" class="{{ $link(request()->routeIs('client.profit')) }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Profit History</a>
@@ -156,8 +156,8 @@
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
-    <nav class="lg:hidden shrink-0 relative z-10 border-t border-gray-200 dark:border-white/[0.06] px-2 pt-2"
-         style="padding-bottom:max(0.6rem,env(safe-area-inset-bottom))">
+    <nav class="lg:hidden shrink-0 relative z-10 border-t border-gray-200 dark:border-white/[0.06] px-2 pt-1.5"
+         style="padding-bottom:max(0.2rem,calc(env(safe-area-inset-bottom) - 14px))">
         <div class="flex items-end justify-around">
             @foreach ($navLinks as $i => $it)
                 @php $active = request()->routeIs($it['match']); @endphp

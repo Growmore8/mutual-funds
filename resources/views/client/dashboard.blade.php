@@ -145,6 +145,11 @@
                     <p class="text-lg font-bold text-gray-900 dark:text-white mt-2">{{ $money($month) }}</p>
                     <p class="text-[11px] {{ $sub }}">Total profit this month</p>
                 </div>
+                <div class="rounded-xl border border-gray-100 dark:border-white/[0.06] p-4 col-span-2">
+                    <div class="flex items-center justify-between"><p class="text-xs {{ $lbl }}">Referral earnings</p><span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300 grid place-items-center"><i class="fa-solid fa-gift"></i></span></div>
+                    <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $money($referralEarned) }}</p>
+                    <p class="text-[11px] {{ $sub }}">1% of referrals' deposits · withdrawable</p>
+                </div>
             </div>
         </div>
 

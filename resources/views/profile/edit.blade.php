@@ -22,7 +22,7 @@
                 <i class="fa-solid fa-file-pdf w-5 text-gray-400"></i> Statement (PDF) <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
             </x-statement-modal>
             <a href="{{ route('payout.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
-                <i class="fa-solid fa-money-check-dollar w-5 text-gray-400"></i> Payout methods <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
+                <i class="fa-solid fa-money-check-dollar w-5 text-gray-400"></i> Withdrawal methods <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
             </a>
             <a href="{{ route('client.referrals') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">
                 <i class="fa-solid fa-gift w-5 text-gray-400"></i> Refer &amp; Earn <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>

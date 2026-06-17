@@ -65,13 +65,15 @@ class ClientDashboardController extends Controller
             ->get();
 
         $recent = Transaction::where('user_id', $user->id)
-            ->whereIn('type', ['profit', 'deposit', 'withdrawal'])
+            ->whereIn('type', ['profit', 'deposit', 'withdrawal', 'referral'])
             ->latest('id')->limit(8)->get();
+
+        $referralEarned = $user->referralEarned();
 
         return view('client.dashboard', compact(
             'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl'
+            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned'
         ));
     }
 
