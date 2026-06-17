@@ -52,15 +52,22 @@ class StatementController extends Controller
         return view('client.transactions', compact('transactions', 'type'));
     }
 
-    /** Daily profit history (per-day PnL allocations). */
-    public function profit(Request $request)
+    /** Full profit history (per-day PnL allocations) with period filter. */
+    public function profit(Request $request, StatementService $svc)
     {
+        $period = $request->get('period', 'all');
+
         $rows = PnlAllocation::where('user_id', $request->user()->id)
+            ->when(in_array($period, ['today', 'week', 'month', 'year', 'custom']), function ($q) use ($svc, $period, $request) {
+                [$start, $end] = $svc->period($period, $request->get('from'), $request->get('to'));
+                $q->whereBetween('allocation_date', [$start->toDateString(), $end->toDateString()]);
+            })
             ->latest('allocation_date')
-            ->paginate(31);
+            ->paginate(60)
+            ->withQueryString();
 
         $totalProfit = $request->user()->totalProfit();
 
-        return view('client.profit', compact('rows', 'totalProfit'));
+        return view('client.profit', compact('rows', 'totalProfit', 'period'));
     }
 }

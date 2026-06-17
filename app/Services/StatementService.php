@@ -13,6 +13,7 @@ class StatementService
         $now = now();
 
         return match ($period) {
+            'today' => [$now->copy()->startOfDay(), $now->copy()->endOfDay(), 'Today, ' . $now->format('d M Y')],
             'week' => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek(), 'Week of ' . $now->copy()->startOfWeek()->format('d M Y')],
             'year' => [$now->copy()->startOfYear(), $now->copy()->endOfYear(), 'Year ' . $now->year],
             'custom' => [

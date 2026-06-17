@@ -1,7 +1,7 @@
 <x-client-layout title="Transactions">
     @php $money = fn ($n) => '$' . number_format(abs((float) $n), 2); @endphp
 
-    <div class="max-w-2xl mx-auto">
+    <div class="w-full">
         <div class="flex items-center justify-between gap-3 mb-4">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Transaction history</h2>
         </div>
