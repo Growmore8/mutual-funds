@@ -156,20 +156,24 @@
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
-    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pb-0 pointer-events-none">
-        <div class="pointer-events-auto mx-auto w-fit max-w-full flex items-center gap-1 rounded-full bg-white dark:bg-[#0d1322] ring-1 ring-gray-200 dark:ring-white/10 shadow-[0_12px_40px_rgba(0,0,0,.45)] px-2 py-2">
+    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white dark:bg-[#0a1326] border-t border-gray-200 dark:border-white/[0.06] px-1 pt-2"
+         style="padding-bottom:max(0.45rem,env(safe-area-inset-bottom))">
+        <div class="flex items-end justify-around">
             @foreach ($navLinks as $i => $it)
                 @php $active = request()->routeIs($it['match']); @endphp
                 <a href="{{ route($it['route']) }}"
-                   class="flex items-center justify-center rounded-full transition-all duration-200 {{ $active ? 'gap-2 px-4 h-12 bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white' : 'w-12 h-12 text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white' }}">
-                    <i class="fa-solid {{ $it['icon'] }} text-lg"></i>
-                    @if ($active)<span class="text-sm font-semibold whitespace-nowrap">{{ $it['label'] }}</span>@endif
+                   class="flex flex-col items-center gap-1 w-16 py-0.5 transition {{ $active ? 'text-emerald-500' : 'text-gray-400 hover:text-gray-200' }}">
+                    <i class="fa-solid {{ $it['icon'] }} text-[18px]"></i>
+                    <span class="text-[10px] font-medium leading-none">{{ $it['label'] }}</span>
                 </a>
 
                 @if ($i === 1)
                     {{-- center action (+) --}}
-                    <button type="button" @click="sheet=!sheet" class="w-12 h-12 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center active:scale-95 transition">
-                        <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                    <button type="button" @click="sheet=!sheet" class="flex flex-col items-center gap-1 w-16 -mt-5">
+                        <span class="w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-white dark:ring-[#0a1326] active:scale-95 transition">
+                            <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                        </span>
+                        <span class="text-[10px] font-medium leading-none text-gray-400">Add</span>
                     </button>
                 @endif
             @endforeach
