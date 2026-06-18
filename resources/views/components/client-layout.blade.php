@@ -125,7 +125,7 @@
             </div>
         </header>
 
-        <main class="px-4 sm:px-6 lg:px-8 py-6 page-in">
+        <main class="px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:pb-8 page-in">
             @if (session('status'))
                 <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg p-3">{{ session('status') }}</div>
             @endif
@@ -156,7 +156,7 @@
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
-    <nav class="lg:hidden shrink-0 relative z-10 border-t border-gray-200 dark:border-white/[0.06] bg-gray-50 dark:bg-[#070d1f] px-2 pt-1.5"
+    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/[0.06] bg-white/95 dark:bg-[#0a1326]/95 backdrop-blur px-2 pt-1.5"
          style="padding-bottom:env(safe-area-inset-bottom)">
         <div class="flex items-end justify-around">
             @foreach ($navLinks as $i => $it)
