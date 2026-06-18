@@ -52,8 +52,8 @@
         .beadcell + .beadcell{margin-left:-14px}
     </style>
 </head>
-<body class="app-shell bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200 overflow-hidden flex flex-col lg:overflow-visible lg:block" x-data="{ sheet: false }">
-<div class="flex-1 min-h-0 overflow-y-auto lg:flex-none lg:min-h-[100dvh] lg:overflow-visible lg:flex">
+<body class="min-h-screen bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
+<div class="lg:flex lg:min-h-screen">
 
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
