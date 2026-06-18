@@ -55,7 +55,7 @@ class WebPushService
 
             foreach ($webPush->flush() as $report) {
                 if (! $report->isSuccess() && $report->isSubscriptionExpired()) {
-                    PushSubscription::where('endpoint', $report->getRequest()->getUri()->__toString())->delete();
+                    PushSubscription::where('endpoint', $report->getEndpoint())->delete();
                 }
             }
         } catch (\Throwable $e) {
