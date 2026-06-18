@@ -158,20 +158,20 @@
     @endphp
     <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white dark:bg-[#0a1326] border-t border-gray-200 dark:border-white/[0.06] px-1 pt-2"
          style="padding-bottom:max(0.45rem,env(safe-area-inset-bottom))">
-        <div class="flex items-end justify-around">
+        <div class="flex items-center justify-around">
             @foreach ($navLinks as $i => $it)
                 @php $active = request()->routeIs($it['match']); @endphp
                 <a href="{{ route($it['route']) }}"
-                   class="flex flex-col items-center gap-1 w-16 py-0.5 transition {{ $active ? 'text-emerald-500' : 'text-gray-400 hover:text-gray-200' }}">
-                    <i class="fa-solid {{ $it['icon'] }} text-[18px]"></i>
+                   class="flex flex-col items-center gap-1 w-16 py-0.5 transition {{ $active ? 'text-emerald-500' : 'text-gray-400 hover:text-emerald-400' }}">
+                    <i class="fa-solid {{ $it['icon'] }} text-[19px]"></i>
                     <span class="text-[10px] font-medium leading-none">{{ $it['label'] }}</span>
                 </a>
 
                 @if ($i === 1)
                     {{-- center action (+) --}}
-                    <button type="button" @click="sheet=!sheet" class="flex flex-col items-center gap-1 w-16 -mt-5">
-                        <span class="w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-lg shadow-emerald-500/40 ring-4 ring-white dark:ring-[#0a1326] active:scale-95 transition">
-                            <i class="fa-solid fa-plus text-lg" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
+                    <button type="button" @click="sheet=!sheet" class="flex flex-col items-center gap-1 w-16 py-0.5">
+                        <span class="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center active:scale-95 transition">
+                            <i class="fa-solid fa-plus text-sm" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
                         </span>
                         <span class="text-[10px] font-medium leading-none text-gray-400">Add</span>
                     </button>
