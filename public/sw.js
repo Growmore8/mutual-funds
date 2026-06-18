@@ -1,6 +1,29 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v5';
+const CACHE = 'gc-funds-v6';
+
+// Web push: show the notification when one arrives.
+self.addEventListener('push', (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch (e) { data = { body: event.data && event.data.text() }; }
+    const title = data.title || 'GrowthCapital';
+    event.waitUntil(self.registration.showNotification(title, {
+        body: data.body || '',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: { url: data.url || '/app' },
+    }));
+});
+
+// Tapping a notification focuses/opens the app at the right page.
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || '/app';
+    event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+        for (const c of list) { if ('focus' in c) { c.navigate(url); return c.focus(); } }
+        if (clients.openWindow) return clients.openWindow(url);
+    }));
+});
 const OFFLINE_URLS = ['/offline.html', '/logo.png'];
 
 self.addEventListener('install', (event) => {

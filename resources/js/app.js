@@ -36,3 +36,48 @@ function enhancePasswordFields(root = document) {
 document.addEventListener('DOMContentLoaded', () => enhancePasswordFields());
 // Re-scan when modals/dynamic content open.
 document.addEventListener('click', () => setTimeout(enhancePasswordFields, 50));
+
+/* ---- Web push notifications ---- */
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function subscribePush() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+        const meta = document.querySelector('meta[name="vapid-key"]');
+        const csrf = document.querySelector('meta[name="csrf-token"]');
+        if (!meta || !meta.content || !csrf) return false;
+
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(meta.content),
+            });
+        }
+        await fetch('/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.content, 'Accept': 'application/json' },
+            body: JSON.stringify(sub),
+        });
+        return true;
+    } catch (e) { return false; }
+}
+
+// Triggered by an "Enable notifications" button (the permission prompt needs a user gesture).
+window.enablePush = async function () {
+    if (!('Notification' in window)) return 'unsupported';
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') await subscribePush();
+    return perm;
+};
+
+// If permission is already granted, keep the subscription fresh on each load.
+if ('Notification' in window && Notification.permission === 'granted') {
+    window.addEventListener('load', () => subscribePush());
+}

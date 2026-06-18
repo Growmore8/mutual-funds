@@ -48,6 +48,10 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    // Web push subscriptions (clients + admins)
+    Route::post('/push/subscribe', [\App\Http\Controllers\PushController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('/push/unsubscribe', [\App\Http\Controllers\PushController::class, 'unsubscribe'])->name('push.unsubscribe');
+
     // Email OTP verification
     Route::get('/verify-otp', [OtpController::class, 'show'])->name('otp.show');
     Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');

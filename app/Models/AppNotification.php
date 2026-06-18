@@ -17,10 +17,16 @@ class AppNotification extends Model
         return $this->belongsTo(User::class);
     }
 
-    /** Create a notification for one user. */
+    /** Create a notification for one user (+ fire a web push to their devices). */
     public static function notify(int $userId, string $type, string $title, ?string $body = null, ?string $url = null, ?string $icon = null): void
     {
         static::create(compact('type', 'title', 'body', 'url', 'icon') + ['user_id' => $userId]);
+
+        try {
+            app(\App\Services\WebPushService::class)->sendToUser($userId, $title, $body, $url);
+        } catch (\Throwable $e) {
+            // never let a push failure break the app flow
+        }
     }
 
     /** Notify every admin (e.g. a new client request). */

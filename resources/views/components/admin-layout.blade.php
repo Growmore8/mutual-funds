@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="vapid-key" content="{{ config('services.webpush.public_key') }}">
     <title>{{ $title }} · GrowthCapital Funds</title>
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="apple-touch-icon" href="/logo.png">
@@ -101,5 +103,16 @@
         </main>
     </div>
 </div>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').then(function () {
+                if ('Notification' in window && Notification.permission === 'default' && window.enablePush) {
+                    setTimeout(function () { window.enablePush(); }, 2000);
+                }
+            }).catch(function () {});
+        });
+    }
+</script>
 </body>
 </html>

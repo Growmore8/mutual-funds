@@ -10,6 +10,24 @@
             <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">{{ $errors->first() }}</div>
         @endif
 
+        {{-- Push notifications --}}
+        <div class="bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm p-6" x-data="{ status: (window.Notification && Notification.permission) || 'default' }">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300 grid place-items-center"><i class="fa-solid fa-bell"></i></div>
+                <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Push notifications</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Get alerts for deposits, profit, withdrawals &amp; referrals — even when the app is closed.</p>
+                </div>
+                <span x-show="status==='granted'" class="ml-auto text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">Enabled</span>
+            </div>
+            <button type="button" x-show="status!=='granted'" @click="status = await window.enablePush()"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-sm font-medium">
+                <i class="fa-solid fa-bell mr-1"></i> Enable notifications
+            </button>
+            <p x-show="status==='denied'" x-cloak class="text-xs text-amber-600 mt-2">Notifications are blocked in your browser/phone settings — allow them there to enable.</p>
+            <p class="text-[11px] text-gray-400 mt-2">On iPhone, add the app to your Home Screen first, then enable.</p>
+        </div>
+
         {{-- PIN --}}
         <div class="bg-white rounded-2xl shadow-sm p-6">
             <div class="flex items-center gap-3 mb-4">
