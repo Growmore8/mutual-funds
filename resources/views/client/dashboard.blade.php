@@ -23,8 +23,9 @@
     </style>
 
     {{-- Refer & Earn promo popup (opens on app launch, once per day) --}}
-    <div x-data="{ open:false, seal(){ this.open=false; try{ localStorage.setItem('refPromo', new Date().toDateString()); }catch(e){} } }"
-         x-init="try{ if(localStorage.getItem('refPromo') !== new Date().toDateString()) setTimeout(()=>open=true, 500); }catch(e){ open=true; }"
+    <div x-data="{ open:false,
+            init(){ try{ if(localStorage.getItem('refPromo') !== new Date().toDateString()){ setTimeout(()=>{ this.open = true; }, 600); } }catch(e){ this.open = true; } },
+            seal(){ this.open=false; try{ localStorage.setItem('refPromo', new Date().toDateString()); }catch(e){} } }"
          x-show="open" x-cloak x-transition.opacity class="fixed inset-0 z-[70] grid place-items-center p-5">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="seal()"></div>
 
