@@ -156,7 +156,8 @@
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
-    <nav class="lg:hidden shrink-0 relative z-10 border-t border-gray-200 dark:border-white/[0.06] px-2 pt-1.5 pb-0">
+    <nav class="lg:hidden shrink-0 relative z-10 border-t border-gray-200 dark:border-white/[0.06] bg-gray-50 dark:bg-[#070d1f] px-2 pt-1.5"
+         style="padding-bottom:env(safe-area-inset-bottom)">
         <div class="flex items-end justify-around">
             @foreach ($navLinks as $i => $it)
                 @php $active = request()->routeIs($it['match']); @endphp
