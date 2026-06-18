@@ -22,6 +22,42 @@
         .gcard:hover{transform:translateY(-2px)}
     </style>
 
+    {{-- Refer & Earn promo popup (opens on app launch, once per day) --}}
+    <div x-data="{ open:false, seal(){ this.open=false; try{ localStorage.setItem('refPromo', new Date().toDateString()); }catch(e){} } }"
+         x-init="try{ if(localStorage.getItem('refPromo') !== new Date().toDateString()) setTimeout(()=>open=true, 500); }catch(e){ open=true; }"
+         x-show="open" x-cloak x-transition.opacity class="fixed inset-0 z-[70] grid place-items-center p-5">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="seal()"></div>
+
+        <div x-show="open" x-transition.scale.origin.center
+             class="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            {{-- Hero --}}
+            <div class="relative bg-gradient-to-br from-emerald-400 via-emerald-600 to-teal-700 px-6 pt-8 pb-7 text-white text-center overflow-hidden">
+                {{-- decorative coins --}}
+                <i class="fa-solid fa-coins absolute -left-2 top-4 text-amber-300/30 text-5xl rotate-[-15deg]"></i>
+                <i class="fa-solid fa-coins absolute right-2 bottom-3 text-amber-300/30 text-3xl rotate-12"></i>
+                <i class="fa-solid fa-star absolute right-8 top-5 text-white/30 text-lg"></i>
+
+                <button @click="seal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 grid place-items-center text-white z-10" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="relative mx-auto w-24 h-24 rounded-3xl bg-white/15 ring-1 ring-white/30 grid place-items-center mb-4 animate-bounce" style="animation-duration:2.5s">
+                    <i class="fa-solid fa-gift text-5xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold tracking-tight">Refer &amp; Earn 🎉</h3>
+                <p class="text-sm text-white/90 mt-2 px-2">Invite your friends and earn <strong>1% of every deposit</strong> they make — for life!</p>
+                <div class="mt-4 inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 text-sm font-semibold">
+                    <i class="fa-solid fa-infinity text-amber-300"></i> Unlimited earnings
+                </div>
+            </div>
+            {{-- Actions --}}
+            <div class="bg-white dark:bg-[#0f1b38] p-4 flex gap-2">
+                <button @click="seal()" class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm font-medium">Maybe later</button>
+                <a href="{{ route('client.referrals') }}" class="flex-1 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold text-center"><i class="fa-solid fa-paper-plane mr-1"></i> Invite &amp; Earn</a>
+            </div>
+        </div>
+    </div>
+
     {{-- Welcome --}}
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
