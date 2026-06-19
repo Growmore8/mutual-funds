@@ -9,7 +9,11 @@
         $dailyPoolProfit = round((float) ($at->pool_amount ?? 0) * $dailyPct / 100, 2);
         $pts = $chart->values();
         $n = $pts->count();
-        $max = max(1.0, (float) ($pts->max('net_pnl') ?: 0));
+        $vmax = (float) ($pts->max('net_pnl') ?? 0);
+        $vmin = (float) ($pts->min('net_pnl') ?? 0);
+        $vrange = max(0.01, $vmax - $vmin);
+        $trendUp = $n > 1 ? ((float) $pts->last()->net_pnl >= (float) $pts->first()->net_pnl) : true;
+        $lineColor = $trendUp ? '#10b981' : '#ef4444';
     @endphp
 
     <style>
@@ -30,7 +34,8 @@
                 <div class="absolute inset-0" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16"></div>
                 <div class="relative text-center px-8">
                     <img src="/logo.png?v={{ \App\Models\Setting::get('brand_v','1') }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
-                    <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</p>
+                    <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{!! preg_replace('/(capital)/i', '<span class="text-emerald-400">$1</span>', e(\App\Models\Setting::get('app_name', 'GrowthCapital'))) !!}</p>
+                    <p class="text-[11px] tracking-[0.35em] uppercase text-gray-400 mt-1.5">Mutual Fund</p>
                     <p class="text-sm text-emerald-300/90 mt-2">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
                     <div class="flex items-center justify-center gap-2 mt-7">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0ms"></span>
@@ -104,7 +109,8 @@
         $hcoords = [];
         foreach ($pts as $i => $row) {
             $hx = $n > 1 ? round(($i / ($n - 1)) * 600, 1) : 300;
-            $hy = round(110 - (max(0, (float) $row->net_pnl) / $max) * 90, 1);
+            // Scale between the series min and max so the line rises AND falls.
+            $hy = round(110 - (((float) $row->net_pnl - $vmin) / $vrange) * 90, 1);
             $hcoords[] = "$hx,$hy";
         }
         $hline = implode(' ', $hcoords);
@@ -133,17 +139,17 @@
             <svg viewBox="0 0 600 120" preserveAspectRatio="none" class="w-full h-36 mt-4">
                 <defs>
                     <linearGradient id="gcfill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(16,185,129,.35)"/>
-                        <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+                        <stop offset="0%" stop-color="{{ $lineColor }}" stop-opacity="0.30"/>
+                        <stop offset="100%" stop-color="{{ $lineColor }}" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 <polygon points="{{ $harea }}" fill="url(#gcfill)"/>
-                <polyline points="{{ $hline }}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <polyline points="{{ $hline }}" fill="none" stroke="{{ $lineColor }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
             </svg>
         @else
             <div class="h-36 mt-4 grid place-items-center text-sm text-gray-400 text-center">Your performance chart appears once the pool starts distributing daily profit.</div>
         @endif
-        <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Earnings, last 14 days</p>
+        <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Running P&amp;L movements</p>
     </div>
 
     @php

@@ -57,13 +57,21 @@ class ClientDashboardController extends Controller
         $floatingShare = round($poolsFloating * $shareWeight, 2);
         $liveRef = $pool->account_ref ?? null;
 
-        $chart = Transaction::where('fund_account_id', $aid)
+        // Forex-style running P&L: one point per profit/loss event so the line
+        // moves up and down with every change (not just daily aggregates).
+        $profitTx = Transaction::where('fund_account_id', $aid)
             ->where('type', 'profit')
-            ->where('created_at', '>=', today()->subDays(14))
-            ->selectRaw('DATE(created_at) as allocation_date, SUM(amount) as net_pnl')
-            ->groupBy('allocation_date')
-            ->orderBy('allocation_date')
-            ->get();
+            ->orderBy('id')
+            ->get(['amount', 'created_at']);
+
+        $run = 0.0;
+        $series = [];
+        foreach ($profitTx as $t) {
+            $run += (float) $t->amount;
+            $series[] = (object) ['allocation_date' => $t->created_at, 'net_pnl' => round($run, 2)];
+        }
+        // Keep the most recent ~80 movements for a dense, trading-style line.
+        $chart = collect(array_slice($series, -80));
 
         $recent = Transaction::where('fund_account_id', $aid)
             ->whereIn('type', ['profit', 'deposit', 'withdrawal', 'referral'])
