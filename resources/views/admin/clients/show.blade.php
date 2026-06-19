@@ -178,17 +178,23 @@
                     <p class="text-sm text-gray-400 mb-3">No documents uploaded.</p>
                 @endforelse
 
-                {{-- Upload on behalf of the client --}}
-                <form method="POST" action="{{ route('admin.clients.kyc.upload', $client) }}" enctype="multipart/form-data" class="mt-4 space-y-3 text-sm border-t border-gray-100 pt-4">
-                    @csrf
-                    <p class="text-xs text-gray-500">Upload the client's National ID / Passport on their behalf.</p>
-                    <div><label class="block text-gray-700 mb-1">Document number (optional)</label><input name="document_number" class="w-full border-gray-300 rounded-md"></div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block text-gray-700 mb-1">Front</label><input type="file" name="front" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
-                        <div><label class="block text-gray-700 mb-1">Back</label><input type="file" name="back" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
+                {{-- Upload on behalf of the client — only while KYC is not yet verified --}}
+                @if ($client->kyc_status === 'approved')
+                    <div class="mt-4 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        <i class="fa-solid fa-circle-check"></i> KYC verified — documents above are available to view.
                     </div>
-                    <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-upload mr-1"></i> Upload KYC</button>
-                </form>
+                @else
+                    <form method="POST" action="{{ route('admin.clients.kyc.upload', $client) }}" enctype="multipart/form-data" class="mt-4 space-y-3 text-sm border-t border-gray-100 pt-4">
+                        @csrf
+                        <p class="text-xs text-gray-500">Upload the client's National ID / Passport on their behalf.</p>
+                        <div><label class="block text-gray-700 mb-1">Document number (optional)</label><input name="document_number" class="w-full border-gray-300 rounded-md"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-gray-700 mb-1">Front</label><input type="file" name="front" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
+                            <div><label class="block text-gray-700 mb-1">Back</label><input type="file" name="back" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs"></div>
+                        </div>
+                        <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-upload mr-1"></i> Upload KYC</button>
+                    </form>
+                @endif
             </div>
 
             {{-- Recent transactions --}}
