@@ -34,8 +34,11 @@
     </div>
 
     {{-- Form side --}}
-    <div class="auth-hero lg:bg-none flex items-center justify-center px-6 py-10 relative">
-        <div class="w-full max-w-sm relative z-10">
+    <div class="relative lg:auth-hero lg:flex lg:items-center lg:justify-center lg:px-6 lg:py-10">
+        @if($hero)
+            <div class="lg:hidden h-44 bg-cover bg-center" style="background-image:linear-gradient(to bottom,rgba(7,11,22,.2) 40%,#070b16 96%),url('{{ $hero }}?v={{ $brandV }}')"></div>
+        @endif
+        <div class="w-full max-w-sm mx-auto px-6 pb-10 relative z-10 {{ $hero ? '-mt-12 lg:mt-0 lg:px-0' : 'pt-8 lg:pt-0 lg:px-0' }}">
             <div class="flex items-center gap-2 mb-6">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
                 <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>
