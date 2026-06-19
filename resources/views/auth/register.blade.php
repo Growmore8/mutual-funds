@@ -1,87 +1,85 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
-        <input type="hidden" name="ref" value="{{ $ref ?? request('ref') }}">
-        @if (!empty($ref))
-            <div class="mb-4 text-sm bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg p-3">
-                <i class="fa-solid fa-gift"></i> You were referred — you're joining with referral code <strong>{{ $ref }}</strong>.
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+@php $appName = \App\Models\Setting::get('app_name', 'GrowthCapital'); $brandV = \App\Models\Setting::get('brand_v', '1'); @endphp
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Sign up · {{ $appName }}</title>
+    <link rel="icon" href="/logo.png?v={{ $brandV }}" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .auth-hero{background:radial-gradient(1200px 500px at 20% -10%,rgba(37,99,235,.35),transparent 55%),radial-gradient(900px 500px at 90% 110%,rgba(16,185,129,.3),transparent 55%),linear-gradient(160deg,#0b1224,#070b16)}
+        .auth-blob{filter:blur(40px);opacity:.5}
+        .ginput{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+        .ginput:focus{border-color:#10b981;box-shadow:0 0 0 2px rgba(16,185,129,.25);background:rgba(255,255,255,.06)}
+        select.ginput option{background:#0b1224;color:#e5e7eb}
+    </style>
+</head>
+<body class="h-full bg-[#070b16] text-gray-200">
+<div class="min-h-full lg:grid lg:grid-cols-2">
+
+    {{-- Brand / art side (desktop) --}}
+    <div class="hidden lg:block auth-hero relative overflow-hidden">
+        <div class="absolute -top-10 left-10 w-72 h-72 rounded-full bg-blue-500/40 auth-blob"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-emerald-500/40 auth-blob"></div>
+        <div class="relative z-10 h-full flex flex-col justify-center px-16 text-white">
+            <h2 class="text-4xl font-extrabold leading-tight">Start investing<br>with confidence.</h2>
+            <p class="text-gray-300 mt-4 max-w-md">Create your account, get verified, and your capital starts earning a daily share of the managed pool's profit.</p>
+            <p class="absolute bottom-8 text-xs text-gray-500">&copy; {{ date('Y') }} {{ $appName }} Ltd</p>
+        </div>
+    </div>
+
+    {{-- Form side --}}
+    <div class="auth-hero lg:bg-none flex items-center justify-center px-6 py-10 relative">
+        <div class="w-full max-w-sm relative z-10">
+            <div class="flex items-center gap-2 mb-6">
+                <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
+                <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>
             </div>
-        @endif
 
-        <!-- Full Name (as per National ID) -->
-        <div>
-            <x-input-label for="name" :value="__('Full Name (as per National ID)')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+            <h1 class="text-2xl font-extrabold text-white">Create your account</h1>
+            <p class="text-sm text-gray-400 mt-1 mb-5">It only takes a minute.</p>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+            @if ($errors->any())
+                <div class="mb-4 bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg p-3">{{ $errors->first() }}</div>
+            @endif
 
-        <!-- Phone Number -->
-        <div class="mt-4">
-            <x-input-label for="phone" :value="__('Phone Number')" />
-            <x-text-input id="phone" class="block mt-1 w-full" type="tel" name="phone" :value="old('phone')" required autocomplete="tel" placeholder="+44 ..." />
-            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-        </div>
-
-        <!-- Country -->
-        <div class="mt-4">
-            <x-input-label for="country" :value="__('Country')" />
-            <x-country-select name="country" :value="old('country')" :required="true" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" />
-            <x-input-error :messages="$errors->get('country')" class="mt-2" />
-        </div>
-
-        <!-- Account Type -->
-        <div class="mt-4">
-            <x-input-label for="account_type_id" :value="__('Account Type')" />
-            <select id="account_type_id" name="account_type_id" required
-                    class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                <option value="">Select a plan…</option>
-                @foreach ($accountTypes as $t)
-                    <option value="{{ $t->id }}" @selected(old('account_type_id') == $t->id)>
-                        {{ $t->name }} — min ${{ number_format((float)$t->min_deposit) }}
-                    </option>
-                @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('account_type_id')" class="mt-2" />
-        </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
+            <a href="{{ route('oauth.redirect', 'google') }}" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/15 hover:bg-white/5 text-sm font-medium text-gray-200 mb-4">
+                <i class="fa-brands fa-google text-[#ea4335]"></i> Sign up with Google
             </a>
+            <div class="relative my-4 text-center"><span class="text-xs text-gray-500 bg-[#070b16] lg:bg-transparent px-2 relative z-10">Or with email</span><div class="absolute inset-x-0 top-1/2 border-t border-white/10"></div></div>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+            <form method="POST" action="{{ route('register') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="ref" value="{{ $ref ?? request('ref') }}">
+                @if (!empty($ref))
+                    <div class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg p-2.5"><i class="fa-solid fa-gift"></i> Joining with referral code <strong>{{ $ref }}</strong>.</div>
+                @endif
+
+                <input name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="Full name (as per ID)" class="ginput w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none">
+                <input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" placeholder="Email" class="ginput w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none">
+                <input type="tel" name="phone" value="{{ old('phone') }}" required placeholder="Phone (+44 …)" class="ginput w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none">
+                <x-country-select name="country" :value="old('country')" :required="true" class="ginput w-full px-4 py-3 rounded-xl text-white outline-none" />
+                <select name="account_type_id" required class="ginput w-full px-4 py-3 rounded-xl text-white outline-none">
+                    <option value="">Select a plan…</option>
+                    @foreach ($accountTypes as $t)
+                        <option value="{{ $t->id }}" @selected(old('account_type_id') == $t->id)>{{ $t->name }} — min ${{ number_format((float)$t->min_deposit) }}</option>
+                    @endforeach
+                </select>
+                <div class="relative" x-data="{ show:false }">
+                    <input :type="show?'text':'password'" name="password" required autocomplete="new-password" placeholder="Password" class="ginput w-full px-4 pr-11 py-3 rounded-xl text-white placeholder-gray-500 outline-none">
+                    <button type="button" @click="show=!show" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500"><i class="fa-solid" :class="show?'fa-eye-slash':'fa-eye'"></i></button>
+                </div>
+                <input type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm password" class="ginput w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none">
+
+                <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition mt-1">Create account</button>
+            </form>
+
+            <p class="text-center text-sm text-gray-400 mt-5">Already have an account? <a href="{{ route('login') }}" class="text-emerald-400 font-semibold">Log in</a></p>
         </div>
-    </form>
-</x-guest-layout>
+    </div>
+</div>
+</body>
+</html>

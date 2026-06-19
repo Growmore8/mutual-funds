@@ -31,6 +31,10 @@ Route::get('/manifest.webmanifest', function () {
 Route::post('/webauthn/login/options', [\App\Http\Controllers\WebAuthnController::class, 'loginOptions'])->name('webauthn.login.options');
 Route::post('/webauthn/login', [\App\Http\Controllers\WebAuthnController::class, 'login'])->name('webauthn.login');
 
+// Social login (Google) via Socialite.
+Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\OAuthController::class, 'redirect'])->name('oauth.redirect');
+Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\OAuthController::class, 'callback'])->name('oauth.callback');
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');

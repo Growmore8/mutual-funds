@@ -22,6 +22,22 @@
         .gcard:hover{transform:translateY(-2px)}
     </style>
 
+    {{-- Splash / loading screen (shows briefly when the app is opened) --}}
+    <div x-data="{ show: false }" x-init="try{ if(!sessionStorage.getItem('splashShown')){ show=true; setTimeout(()=>{ show=false; sessionStorage.setItem('splashShown','1'); }, 2200); } }catch(e){}">
+        <template x-teleport="body">
+            <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
+                 class="fixed inset-0 z-[100] grid place-items-center">
+                <div class="absolute inset-0" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16"></div>
+                <div class="relative text-center">
+                    <img src="/logo.png" alt="" class="w-20 h-20 mx-auto drop-shadow-[0_0_25px_rgba(16,185,129,.5)] animate-pulse" onerror="this.style.display='none'">
+                    <p class="mt-4 text-2xl font-extrabold text-white tracking-wide">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Mutual Funds</p>
+                    <div class="mt-6 mx-auto w-8 h-8 border-2 border-white/20 border-t-emerald-400 rounded-full animate-spin"></div>
+                </div>
+            </div>
+        </template>
+    </div>
+
     {{-- Admin-managed popup (maintenance / notice / offer / promotion) --}}
     @if (!empty($announcement))
         @php
