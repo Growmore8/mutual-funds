@@ -41,8 +41,9 @@ class StatementController extends Controller
     public function transactions(Request $request)
     {
         $type = $request->get('type');
+        $aid = $request->user()->currentAccount()?->id;
 
-        $transactions = Transaction::where('user_id', $request->user()->id)
+        $transactions = Transaction::where('fund_account_id', $aid)
             ->when(in_array($type, ['deposit', 'withdrawal', 'profit', 'fee', 'adjustment']),
                 fn ($q) => $q->where('type', $type))
             ->latest('id')
@@ -56,8 +57,10 @@ class StatementController extends Controller
     public function profit(Request $request, StatementService $svc)
     {
         $period = $request->get('period', 'all');
+        $account = $request->user()->currentAccount();
+        $aid = $account?->id;
 
-        $rows = Transaction::where('user_id', $request->user()->id)
+        $rows = Transaction::where('fund_account_id', $aid)
             ->where('type', 'profit')
             ->when(in_array($period, ['today', 'week', 'month', 'year', 'custom']), function ($q) use ($svc, $period, $request) {
                 [$start, $end] = $svc->period($period, $request->get('from'), $request->get('to'));
@@ -67,7 +70,7 @@ class StatementController extends Controller
             ->paginate(60)
             ->withQueryString();
 
-        $totalProfit = $request->user()->totalProfit();
+        $totalProfit = (float) Transaction::where('fund_account_id', $aid)->where('type', 'profit')->sum('amount');
 
         return view('client.profit', compact('rows', 'totalProfit', 'period'));
     }

@@ -19,6 +19,15 @@ class AccountRequestController extends Controller
         return view('client.accounts.index', compact('user', 'investment', 'accountTypes', 'pendingRequest', 'pastRequests'));
     }
 
+    /** Switch the active fund account (must belong to the user). */
+    public function switchAccount(Request $request, \App\Models\FundAccount $account)
+    {
+        abort_unless($account->user_id === $request->user()->id, 403);
+        session(['fund_account_id' => $account->id]);
+
+        return redirect()->route('client.dashboard')->with('status', 'Switched to ' . $account->label . '.');
+    }
+
     public function store(Request $request)
     {
         $user = $request->user();

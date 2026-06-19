@@ -10,6 +10,30 @@
             </div>
         </div>
 
+        {{-- Account switcher (only if the client has more than one fund account) --}}
+        @php $accs = auth()->user()->fundAccounts; $current = auth()->user()->currentAccount(); @endphp
+        @if ($accs->count() > 1)
+            <div class="p-2 bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm">
+                <p class="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">Switch account</p>
+                @foreach ($accs as $acc)
+                    <form method="POST" action="{{ route('accounts.switch', $acc) }}">@csrf
+                        <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left {{ $current && $current->id === $acc->id ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5' }}">
+                            <span class="w-9 h-9 rounded-full grid place-items-center font-bold shrink-0 {{ $current && $current->id === $acc->id ? 'bg-emerald-500 text-[#04231a]' : 'bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-gray-300' }}">{{ $loop->iteration }}</span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block font-medium text-gray-900 dark:text-white">{{ $acc->label }}</span>
+                                <span class="block text-xs text-gray-400">{{ $acc->accountType->name ?? 'No plan' }} · {{ $acc->code() }}</span>
+                            </span>
+                            @if ($current && $current->id === $acc->id)
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">Current</span>
+                            @else
+                                <i class="fa-solid fa-arrow-right-arrow-left text-gray-300 dark:text-gray-500"></i>
+                            @endif
+                        </button>
+                    </form>
+                @endforeach
+            </div>
+        @endif
+
         {{-- Settings --}}
         <div class="p-2 bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm divide-y divide-gray-100 dark:divide-white/[0.06] text-sm">
             <a href="{{ route('accounts.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl text-gray-800 dark:text-gray-200">

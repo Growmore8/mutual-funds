@@ -14,49 +14,50 @@ class ClientDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->load('accountType', 'poolAccount');
+        $user = $request->user();
+        $account = $user->currentAccount();
+        $account?->load('accountType', 'poolAccount');
+        $at = $account?->accountType;
+        $aid = $account?->id;
 
-        // Pools the client is tied to: their deposits' pools + the admin-assigned Live ID.
-        $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
-        if ($user->pool_account_id) {
-            $poolIds = $poolIds->push($user->pool_account_id)->unique()->values();
+        // Pools tied to THIS account: its deposits' pools + its assigned Live ID.
+        $poolIds = $account ? $account->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter() : collect();
+        if ($account?->pool_account_id) {
+            $poolIds = $poolIds->push($account->pool_account_id)->unique()->values();
         }
         $pools = PoolAccount::whereIn('id', $poolIds)->get();
-        $pool = $pools->first() ?? $user->poolAccount ?? PoolAccount::where('is_active', true)->first();   // display pool
+        $pool = $pools->first() ?? $account?->poolAccount ?? PoolAccount::where('is_active', true)->first();   // display pool
         $latestSnap = $pool?->snapshots()->latest('snapshot_date')->first();
 
-        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');   // principal (locked)
-        $balanceAfter = (float) (Transaction::where('user_id', $user->id)->latest('id')->value('balance_after') ?? 0);
-        $totalEarned = (float) Transaction::where('user_id', $user->id)->where('type', 'profit')->sum('amount'); // gross profit/loss credited
-        $runningPnl = $user->runningPnl();              // profit/loss after payouts (can be negative)
-        $withdrawable = $user->availableToWithdraw();   // positive PnL only
+        $investment = $account ? $account->totalDeposited() : 0.0;   // principal (locked) for this account
+        $balanceAfter = (float) (Transaction::where('fund_account_id', $aid)->latest('id')->value('balance_after') ?? 0);
+        $totalEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'profit')->sum('amount');
+        $runningPnl = $account ? $account->runningPnl() : 0.0;
+        $withdrawable = $account ? $account->availableToWithdraw() : 0.0;
 
-        $today = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today())->sum('net_pnl');
-        $yesterday = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today()->subDay())->sum('net_pnl');
-        $month = (float) Transaction::where('user_id', $user->id)->where('type', 'profit')
+        $today = (float) PnlAllocation::where('fund_account_id', $aid)->whereDate('allocation_date', today())->sum('net_pnl');
+        $yesterday = (float) PnlAllocation::where('fund_account_id', $aid)->whereDate('allocation_date', today()->subDay())->sum('net_pnl');
+        $month = (float) Transaction::where('fund_account_id', $aid)->where('type', 'profit')
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount');
 
         // Profit share = invested / the plan's fixed pool amount (× 100), capped at 100%.
-        $planPool = (float) ($user->accountType->pool_amount ?? 0);
+        $planPool = (float) ($at->pool_amount ?? 0);
         $poolsCapacity = $planPool > 0 ? $planPool : (float) $pools->sum('capacity');
         $poolsBalance = (float) $pools->sum('balance');
         $sharePct = $planPool > 0 ? round(min(100, $investment / $planPool * 100), 2) : 0.0;
 
-        // Today's combined PnL across the client's pools.
         $poolToday = (float) PoolSnapshot::whereIn('pool_account_id', $poolIds)
             ->whereDate('snapshot_date', $latestSnap->snapshot_date ?? today())
             ->sum('pnl');
         $poolBalance = $poolsBalance;
 
-        // Open (floating, unrealized) P/L — the client's proportional share.
+        // Open (floating, unrealized) P/L — this account's proportional share.
         $poolsFloating = $pools->isNotEmpty() ? (float) $pools->sum('floating_pnl') : (float) ($pool->floating_pnl ?? 0);
         $shareWeight = $planPool > 0 ? min(1.0, $investment / $planPool) : 0.0;
         $floatingShare = round($poolsFloating * $shareWeight, 2);
-        $liveRef = $pool->account_ref ?? null;   // assigned Live ID / pool account
+        $liveRef = $pool->account_ref ?? null;
 
-        // last 14 days of the client's net profit for the chart — from profit
-        // transactions (same source as balance/profit history), summed per day.
-        $chart = Transaction::where('user_id', $user->id)
+        $chart = Transaction::where('fund_account_id', $aid)
             ->where('type', 'profit')
             ->where('created_at', '>=', today()->subDays(14))
             ->selectRaw('DATE(created_at) as allocation_date, SUM(amount) as net_pnl')
@@ -64,15 +65,15 @@ class ClientDashboardController extends Controller
             ->orderBy('allocation_date')
             ->get();
 
-        $recent = Transaction::where('user_id', $user->id)
+        $recent = Transaction::where('fund_account_id', $aid)
             ->whereIn('type', ['profit', 'deposit', 'withdrawal', 'referral'])
             ->latest('id')->limit(8)->get();
 
-        $referralEarned = $user->referralEarned();
+        $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');
         $announcement = \App\Models\Announcement::active()->latest()->first();
 
         return view('client.dashboard', compact(
-            'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
+            'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement'
         ));
@@ -81,18 +82,21 @@ class ClientDashboardController extends Controller
     /** Live figures for the client dashboard's auto-refresh (JSON). */
     public function live(Request $request, PoolApiClient $api)
     {
-        $user = $request->user()->load('accountType');
+        $user = $request->user();
+        $account = $user->currentAccount();
+        $account?->load('accountType');
+        $aid = $account?->id;
 
-        $poolIds = $user->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter();
-        if ($user->pool_account_id) {
-            $poolIds = $poolIds->push($user->pool_account_id)->unique()->values();
+        $poolIds = $account ? $account->deposits()->where('status', 'approved')->distinct()->pluck('pool_account_id')->filter() : collect();
+        if ($account?->pool_account_id) {
+            $poolIds = $poolIds->push($account->pool_account_id)->unique()->values();
         }
         $pools = PoolAccount::whereIn('id', $poolIds)->get();
         if ($pools->isEmpty() && ($first = PoolAccount::where('is_active', true)->first())) {
             $pools = collect([$first]);   // show the managed pool's live P/L even before investing
         }
-        $investment = (float) $user->deposits()->where('status', 'approved')->sum('amount');
-        $planPool = (float) ($user->accountType->pool_amount ?? 0);
+        $investment = $account ? $account->totalDeposited() : 0.0;
+        $planPool = (float) ($account?->accountType->pool_amount ?? 0);
         $shareWeight = $planPool > 0 ? min(1.0, $investment / $planPool) : 0.0;
 
         $poolFloating = 0.0;
@@ -101,7 +105,7 @@ class ClientDashboardController extends Controller
         }
 
         $floatingShare = round($poolFloating * $shareWeight, 2);
-        $today = (float) PnlAllocation::where('user_id', $user->id)->whereDate('allocation_date', today())->sum('net_pnl');
+        $today = (float) PnlAllocation::where('fund_account_id', $aid)->whereDate('allocation_date', today())->sum('net_pnl');
 
         return response()->json([
             'poolFloating' => round($poolFloating, 2),

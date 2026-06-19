@@ -33,10 +33,13 @@ class ClientDepositController extends Controller
 
         $slip = $request->file('slip')->store('deposits', 'local');
 
+        $account = $user->currentAccount();
+
         $deposit = Deposit::create([
             'user_id' => $user->id,
-            'pool_account_id' => $user->pool_account_id,
-            'account_type_id' => $user->account_type_id,
+            'fund_account_id' => $account?->id,
+            'pool_account_id' => $account?->pool_account_id ?? $user->pool_account_id,
+            'account_type_id' => $account?->account_type_id ?? $user->account_type_id,
             'amount' => $data['amount'],
             'currency' => 'USD',
             'method' => $data['method'],

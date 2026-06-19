@@ -32,6 +32,15 @@ class AccountRequestController extends Controller
             'admin_note' => $request->input('admin_note'),
         ]);
 
+        // Create the actual additional fund account the client can switch into.
+        $count = $accountRequest->user->fundAccounts()->count();
+        $accountRequest->user->fundAccounts()->create([
+            'label' => 'Account ' . ($count + 1),
+            'account_type_id' => $accountRequest->account_type_id,
+            'pool_account_id' => optional($accountRequest->accountType)->pool_account_id,
+            'is_primary' => false,
+        ]);
+
         Notifier::send(
             $accountRequest->user,
             'Your additional account is approved',

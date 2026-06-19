@@ -114,14 +114,15 @@ class PnlDistributor
         $date = $snapshot->snapshot_date;
 
         $rows = Deposit::query()
-            ->join('users', 'users.id', '=', 'deposits.user_id')
-            ->leftJoin('account_types', 'account_types.id', '=', 'users.account_type_id')
+            ->join('fund_accounts', 'fund_accounts.id', '=', 'deposits.fund_account_id')
+            ->join('users', 'users.id', '=', 'fund_accounts.user_id')
+            ->leftJoin('account_types', 'account_types.id', '=', 'fund_accounts.account_type_id')
             ->where('deposits.pool_account_id', $snapshot->pool_account_id)
             ->where('deposits.status', 'approved')
             ->whereDate('deposits.value_date', '<=', $date)
             ->where('users.status', 'active')
-            ->groupBy('deposits.user_id', 'account_types.pool_amount')
-            ->selectRaw('deposits.user_id as user_id, SUM(deposits.amount) as capital, account_types.pool_amount as pool_amount')
+            ->groupBy('deposits.fund_account_id', 'fund_accounts.user_id', 'account_types.pool_amount')
+            ->selectRaw('deposits.fund_account_id as faid, fund_accounts.user_id as user_id, SUM(deposits.amount) as capital, account_types.pool_amount as pool_amount')
             ->get();
 
         if ($rows->isEmpty()) {
@@ -141,17 +142,18 @@ class PnlDistributor
                 }
 
                 $alloc = PnlAllocation::firstOrCreate(
-                    ['pool_snapshot_id' => $snapshot->id, 'user_id' => $row->user_id],
-                    ['allocation_date' => $date, 'eligible_capital' => $capital, 'weight' => $weight, 'gross_pnl' => 0, 'fee' => 0, 'net_pnl' => 0],
+                    ['pool_snapshot_id' => $snapshot->id, 'fund_account_id' => $row->faid],
+                    ['user_id' => $row->user_id, 'allocation_date' => $date, 'eligible_capital' => $capital, 'weight' => $weight, 'gross_pnl' => 0, 'fee' => 0, 'net_pnl' => 0],
                 );
                 $alloc->increment('net_pnl', $net);
                 $alloc->increment('gross_pnl', $net);
 
-                $last = Transaction::where('user_id', $row->user_id)->latest('id')->first();
+                $last = Transaction::where('fund_account_id', $row->faid)->latest('id')->first();
                 $balanceAfter = round((float) ($last->balance_after ?? 0) + $net, 2);
 
                 Transaction::create([
                     'user_id' => $row->user_id,
+                    'fund_account_id' => $row->faid,
                     'type' => 'profit',
                     'amount' => $net,
                     'currency' => 'USD',

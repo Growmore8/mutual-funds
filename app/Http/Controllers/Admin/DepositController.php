@@ -116,11 +116,12 @@ class DepositController extends Controller
     private function creditCapital(Deposit $deposit): void
     {
         DB::transaction(function () use ($deposit) {
-            $last = Transaction::where('user_id', $deposit->user_id)->latest('id')->first();
+            $last = Transaction::where('fund_account_id', $deposit->fund_account_id)->latest('id')->first();
             $balanceAfter = round((float) ($last->balance_after ?? 0) + (float) $deposit->amount, 2);
 
             Transaction::create([
                 'user_id' => $deposit->user_id,
+                'fund_account_id' => $deposit->fund_account_id,
                 'type' => 'deposit',
                 'amount' => $deposit->amount,
                 'currency' => 'USD',
@@ -132,14 +133,10 @@ class DepositController extends Controller
             ]);
         });
 
-        $this->autoAssignPlan($deposit->user);
+        // Re-evaluate the plan/pool for the fund account this deposit belongs to.
+        optional(\App\Models\FundAccount::find($deposit->fund_account_id))->recalcPlan();
+        $deposit->user->recalcPlan();
         $this->creditReferral($deposit);
-    }
-
-    /** Auto-set the client's plan based on their total approved deposits. */
-    private function autoAssignPlan(User $user): void
-    {
-        $user->recalcPlan();
     }
 
     /** Pay the client's referrer 1% of this deposit (on every deposit). */
@@ -156,10 +153,13 @@ class DepositController extends Controller
             return;
         }
 
-        DB::transaction(function () use ($referrer, $bonus, $client) {
-            $last = Transaction::where('user_id', $referrer->id)->latest('id')->first();
+        $refAccountId = optional($referrer->primaryAccount())->id;
+
+        DB::transaction(function () use ($referrer, $bonus, $client, $refAccountId) {
+            $last = Transaction::where('fund_account_id', $refAccountId)->latest('id')->first();
             Transaction::create([
                 'user_id' => $referrer->id,
+                'fund_account_id' => $refAccountId,
                 'type' => 'referral',
                 'amount' => $bonus,
                 'currency' => 'USD',

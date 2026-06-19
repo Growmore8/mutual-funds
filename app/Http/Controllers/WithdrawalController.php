@@ -12,18 +12,20 @@ class WithdrawalController extends Controller
     public function create(Request $request)
     {
         $user = $request->user();
+        $account = $user->currentAccount();
 
         return view('client.withdraw.create', [
-            'available' => $user->availableToWithdraw(),
+            'available' => $account ? $account->availableToWithdraw() : 0.0,
             'payoutMethods' => $user->withdrawalMethods,
-            'withdrawals' => $user->withdrawals()->latest()->limit(10)->get(),
+            'withdrawals' => $account ? $account->withdrawals()->latest()->limit(10)->get() : collect(),
         ]);
     }
 
     public function store(Request $request)
     {
         $user = $request->user();
-        $available = $user->availableToWithdraw();
+        $account = $user->currentAccount();
+        $available = $account ? $account->availableToWithdraw() : 0.0;
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
@@ -43,6 +45,7 @@ class WithdrawalController extends Controller
 
         Withdrawal::create([
             'user_id' => $user->id,
+            'fund_account_id' => $account?->id,
             'amount' => $data['amount'],
             'currency' => 'USD',
             'method' => $method->title(),

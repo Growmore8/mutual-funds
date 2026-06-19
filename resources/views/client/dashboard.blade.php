@@ -1,7 +1,7 @@
 <x-client-layout title="Dashboard">
     @php
         $money = fn ($n) => '$' . number_format((float) $n, 2);
-        $at = $user->accountType;
+        $at = $at ?? $user->accountType;
         $dailyPct = (float) ($at->daily_return_pct ?? 0);
         $perDay = round($investment * $dailyPct / 100, 2);          // client's est. daily profit
         $monthlyEst = round($perDay * 30, 2);
@@ -71,6 +71,11 @@
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {{ $user->name }}</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm">{{ $user->email }} · <span class="font-mono">{{ $user->clientCode() }}</span></p>
+            @if ($user->fundAccounts->count() > 1)
+                <a href="{{ route('profile.edit') }}" class="inline-flex items-center gap-1.5 mt-2 text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    <i class="fa-solid fa-layer-group"></i> {{ $account?->label ?? 'Account' }} · switch
+                </a>
+            @endif
         </div>
     </div>
 
