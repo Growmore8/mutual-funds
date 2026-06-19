@@ -49,6 +49,34 @@ class WebAuthnController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /* ---------- Passwordless login (biometric fast login on the login page) ---------- */
+
+    public function loginOptions(AssertionRequest $request)
+    {
+        // Optional email scopes to that user's passkeys; otherwise discoverable.
+        return $request->toVerify($request->only('email'));
+    }
+
+    public function login(AssertedRequest $request)
+    {
+        $user = $request->login();   // verifies the assertion AND logs the user in
+
+        if (! $user) {
+            return response()->json(['ok' => false], 422);
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('pin_unlocked_at', now()->timestamp);
+
+        if ($user->isAdmin()) {
+            $token = \Illuminate\Support\Str::random(40);
+            $user->forceFill(['session_token' => $token])->save();
+            $request->session()->put('admin_session_token', $token);
+        }
+
+        return response()->json(['ok' => true, 'redirect' => route('dashboard', absolute: false)]);
+    }
+
     /* ---------- Manage ---------- */
 
     public function destroy(Request $request)

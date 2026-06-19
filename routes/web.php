@@ -27,6 +27,10 @@ Route::get('/manifest.webmanifest', function () {
     ])->header('Content-Type', 'application/manifest+json');
 });
 
+// Biometric (passkey) passwordless login — usable on the login page before auth.
+Route::post('/webauthn/login/options', [\App\Http\Controllers\WebAuthnController::class, 'loginOptions'])->name('webauthn.login.options');
+Route::post('/webauthn/login', [\App\Http\Controllers\WebAuthnController::class, 'login'])->name('webauthn.login');
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');

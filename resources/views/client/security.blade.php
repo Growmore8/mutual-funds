@@ -56,11 +56,6 @@
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">{{ $hasPin ? 'Update PIN' : 'Set PIN' }}</button>
             </form>
 
-            @if ($hasPin)
-                <form method="POST" action="{{ route('lock.now') }}" class="mt-3 inline">@csrf
-                    <button class="px-4 py-2 border rounded-md text-gray-600 text-sm"><i class="fa-solid fa-lock mr-1"></i> Lock now</button>
-                </form>
-            @endif
 
             @if ($hasPin)
                 <form method="POST" action="{{ route('security.pin.remove') }}" class="mt-4" onsubmit="return confirm('Remove the app-lock PIN? Biometric unlock will also stop working.')">

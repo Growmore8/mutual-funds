@@ -95,6 +95,15 @@
                     </button>
                 </form>
 
+                {{-- Fast biometric login (shown only if this device supports it) --}}
+                <div id="bio-login-wrap" class="hidden mt-4">
+                    <div class="relative my-4 text-center"><span class="text-xs text-gray-400 bg-white dark:bg-[#0f1b38] px-2 relative z-10">or</span><div class="absolute inset-x-0 top-1/2 border-t border-gray-200 dark:border-white/10"></div></div>
+                    <button type="button" id="bio-login-btn" class="w-full border border-emerald-500 text-emerald-600 dark:text-emerald-300 font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-500/10">
+                        <i class="fa-solid fa-fingerprint"></i> Login with Face ID / fingerprint
+                    </button>
+                    <p id="bio-login-msg" class="text-xs text-center text-red-600 mt-2 hidden"></p>
+                </div>
+
                 @if (Route::has('register'))
                     <p class="text-center text-sm text-gray-500 mt-6">
                         Don't have an account?
@@ -107,5 +116,42 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@laragear/webpass@2/dist/webpass.js"></script>
+<script>
+    (function () {
+        var wrap = document.getElementById('bio-login-wrap');
+        var btn = document.getElementById('bio-login-btn');
+        var msg = document.getElementById('bio-login-msg');
+        if (!wrap || typeof Webpass === 'undefined' || (Webpass.isUnsupported && Webpass.isUnsupported())) return;
+
+        // Show the option only when a platform authenticator (Face ID / fingerprint) exists.
+        if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function (ok) {
+                if (ok) wrap.classList.remove('hidden');
+            });
+        }
+
+        btn.addEventListener('click', async function () {
+            msg.classList.add('hidden');
+            btn.disabled = true;
+            try {
+                const email = (document.getElementById('email') || {}).value || '';
+                const { success, data } = await Webpass.assert(
+                    { path: '{{ route('webauthn.login.options') }}', body: email ? { email } : {} },
+                    '{{ route('webauthn.login') }}'
+                );
+                if (success) {
+                    window.location.href = (data && data.redirect) ? data.redirect : '{{ route('dashboard') }}';
+                } else {
+                    msg.textContent = 'Biometric login failed. Use your password.';
+                    msg.classList.remove('hidden'); btn.disabled = false;
+                }
+            } catch (e) {
+                msg.textContent = 'Biometric login was cancelled.';
+                msg.classList.remove('hidden'); btn.disabled = false;
+            }
+        });
+    })();
+</script>
 </body>
 </html>
