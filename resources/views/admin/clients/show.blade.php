@@ -9,7 +9,7 @@
         <div class="bg-white shadow rounded-xl p-5">
             <p class="text-xs text-gray-500"><i class="fa-solid fa-wallet text-gray-400 mr-1"></i> Capital (Balance)</p>
             <p class="text-2xl font-bold text-gray-900">{{ $money($client->totalDeposited()) }}</p>
-            <p class="text-[11px] text-gray-400">Principal · locked capital</p>
+            <p class="text-[11px] text-gray-400">Principal · all accounts</p>
         </div>
         <div class="bg-white shadow rounded-xl p-5">
             <p class="text-xs text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Running PnL</p>
@@ -75,6 +75,42 @@
 
         {{-- Right column --}}
         <div class="lg:col-span-2 space-y-6">
+            {{-- Fund accounts (per-account management) --}}
+            <div class="bg-white shadow rounded-xl p-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Fund accounts <span class="text-xs text-gray-400">({{ $client->fundAccounts->count() }})</span></h3>
+                <div class="space-y-4">
+                    @forelse ($client->fundAccounts as $acc)
+                        @php $apnl = $acc->runningPnl(); @endphp
+                        <div class="border border-gray-200 rounded-xl p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div class="font-medium text-gray-900">{{ $acc->label }} <span class="text-xs font-mono text-gray-400">{{ $acc->code() }}</span> @if($acc->is_primary)<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">primary</span>@endif</div>
+                                <div class="text-xs text-gray-500">Capital <strong>{{ $money($acc->totalDeposited()) }}</strong> · PnL <strong class="{{ $apnl<0?'text-red-600':'text-emerald-600' }}">{{ ($apnl<0?'-':'+').$money(abs($apnl)) }}</strong> · Withdrawable <strong>{{ $money($acc->availableToWithdraw()) }}</strong></div>
+                            </div>
+                            <form method="POST" action="{{ route('admin.clients.account.update', [$client, $acc]) }}" class="grid grid-cols-2 gap-2 text-sm">
+                                @csrf @method('PATCH')
+                                <div><label class="block text-gray-600 text-xs">Label</label><input name="label" value="{{ $acc->label }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
+                                <div><label class="block text-gray-600 text-xs">Plan</label>
+                                    <select name="account_type_id" class="mt-1 w-full border-gray-300 rounded-md">
+                                        <option value="">— none —</option>
+                                        @foreach ($accountTypes as $at)<option value="{{ $at->id }}" @selected($acc->account_type_id==$at->id)>{{ $at->name }}</option>@endforeach
+                                    </select>
+                                </div>
+                                <div><label class="block text-gray-600 text-xs">Live ID (pool)</label>
+                                    <select name="pool_account_id" class="mt-1 w-full border-gray-300 rounded-md">
+                                        <option value="">— unassigned —</option>
+                                        @foreach ($pools as $p)<option value="{{ $p->id }}" @selected($acc->pool_account_id==$p->id)>{{ $p->account_ref }}</option>@endforeach
+                                    </select>
+                                </div>
+                                <label class="flex items-center gap-2 text-xs mt-5"><input type="checkbox" name="plan_locked" value="1" @checked($acc->plan_locked) class="rounded"> Lock plan/pool</label>
+                                <div class="col-span-2"><button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm">Save account</button></div>
+                            </form>
+                        </div>
+                    @empty
+                        <p class="text-sm text-gray-400">No fund accounts.</p>
+                    @endforelse
+                </div>
+            </div>
+
             {{-- Account requests --}}
             <div class="bg-white shadow rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Account requests</h3>

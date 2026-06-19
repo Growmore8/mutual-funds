@@ -67,6 +67,7 @@ class ClientController extends Controller
         abort_unless($client->role === 'client', 404);
         $client->load([
             'accountType', 'poolAccount',
+            'fundAccounts.accountType', 'fundAccounts.poolAccount',
             'deposits.paymentMethod',
             'transactions' => fn ($q) => $q->latest()->limit(50),
             'kycDocuments',
@@ -134,6 +135,27 @@ class ClientController extends Controller
         );
 
         return back()->with('status', 'KYC ' . $decision . ' for ' . $client->name . '.');
+    }
+
+    /** Update one of a client's fund accounts (plan / pool / lock). */
+    public function updateAccount(Request $request, User $client, \App\Models\FundAccount $account)
+    {
+        abort_unless($account->user_id === $client->id, 404);
+
+        $data = $request->validate([
+            'label' => ['nullable', 'string', 'max:60'],
+            'account_type_id' => ['nullable', 'exists:account_types,id'],
+            'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
+        ]);
+
+        $oldPool = $account->pool_account_id;
+        $account->update($data + ['plan_locked' => $request->boolean('plan_locked')]);
+
+        if ($account->pool_account_id && (int) $account->pool_account_id !== (int) $oldPool) {
+            $account->deposits()->update(['pool_account_id' => $account->pool_account_id]);
+        }
+
+        return back()->with('status', 'Account updated.');
     }
 
     public function updateStatus(Request $request, User $client)

@@ -65,6 +65,7 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::get('/clients/{client}/statement', [ClientController::class, 'statement'])->name('clients.statement');
     Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::patch('/clients/{client}/status', [ClientController::class, 'updateStatus'])->name('clients.status');
+    Route::patch('/clients/{client}/accounts/{account}', [ClientController::class, 'updateAccount'])->name('clients.account.update');
     Route::post('/clients/{client}/kyc', [ClientController::class, 'uploadKyc'])->name('clients.kyc.upload');
     Route::post('/clients/{client}/kyc/decision', [ClientController::class, 'kycDecision'])->name('clients.kyc.decision');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
