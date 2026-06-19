@@ -13,6 +13,28 @@ class FundAccount extends Model
         'is_primary' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // Give every account its own unique account number (one login, many accounts).
+        static::creating(function (FundAccount $acc) {
+            if (empty($acc->account_no)) {
+                $acc->account_no = self::nextAccountNo();
+            }
+        });
+    }
+
+    /** Next clean, contiguous account number, e.g. GCA000007. */
+    public static function nextAccountNo(): string
+    {
+        $last = static::whereNotNull('account_no')
+            ->orderByRaw('CAST(SUBSTRING(account_no, 4) AS UNSIGNED) DESC')
+            ->value('account_no');
+
+        $n = $last ? ((int) substr($last, 3)) + 1 : 1;
+
+        return 'GCA' . str_pad((string) $n, 6, '0', STR_PAD_LEFT);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -48,10 +70,10 @@ class FundAccount extends Model
         return $this->hasMany(PnlAllocation::class);
     }
 
-    /** Display code, e.g. GC000002-1 */
+    /** Each account's own unique number, e.g. GCA000007. */
     public function code(): string
     {
-        return $this->user->clientCode() . '-' . $this->id;
+        return $this->account_no ?: ('GCA' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT));
     }
 
     /** Capital = approved deposits in this account. */

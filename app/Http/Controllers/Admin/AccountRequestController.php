@@ -34,12 +34,13 @@ class AccountRequestController extends Controller
 
         // Create the actual additional fund account the client can switch into.
         $count = $accountRequest->user->fundAccounts()->count();
-        $accountRequest->user->fundAccounts()->create([
+        $account = $accountRequest->user->fundAccounts()->create([
             'label' => 'Account ' . ($count + 1),
             'account_type_id' => $accountRequest->account_type_id,
             'pool_account_id' => optional($accountRequest->accountType)->pool_account_id,
             'is_primary' => false,
         ]);
+        $accountRequest->forceFill(['fund_account_id' => $account->id])->save();
 
         Notifier::send(
             $accountRequest->user,
