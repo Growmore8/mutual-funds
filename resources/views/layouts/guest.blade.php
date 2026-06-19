@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'GrowthCapital Funds') }}</title>
+        <title>{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</title>
         <link rel="icon" href="/logo.png" type="image/png">
         <link rel="apple-touch-icon" href="/logo.png">
         <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
@@ -22,7 +22,7 @@
         <div class="min-h-full flex flex-col justify-center items-center px-6 py-10 bg-gray-100">
             <a href="/" class="mb-6 text-center">
                 <img src="/logo.png" alt="GrowthCapital" class="w-16 h-16 mx-auto mb-2" onerror="this.style.display='none'">
-                <div class="text-2xl font-bold text-[#0a1730] dark:text-white">Growth<span class="text-emerald-500">Capital</span></div>
+                <div class="text-2xl font-bold text-[#0a1730] dark:text-white">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </a>
 

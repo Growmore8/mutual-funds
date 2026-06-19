@@ -1,4 +1,9 @@
 @props(['title' => 'Admin'])
+@php
+    $appName = \App\Models\Setting::get('app_name', 'GrowthCapital');
+    $brandV = \App\Models\Setting::get('brand_v', '1');
+    $favicon = \App\Models\Setting::get('favicon_path', '/logo.png');
+@endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -6,9 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-key" content="{{ config('services.webpush.public_key') }}">
-    <title>{{ $title }} · GrowthCapital Funds</title>
-    <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="apple-touch-icon" href="/logo.png">
+    <title>{{ $title }} · {{ $appName }}</title>
+    <link rel="icon" href="{{ $favicon }}?v={{ $brandV }}" type="image/png">
+    <link rel="apple-touch-icon" href="/logo.png?v={{ $brandV }}">
     <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,8 +23,8 @@
     {{-- Sidebar --}}
     <aside class="fixed inset-y-0 left-0 w-64 bg-[#0a1730] text-gray-300 hidden lg:flex flex-col">
         <div class="px-6 h-16 shrink-0 border-b border-white/[0.06] flex items-center gap-2.5">
-            <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
-            <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Fund Admin</span></div>
+            <img src="/logo.png?v={{ $brandV }}" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
+            <div class="text-white font-bold text-lg leading-tight">{{ $appName }}<span class="block text-xs font-normal text-gray-400">Fund Admin</span></div>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
             @php
@@ -65,6 +70,7 @@
             {!! $heading('Settings') !!}
             {!! $link('admin.settings.edit', 'Profile', 'fa-user') !!}
             {!! $link('admin.settings.security', 'Security', 'fa-shield-halved') !!}
+            {!! $link('admin.settings.branding', 'Branding', 'fa-palette') !!}
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                     class="w-full text-left {{ $base }} {{ $idle }}">
                 <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i><span>Appearance</span>

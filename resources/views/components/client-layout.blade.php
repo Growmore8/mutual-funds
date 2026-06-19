@@ -1,4 +1,10 @@
 @props(['title' => 'Dashboard'])
+@php
+    $appName = \App\Models\Setting::get('app_name', 'GrowthCapital');
+    $appShort = \App\Models\Setting::get('app_short_name', 'GC Fund');
+    $brandV = \App\Models\Setting::get('brand_v', '1');
+    $favicon = \App\Models\Setting::get('favicon_path', '/logo.png');
+@endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -6,17 +12,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-key" content="{{ config('services.webpush.public_key') }}">
-    <title>{{ $title }} · GrowthCapital Funds</title>
+    <title>{{ $title }} · {{ $appName }}</title>
     <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();</script>
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#0a1730">
-    <link rel="apple-touch-icon" href="/logo.png">
-    <link rel="icon" href="/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/logo.png?v={{ $brandV }}">
+    <link rel="icon" href="{{ $favicon }}?v={{ $brandV }}" type="image/png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GC Fund">
+    <meta name="apple-mobile-web-app-title" content="{{ $appShort }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -59,8 +65,8 @@
     {{-- Desktop sidebar --}}
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
         <div class="px-6 h-16 shrink-0 border-b border-white/[0.06] flex items-center gap-2.5">
-            <img src="/logo.png" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
-            <div class="text-white font-bold text-lg leading-tight">Growth<span class="text-emerald-400">Capital</span><span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
+            <img src="/logo.png?v={{ $brandV }}" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
+            <div class="text-white font-bold text-lg leading-tight">{{ $appName }}<span class="block text-xs font-normal text-gray-400">Mutual Funds</span></div>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
             @php
@@ -118,8 +124,8 @@
         <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0 lg:hidden">
-                    <img src="/logo.png" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
-                    <span class="font-bold text-[#0a1730] dark:text-white truncate">Growth<span class="text-emerald-500">Capital</span></span>
+                    <img src="/logo.png?v={{ $brandV }}" alt="" class="w-8 h-8 shrink-0" onerror="this.style.display='none'">
+                    <span class="font-bold text-[#0a1730] dark:text-white truncate">{{ $appName }}</span>
                 </div>
                 <div class="hidden lg:block"></div>
                 <x-notification-bell />

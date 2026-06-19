@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Log in · GrowthCapital Funds</title>
+    <title>Log in · {{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</title>
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="apple-touch-icon" href="/logo.png">
     <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
@@ -19,7 +19,7 @@
         <div class="relative z-10 flex items-center gap-3">
             <img src="/logo.png" alt="GrowthCapital" class="w-12 h-12" onerror="this.style.display='none'">
             <div>
-                <div class="text-2xl font-bold">Growth<span class="text-emerald-400">Capital</span></div>
+                <div class="text-2xl font-bold">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </div>
         </div>
@@ -42,7 +42,7 @@
             {{-- mobile brand --}}
             <div class="lg:hidden text-center mb-8">
                 <img src="/logo.png" alt="GrowthCapital" class="w-16 h-16 mx-auto mb-2" onerror="this.style.display='none'">
-                <div class="text-2xl font-bold text-[#0a1730] dark:text-white">Growth<span class="text-emerald-500">Capital</span></div>
+                <div class="text-2xl font-bold text-[#0a1730] dark:text-white">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</div>
                 <p class="text-xs text-gray-400">Mutual Funds</p>
             </div>
 

@@ -6,6 +6,27 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// Dynamic PWA manifest (name/icon come from admin Branding settings).
+Route::get('/manifest.webmanifest', function () {
+    $v = \App\Models\Setting::get('brand_v', '1');
+
+    return response()->json([
+        'name' => \App\Models\Setting::get('app_name', 'GrowthCapital'),
+        'short_name' => \App\Models\Setting::get('app_short_name', 'GC Fund'),
+        'description' => 'Your managed mutual-fund pool account — invest, track daily profit, and withdraw.',
+        'start_url' => '/app',
+        'scope' => '/',
+        'display' => 'standalone',
+        'orientation' => 'portrait',
+        'background_color' => '#0a1730',
+        'theme_color' => '#0a1730',
+        'icons' => [
+            ['src' => '/logo.png?v=' . $v, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/logo.png?v=' . $v, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+        ],
+    ])->header('Content-Type', 'application/manifest+json');
+});
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
