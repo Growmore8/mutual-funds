@@ -55,7 +55,7 @@
                     <img src="{{ \App\Models\Setting::get('login_hero_path', '/logo.png') }}?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-24 h-14 rounded-lg border border-gray-200 object-cover bg-gray-50">
                     <input type="file" name="login_hero" accept=".png,.jpg,.jpeg,.webp" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
                 </div>
-                <p class="text-xs text-gray-400 mt-1">Wide photo (e.g. lifestyle/family). Shown on the login &amp; sign-up screens with a dark fade. Leave empty for the default gradient.</p>
+                <p class="text-xs text-gray-400 mt-1">Wide photo (e.g. lifestyle/family), up to 15&nbsp;MB. Shown on the login &amp; sign-up screens with a dark fade. Leave empty for the default gradient.</p>
             </div>
 
             <button class="px-5 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium">Save branding</button>
