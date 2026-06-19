@@ -113,14 +113,14 @@
                                    :placeholder="sel ? sel.label : 'Type a name, GC ID or GCA account…'"
                                    class="w-full border-gray-300 rounded-md" autocomplete="off">
                             <div x-show="open" @click.outside="open=false" x-cloak
-                                 class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                                 class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
                                 <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
                                     <button type="button" @click="sel=a; q=''; open=false"
-                                            class="w-full text-left px-3 py-2 hover:bg-emerald-50 text-sm" x-text="a.label"></button>
+                                            class="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-100 dark:hover:bg-white/10" x-text="a.label"></button>
                                 </template>
                                 <div x-show="accs.filter(x => x.search.includes(q.toLowerCase())).length === 0" class="px-3 py-2 text-gray-400 text-sm">No match</div>
                             </div>
-                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 mt-1">Selected: <span x-text="sel?.label"></span></p>
+                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
                         <div>
                             <label class="block text-gray-700 mb-1">Type</label>
