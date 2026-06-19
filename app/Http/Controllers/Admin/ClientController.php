@@ -158,6 +158,32 @@ class ClientController extends Controller
         return back()->with('status', 'Account updated.');
     }
 
+    /** Delete one of a client's fund accounts (and its records). */
+    public function destroyAccount(Request $request, User $client, \App\Models\FundAccount $account)
+    {
+        abort_unless($account->user_id === $client->id, 404);
+
+        if ($client->fundAccounts()->count() <= 1) {
+            return back()->with('status', 'Cannot delete the only account — delete the client instead.');
+        }
+
+        // Remove this account's financial records, then the account.
+        $account->transactions()->delete();
+        $account->pnlAllocations()->delete();
+        $account->deposits()->delete();
+        $account->withdrawals()->delete();
+
+        $wasPrimary = $account->is_primary;
+        $account->delete();
+
+        // If we removed the primary, promote the oldest remaining account.
+        if ($wasPrimary) {
+            $client->fundAccounts()->orderBy('id')->first()?->update(['is_primary' => true]);
+        }
+
+        return back()->with('status', 'Account deleted.');
+    }
+
     public function updateStatus(Request $request, User $client)
     {
         $data = $request->validate(['status' => ['required', 'in:pending,active,suspended,locked']]);

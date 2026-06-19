@@ -102,8 +102,17 @@
                                     </select>
                                 </div>
                                 <label class="flex items-center gap-2 text-xs mt-5"><input type="checkbox" name="plan_locked" value="1" @checked($acc->plan_locked) class="rounded"> Lock plan/pool</label>
-                                <div class="col-span-2"><button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm">Save account</button></div>
+                                <div class="col-span-2 flex items-center justify-between gap-2">
+                                    <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm">Save account</button>
+                                </div>
                             </form>
+                            @if ($client->fundAccounts->count() > 1)
+                                <form method="POST" action="{{ route('admin.clients.account.destroy', [$client, $acc]) }}" class="mt-2 text-right"
+                                      onsubmit="return confirm('Delete {{ $acc->label }} ({{ $acc->code() }}) and all its deposits, withdrawals, profit and history? This cannot be undone.')">
+                                    @csrf @method('DELETE')
+                                    <button class="text-xs text-red-600 hover:text-red-700 hover:underline"><i class="fa-solid fa-trash mr-1"></i> Delete this account</button>
+                                </form>
+                            @endif
                         </div>
                     @empty
                         <p class="text-sm text-gray-400">No fund accounts.</p>
