@@ -23,7 +23,7 @@
     </style>
 
     {{-- Splash / loading screen (shows briefly when the app is opened) --}}
-    <div x-data="{ show: false }" x-init="try{ var r=document.referrer||''; var internal = r.indexOf(location.origin)===0 && r.indexOf('/login')<0 && r.indexOf('/auth')<0; if(!internal){ show=true; setTimeout(()=>{ show=false; }, 5000); } }catch(e){ show=true; setTimeout(()=>{ show=false; }, 5000); }">
+    <div x-data="{ show: true }" x-init="setTimeout(()=>{ show=false; }, 3500)">
         <template x-teleport="body">
             <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
                  class="fixed inset-0 z-[100] grid place-items-center">
