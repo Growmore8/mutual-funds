@@ -266,8 +266,7 @@
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Daily pool profit (est.)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($dailyPoolProfit) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}"><i class="fa-solid fa-lock text-[10px] text-gray-400"></i> Principal (locked)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($investment) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Your Profit Share</dt><dd class="font-semibold dark:text-gray-100">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</dd></div>
-                @php $currentPnl = $runningPnl + $floatingShare; @endphp
-                <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Running PnL <span class="text-[10px] text-gray-400">(live)</span></dt><dd id="live-running-pnl" data-val="{{ $currentPnl }}" class="font-semibold {{ $currentPnl < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($currentPnl < 0 ? '-' : '+') . $money(abs($currentPnl)) }}</dd></div>
+                <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Running PnL <span class="text-[10px] text-gray-400">(live)</span></dt><dd id="live-running-pnl" data-val="{{ $floatingShare }}" class="font-semibold {{ $floatingShare < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</dd></div>
                 <div class="flex justify-between py-2 bg-emerald-50 dark:bg-emerald-500/10 -mx-2 px-2 rounded"><dt class="text-gray-600 dark:text-emerald-200">Withdrawable profit</dt><dd class="font-bold text-emerald-700 dark:text-emerald-300">{{ $money($withdrawable) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Per Day Profit (est.)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($perDay) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">ROI (monthly, est.)</dt><dd class="font-semibold dark:text-gray-100">{{ rtrim(rtrim(number_format($roiMonthly,2),'0'),'.') }}%</dd></div>
@@ -315,7 +314,6 @@
     <script>
         (function () {
             const POLL = 4000; // ms — fetch latest value
-            const REALIZED_PNL = {{ $runningPnl }}; // running PnL = realized + live floating share
             const fmt = (n, signed) => (signed ? (n < 0 ? '-' : '+') : '') + '$' + Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
             // Registry of live values; a single rAF loop eases each toward its target.
@@ -359,7 +357,7 @@
                     if (!res.ok) return;
                     const d = await res.json();
                     if (d.poolFloating !== undefined) track('live-pool', d.poolFloating, true);
-                    if (d.floatingShare !== undefined) { track('live-floating', d.floatingShare, true); track('live-floating-hero', d.floatingShare, true); track('live-running-pnl', REALIZED_PNL + d.floatingShare, true); }
+                    if (d.floatingShare !== undefined) { track('live-floating', d.floatingShare, true); track('live-floating-hero', d.floatingShare, true); track('live-running-pnl', d.floatingShare, true); }
                     if (d.today !== undefined) track('live-today', d.today, false);
                 } catch (e) {}
             }
