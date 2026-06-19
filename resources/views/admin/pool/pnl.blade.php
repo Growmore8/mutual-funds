@@ -20,10 +20,11 @@
                         <td class="px-4 py-3 font-medium {{ $s->pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ($s->pnl < 0 ? '-' : '+') . '$' . number_format(abs((float)$s->pnl),2) }}</td>
                         <td class="px-4 py-3 {{ (float)$s->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ((float)$s->floating_pnl < 0 ? '-' : '+') . '$' . number_format(abs((float)$s->floating_pnl),2) }}</td>
                         <td class="px-4 py-3">
-                            @if ($s->distributed)
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Closed · distributed ({{ $s->allocations()->count() }})</span>
+                            @php $allocCount = $s->allocations()->count(); $isClosed = abs((float) $s->floating_pnl) < 0.005; @endphp
+                            @if ($isClosed)
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Closed · distributed ({{ $allocCount }})</span>
                             @else
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Open · running</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Open · running ({{ $allocCount }})</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right">

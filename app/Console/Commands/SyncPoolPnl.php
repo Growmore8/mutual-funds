@@ -52,6 +52,9 @@ class SyncPoolPnl extends Command
                     $pool->update(['distributed_pnl' => $cumulative]);
                 }
 
+                // A snapshot is "closed/distributed" once there's no open floating position.
+                $snapshot->update(['distributed' => abs($floating) < 0.005]);
+
                 $this->line("  {$pool->account_ref}: +{$delta} realized, floating {$floating} → distributed to {$credited} client(s)");
             } catch (\Throwable $e) {
                 $failed++;
