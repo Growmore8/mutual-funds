@@ -133,10 +133,10 @@
                     {{-- Desktop account switcher (only when the client has more than one account) --}}
                     @php $hdrAccs = auth()->user()->fundAccounts; $hdrCur = auth()->user()->currentAccount(); @endphp
                     @if ($hdrAccs->count() > 1)
-                        <div class="hidden lg:block relative" x-data="{ o:false }">
+                        <div class="relative" x-data="{ o:false }">
                             <button type="button" @click="o=!o" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5">
                                 <i class="fa-solid fa-layer-group text-emerald-500"></i>
-                                <span class="font-medium max-w-[10rem] truncate">{{ $hdrCur->label ?? 'Account' }}</span>
+                                <span class="font-medium max-w-[7rem] sm:max-w-[10rem] truncate">{{ $hdrCur->label ?? 'Account' }}</span>
                                 <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
                             </button>
                             <div x-show="o" @click.outside="o=false" x-transition style="display:none" class="absolute right-0 mt-2 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1.5 z-50">
