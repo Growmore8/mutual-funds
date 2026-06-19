@@ -29,10 +29,10 @@
                     <th class="px-3 py-2.5 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
                 @forelse ($clients as $c)
                     @php $accs = $c->fundAccounts; $multi = $accs->count() > 1; @endphp
-                    <tr class="hover:bg-gray-50" x-data="{ open:false }">
+                <tbody class="divide-y divide-gray-100" x-data="{ open:false }">
+                    <tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 font-mono text-xs text-gray-600">{{ $c->clientCode() }}</td>
                         <td class="px-3 py-2 text-gray-400 text-xs">{{ $c->created_at->format('d M Y') }}</td>
                         <td class="px-3 py-2">
@@ -105,10 +105,12 @@
                             </td>
                         </tr>
                     @endif
+                </tbody>
                 @empty
+                <tbody>
                     <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
+                </tbody>
                 @endforelse
-            </tbody>
         </table>
     </div>
     <div class="mt-4">{{ $clients->links() }}</div>
