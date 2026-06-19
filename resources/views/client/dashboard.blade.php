@@ -108,7 +108,7 @@
             <p class="text-gray-500 dark:text-gray-400 text-sm">{{ $user->email }} · <span class="font-mono">{{ $user->clientCode() }}</span></p>
             @if ($user->fundAccounts->count() > 1)
                 <a href="{{ route('profile.edit') }}" class="inline-flex items-center gap-1.5 mt-2 text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    <i class="fa-solid fa-layer-group"></i> {{ $account?->label ?? 'Account' }} · switch
+                    <i class="fa-solid fa-layer-group"></i> Viewing: {{ $account?->label ?? 'Account' }} · <span class="font-mono">{{ $account?->code() }}</span> · switch
                 </a>
             @endif
         </div>
