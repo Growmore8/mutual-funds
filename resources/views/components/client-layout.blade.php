@@ -88,6 +88,7 @@
             <x-statement-modal :base-url="route('client.statement')" class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition"><i class="fa-solid fa-file-pdf w-5 text-center"></i> Statement</x-statement-modal>
 
             {!! $head !!}Account</p>
+            <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.edit')) }}"><i class="fa-solid fa-user w-5 text-center"></i> Profile</a>
             <a href="{{ route('security.index') }}" class="{{ $link(request()->routeIs('security.*')) }}"><i class="fa-solid fa-shield-halved w-5 text-center"></i> Security</a>
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                     class="nav-link w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition">
@@ -128,7 +129,35 @@
                     <span class="font-bold text-[#0a1730] dark:text-white truncate">{{ $appName }}</span>
                 </div>
                 <div class="hidden lg:block"></div>
-                <x-notification-bell />
+                <div class="flex items-center gap-2">
+                    {{-- Desktop account switcher (only when the client has more than one account) --}}
+                    @php $hdrAccs = auth()->user()->fundAccounts; $hdrCur = auth()->user()->currentAccount(); @endphp
+                    @if ($hdrAccs->count() > 1)
+                        <div class="hidden lg:block relative" x-data="{ o:false }">
+                            <button type="button" @click="o=!o" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5">
+                                <i class="fa-solid fa-layer-group text-emerald-500"></i>
+                                <span class="font-medium max-w-[10rem] truncate">{{ $hdrCur->label ?? 'Account' }}</span>
+                                <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                            </button>
+                            <div x-show="o" @click.outside="o=false" x-transition style="display:none" class="absolute right-0 mt-2 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1.5 z-50">
+                                <p class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-400">Switch account</p>
+                                @foreach ($hdrAccs as $a)
+                                    <form method="POST" action="{{ route('accounts.switch', $a) }}">@csrf
+                                        <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left {{ $hdrCur && $hdrCur->id===$a->id ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5' }}">
+                                            <span class="flex-1 min-w-0">
+                                                <span class="block text-sm font-medium text-gray-900 dark:text-white truncate">{{ $a->label }}</span>
+                                                <span class="block text-xs text-gray-400 truncate">{{ $a->accountType->name ?? 'No plan' }} · {{ $a->code() }}</span>
+                                            </span>
+                                            @if($hdrCur && $hdrCur->id===$a->id)<i class="fa-solid fa-check text-emerald-500"></i>@endif
+                                        </button>
+                                    </form>
+                                @endforeach
+                                <a href="{{ route('accounts.index') }}" class="block px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg"><i class="fa-solid fa-circle-plus mr-1"></i> Open another account</a>
+                            </div>
+                        </div>
+                    @endif
+                    <x-notification-bell />
+                </div>
             </div>
         </header>
 
