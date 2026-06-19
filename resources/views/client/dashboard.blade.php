@@ -27,7 +27,17 @@
     </style>
 
     {{-- Splash / loading screen (shows briefly when the app is opened) --}}
-    <div x-data="{ show: true }" x-init="setTimeout(()=>{ show=false; }, 3500)">
+    <div x-data="{ show:false, flash(){ this.show=true; setTimeout(()=>{ this.show=false; }, 3500); } }"
+         x-init="(function(c){
+            var r = document.referrer || '';
+            var internal = r.indexOf(location.origin)===0 && r.indexOf('/login')<0 && r.indexOf('/auth')<0;
+            if(!internal){ c.flash(); }            /* cold app open / after login — not internal navigation */
+            var hiddenAt = 0, IDLE = 10*60*1000;   /* re-show only after a long idle (10 min) */
+            document.addEventListener('visibilitychange', function(){
+                if(document.hidden){ hiddenAt = Date.now(); }
+                else if(hiddenAt && (Date.now()-hiddenAt) > IDLE){ c.flash(); }
+            });
+         })($data)">
         <template x-teleport="body">
             <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
                  class="fixed inset-0 z-[100] grid place-items-center">
