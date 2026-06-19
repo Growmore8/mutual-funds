@@ -28,11 +28,15 @@
             <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
                  class="fixed inset-0 z-[100] grid place-items-center">
                 <div class="absolute inset-0" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16"></div>
-                <div class="relative text-center">
-                    <img src="/logo.png" alt="" class="w-20 h-20 mx-auto drop-shadow-[0_0_25px_rgba(16,185,129,.5)] animate-pulse" onerror="this.style.display='none'">
-                    <p class="mt-4 text-2xl font-extrabold text-white tracking-wide">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</p>
-                    <p class="text-xs text-gray-400 mt-1">Mutual Funds</p>
-                    <div class="mt-6 mx-auto w-8 h-8 border-2 border-white/20 border-t-emerald-400 rounded-full animate-spin"></div>
+                <div class="relative text-center px-8">
+                    <img src="/logo.png?v={{ \App\Models\Setting::get('brand_v','1') }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
+                    <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{{ \App\Models\Setting::get('app_name', 'GrowthCapital') }}</p>
+                    <p class="text-sm text-emerald-300/90 mt-2">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
+                    <div class="flex items-center justify-center gap-2 mt-7">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0ms"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:150ms"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:300ms"></span>
+                    </div>
                 </div>
             </div>
         </template>

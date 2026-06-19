@@ -24,6 +24,11 @@
                     <p class="text-xs text-gray-400 mt-1">Used as the installed PWA icon label.</p>
                 </div>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Slogan</label>
+                <input name="app_slogan" value="{{ old('app_slogan', \App\Models\Setting::get('app_slogan', 'Invest together · Earn together')) }}" class="mt-1 w-full border-gray-300 rounded-md">
+                <p class="text-xs text-gray-400 mt-1">Shown on the loading screen under the app name.</p>
+            </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>

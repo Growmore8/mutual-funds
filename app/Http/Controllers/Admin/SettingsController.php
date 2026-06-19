@@ -25,6 +25,7 @@ class SettingsController extends Controller
         $data = $request->validate([
             'app_name' => ['required', 'string', 'max:60'],
             'app_short_name' => ['nullable', 'string', 'max:30'],
+            'app_slogan' => ['nullable', 'string', 'max:80'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
             'favicon' => ['nullable', 'image', 'mimes:png,ico,jpg,jpeg', 'max:1024'],
             'login_hero' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:5120'],
@@ -32,6 +33,7 @@ class SettingsController extends Controller
 
         Setting::put('app_name', $data['app_name']);
         Setting::put('app_short_name', $data['app_short_name'] ?: $data['app_name']);
+        Setting::put('app_slogan', $data['app_slogan'] ?? 'Invest together · Earn together');
 
         // Uploaded images overwrite the public files; bump a version for cache-busting.
         if ($request->hasFile('logo')) {
