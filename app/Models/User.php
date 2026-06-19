@@ -48,6 +48,40 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
                 $user->referral_code = $code;
             }
         });
+
+        // Every client gets a primary fund account.
+        static::created(function (User $user) {
+            if ($user->role === 'client' && $user->fundAccounts()->count() === 0) {
+                $user->fundAccounts()->create([
+                    'label' => 'Account 1',
+                    'account_type_id' => $user->account_type_id,
+                    'pool_account_id' => $user->pool_account_id,
+                    'plan_locked' => (bool) ($user->plan_locked ?? false),
+                    'is_primary' => true,
+                ]);
+            }
+        });
+    }
+
+    public function fundAccounts()
+    {
+        return $this->hasMany(FundAccount::class)->orderBy('id');
+    }
+
+    public function primaryAccount(): ?FundAccount
+    {
+        return $this->fundAccounts()->where('is_primary', true)->first() ?? $this->fundAccounts()->first();
+    }
+
+    /** The account the client is currently viewing (session-selected, else primary). */
+    public function currentAccount(): ?FundAccount
+    {
+        $id = session('fund_account_id');
+        if ($id && ($acc = $this->fundAccounts()->find($id))) {
+            return $acc;
+        }
+
+        return $this->primaryAccount();
     }
 
     public function referrer()
