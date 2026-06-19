@@ -22,7 +22,7 @@
     {{-- Form side --}}
     <div class="relative lg:auth-hero lg:flex lg:items-center lg:justify-center lg:px-6 lg:py-12">
         @if($hero)
-            <div class="lg:hidden absolute inset-0" style="background-color:#070b16;background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0,rgba(7,11,22,.12) 35%,rgba(7,11,22,.6) 72%,#070b16 100%),url('{{ $hero }}?v={{ $brandV }}');background-repeat:no-repeat,no-repeat;background-size:100% 360px,100% 360px;background-position:center top,center top"></div>
+            <div class="lg:hidden absolute inset-x-0 top-0 h-80" style="background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0%,rgba(7,11,22,.15) 35%,rgba(7,11,22,.85) 72%,#070b16 90%),url('{{ $hero }}?v={{ $brandV }}');background-size:100% 100%,cover;background-position:center,center;background-repeat:no-repeat,no-repeat"></div>
         @endif
         <div class="w-full max-w-sm mx-auto px-6 pb-12 relative z-10 {{ $hero ? 'pt-56 lg:pt-0 lg:px-0' : 'pt-10 lg:pt-0 lg:px-0' }}">
             <div class="flex items-center gap-2 mb-8">
@@ -73,6 +73,22 @@
                     <i class="fa-solid fa-fingerprint text-emerald-400"></i> Face ID / fingerprint
                 </button>
                 <p id="bio-login-msg" class="text-xs text-center text-red-400 mt-2 hidden"></p>
+            </div>
+
+            {{-- Fast login with PIN (shown when this device has a remembered account) --}}
+            <div id="pin-login-wrap" class="hidden mt-3" x-data="{ open: false }">
+                <button type="button" @click="open=!open; if(open) $nextTick(()=>document.getElementById('pin-login-input').focus())"
+                        class="w-full border border-white/15 text-gray-200 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5">
+                    <i class="fa-solid fa-keyboard text-emerald-400"></i> Login with PIN
+                </button>
+                <form x-show="open" x-transition method="POST" action="{{ route('pin.login') }}" class="mt-3" style="display:none">
+                    @csrf
+                    <input type="hidden" name="email" id="pin-login-email">
+                    <input id="pin-login-input" name="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off"
+                           class="ginput w-full text-center tracking-[0.6em] text-xl py-3 rounded-xl text-white placeholder-gray-600 outline-none" placeholder="••••">
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition mt-2">Unlock &amp; login</button>
+                    <p class="text-[11px] text-gray-500 text-center mt-2">Logs in <span id="pin-login-name" class="text-gray-300"></span> on this device.</p>
+                </form>
             </div>
 
             <div class="relative my-5 text-center"><span class="text-xs text-gray-500 bg-[#070b16] lg:bg-transparent px-2 relative z-10">Or</span><div class="absolute inset-x-0 top-1/2 border-t border-white/10"></div></div>
@@ -127,6 +143,33 @@
                 else { msg.textContent = 'Biometric login failed. Use your password.'; msg.classList.remove('hidden'); btn.disabled = false; }
             } catch (e) { msg.textContent = 'Biometric login was cancelled.'; msg.classList.remove('hidden'); btn.disabled = false; }
         });
+    })();
+
+    // Fast login with PIN: remember the last email on this device and offer a PIN unlock.
+    (function () {
+        try {
+            var emailField = document.getElementById('email');
+            // Remember the email whenever the password form is submitted.
+            var pwForm = document.querySelector('form[action="{{ route('login') }}"]');
+            if (pwForm) pwForm.addEventListener('submit', function () {
+                if (emailField && emailField.value) localStorage.setItem('gc_last_email', emailField.value.trim());
+            });
+
+            var saved = localStorage.getItem('gc_last_email');
+            if (saved) {
+                if (emailField && !emailField.value) emailField.value = saved;
+                var pinWrap = document.getElementById('pin-login-wrap');
+                var pinEmail = document.getElementById('pin-login-email');
+                var pinName = document.getElementById('pin-login-name');
+                if (pinWrap && pinEmail) {
+                    pinEmail.value = saved;
+                    if (pinName) pinName.textContent = saved;
+                    pinWrap.classList.remove('hidden');
+                }
+                // Keep the hidden PIN email in sync if the user edits the email field.
+                if (emailField && pinEmail) emailField.addEventListener('input', function () { pinEmail.value = emailField.value.trim(); });
+            }
+        } catch (e) {}
     })();
 </script>
 </body>

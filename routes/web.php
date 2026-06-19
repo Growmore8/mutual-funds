@@ -31,6 +31,9 @@ Route::get('/manifest.webmanifest', function () {
 Route::post('/webauthn/login/options', [\App\Http\Controllers\WebAuthnController::class, 'loginOptions'])->name('webauthn.login.options');
 Route::post('/webauthn/login', [\App\Http\Controllers\WebAuthnController::class, 'login'])->name('webauthn.login');
 
+// Fast login with app PIN (after the user has set one).
+Route::post('/pin-login', [\App\Http\Controllers\Auth\PinLoginController::class, 'login'])->name('pin.login');
+
 // Social login (Google) via Socialite.
 Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\OAuthController::class, 'redirect'])->name('oauth.redirect');
 Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\OAuthController::class, 'callback'])->name('oauth.callback');
