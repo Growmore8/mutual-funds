@@ -69,11 +69,12 @@ class ClientDashboardController extends Controller
             ->latest('id')->limit(8)->get();
 
         $referralEarned = $user->referralEarned();
+        $announcement = \App\Models\Announcement::active()->latest()->first();
 
         return view('client.dashboard', compact(
             'user', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned'
+            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement'
         ));
     }
 

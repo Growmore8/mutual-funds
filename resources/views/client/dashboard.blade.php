@@ -22,8 +22,53 @@
         .gcard:hover{transform:translateY(-2px)}
     </style>
 
-    {{-- Refer & Earn promo popup (opens on app launch, once per day). Teleported to
+    {{-- Admin-managed popup (maintenance / notice / offer / promotion) --}}
+    @if (!empty($announcement))
+        @php
+            $hero = [
+                'maintenance' => 'from-rose-500 to-red-700',
+                'notice' => 'from-sky-500 to-indigo-700',
+                'offer' => 'from-amber-400 to-orange-600',
+                'promotion' => 'from-emerald-400 to-teal-700',
+            ][$announcement->type] ?? 'from-emerald-400 to-teal-700';
+            $heroIcon = ['maintenance'=>'fa-screwdriver-wrench','notice'=>'fa-circle-info','offer'=>'fa-tags','promotion'=>'fa-bullhorn'][$announcement->type] ?? 'fa-bullhorn';
+        @endphp
+        <div x-data="{ open:false, freq:@js($announcement->frequency), key:'ann_{{ $announcement->id }}',
+                init(){ try{ const v=localStorage.getItem(this.key), t=new Date().toDateString(); let show=true;
+                        if(this.freq==='once') show=!v; else if(this.freq==='daily') show=(v!==t);
+                        if(show) setTimeout(()=>{ this.open=true; }, 500); }catch(e){ this.open=true; } },
+                seal(){ this.open=false; try{ localStorage.setItem(this.key, this.freq==='once'?'seen':new Date().toDateString()); }catch(e){} } }">
+            <template x-teleport="body">
+                <div x-show="open" x-cloak x-transition.opacity class="fixed inset-0 z-[70] grid place-items-center p-5">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="seal()"></div>
+                    <div x-show="open" x-transition.scale.origin.center class="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-[#0f1b38]">
+                        <div class="relative bg-gradient-to-br {{ $hero }} px-6 pt-7 pb-6 text-white text-center">
+                            <button @click="seal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 grid place-items-center text-white z-10"><i class="fa-solid fa-xmark"></i></button>
+                            @if ($announcement->image_url)
+                                <img src="{{ $announcement->image_url }}" alt="" class="w-full h-32 object-cover rounded-xl mb-3" onerror="this.style.display='none'">
+                            @else
+                                <div class="mx-auto w-16 h-16 rounded-2xl bg-white/15 grid place-items-center mb-3"><i class="fa-solid {{ $heroIcon }} text-3xl"></i></div>
+                            @endif
+                            <h3 class="text-xl font-extrabold">{{ $announcement->title }}</h3>
+                        </div>
+                        <div class="p-5 text-center">
+                            @if ($announcement->body)<p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $announcement->body }}</p>@endif
+                            <div class="mt-4 flex gap-2">
+                                <button @click="seal()" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm font-medium">Close</button>
+                                @if ($announcement->cta_url && $announcement->cta_label)
+                                    <a href="{{ $announcement->cta_url }}" @click="seal()" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold text-center">{{ $announcement->cta_label }}</a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    @endif
+
+    {{-- Refer & Earn promo popup (shown only when there's no admin popup). Teleported to
          <body> so it overlays the screen and isn't trapped inside the animated <main>. --}}
+    @if (empty($announcement))
     <div x-data="{ open:false,
             init(){ try{ if(localStorage.getItem('refPromo') !== new Date().toDateString()){ setTimeout(()=>{ this.open = true; }, 600); } }catch(e){ this.open = true; } },
             seal(){ this.open=false; try{ localStorage.setItem('refPromo', new Date().toDateString()); }catch(e){} } }">
@@ -61,6 +106,7 @@
             </div>
         </template>
     </div>
+    @endif
 
     {{-- Welcome --}}
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">

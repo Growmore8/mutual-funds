@@ -60,6 +60,7 @@
             <a href="{{ route('admin.pool.index') }}" class="{{ $base }} {{ request()->routeIs('admin.pool.index') ? $active : $idle }}"><i class="fa-solid fa-layer-group w-5 text-center"></i><span>Pool</span></a>
             <a href="{{ route('admin.pool.pnl') }}" class="{{ $base }} {{ request()->routeIs('admin.pool.pnl') ? $active : $idle }}"><i class="fa-solid fa-chart-pie w-5 text-center"></i><span>PnL</span></a>
             <a href="{{ route('admin.messages.index') }}" class="{{ $base }} {{ request()->routeIs('admin.messages.*') ? $active : $idle }}"><i class="fa-solid fa-headset w-5 text-center"></i><span>Message Center</span></a>
+            <a href="{{ route('admin.announcements.index') }}" class="{{ $base }} {{ request()->routeIs('admin.announcements.*') ? $active : $idle }}"><i class="fa-solid fa-bullhorn w-5 text-center"></i><span>Popups</span></a>
 
             {!! $heading('Settings') !!}
             {!! $link('admin.settings.edit', 'Profile', 'fa-user') !!}

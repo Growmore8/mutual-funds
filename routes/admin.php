@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccountRequestController;
 use App\Http\Controllers\Admin\AccountTypeController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\DepositController;
 use App\Http\Controllers\Admin\KycReviewController;
@@ -115,6 +116,9 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
 
     // Pool / PnL
     Route::get('/pool', [PoolController::class, 'index'])->name('pool.index');
+    // Popups / announcements
+    Route::resource('announcements', AnnouncementController::class)->except(['show']);
+
     Route::get('/pool/pnl', [PoolController::class, 'pnl'])->name('pool.pnl');
     Route::delete('/pool/pnl/{snapshot}', [PoolController::class, 'destroyPnl'])->name('pool.pnl.destroy');
     Route::get('/pool/live', [PoolController::class, 'live'])->name('pool.live');
