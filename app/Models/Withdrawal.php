@@ -17,4 +17,9 @@ class Withdrawal extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function fundAccount()
+    {
+        return $this->belongsTo(FundAccount::class);
+    }
 }

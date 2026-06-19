@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppNotification;
 use App\Models\Deposit;
+use App\Models\FundAccount;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Withdrawal;
@@ -15,7 +17,7 @@ class TransactionController extends Controller
     {
         $search = trim((string) $request->get('q'));
 
-        $transactions = Transaction::with('user', 'source')
+        $transactions = Transaction::with('user', 'source', 'fundAccount')
             ->when($request->type, fn ($q) => $q->where('type', $request->type))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {
@@ -24,9 +26,11 @@ class TransactionController extends Controller
                         $w->orWhere('id', (int) $search);
                     }
                     // by client ID (GC000003 -> user 3)
-                    if (stripos($search, 'GC') === 0 && ($digits = ltrim(preg_replace('/\D/', '', $search), '0')) !== '') {
+                    if (stripos($search, 'GC') === 0 && stripos($search, 'GCA') !== 0 && ($digits = ltrim(preg_replace('/\D/', '', $search), '0')) !== '') {
                         $w->orWhere('user_id', (int) $digits);
                     }
+                    // by account number (GCA000006)
+                    $w->orWhereHas('fundAccount', fn ($fa) => $fa->where('account_no', 'like', "%{$search}%"));
                     // by client name / email
                     $w->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'like', "%{$search}%")
@@ -38,26 +42,35 @@ class TransactionController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        $clients = User::where('role', 'client')->orderBy('name')->get(['id', 'name', 'email']);
+        // Account picker (searchable) for the "Add transaction" form.
+        $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
+            'id' => $a->id,
+            'label' => ($a->user->name ?? 'Client') . ' · ' . $a->code() . ' · ' . $a->label,
+            'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
+        ])->values();
 
-        return view('admin.transactions.index', compact('transactions', 'clients', 'search'));
+        return view('admin.transactions.index', compact('transactions', 'accounts', 'search'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'fund_account_id' => ['required', 'exists:fund_accounts,id'],
             'type' => ['required', 'in:deposit,withdrawal,profit,fee,reversal,adjustment'],
             'amount' => ['required', 'numeric'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $user = User::find($data['user_id']);
-        $last = Transaction::where('user_id', $data['user_id'])->latest()->first();
-        $balanceAfter = (float) ($last->balance_after ?? 0) + (float) $data['amount'];
+        $account = FundAccount::findOrFail($data['fund_account_id']);
+        $user = $account->user;
+
+        // Balance runs per fund account.
+        $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
+        $balanceAfter = round((float) ($last->balance_after ?? 0) + (float) $data['amount'], 2);
 
         $tx = Transaction::create([
-            'user_id' => $data['user_id'],
+            'user_id' => $user->id,
+            'fund_account_id' => $account->id,
             'type' => $data['type'],
             'amount' => $data['amount'],
             'currency' => 'USD',
@@ -67,12 +80,13 @@ class TransactionController extends Controller
         ]);
 
         // A deposit/withdrawal here also creates the matching record so it counts
-        // as invested capital (Total Deposit, profit share, distribution).
+        // as invested capital for THIS account (Total Deposit, share, distribution).
         if ($data['type'] === 'deposit') {
             $dep = Deposit::create([
                 'user_id' => $user->id,
-                'pool_account_id' => $user->pool_account_id,
-                'account_type_id' => $user->account_type_id,
+                'fund_account_id' => $account->id,
+                'pool_account_id' => $account->pool_account_id,
+                'account_type_id' => $account->account_type_id,
                 'amount' => abs((float) $data['amount']),
                 'currency' => 'USD',
                 'status' => 'approved',
@@ -80,10 +94,11 @@ class TransactionController extends Controller
                 'approved_at' => now(),
             ]);
             $tx->update(['source_type' => Deposit::class, 'source_id' => $dep->id]);
-            $user->recalcPlan();
+            $account->recalcPlan();
         } elseif ($data['type'] === 'withdrawal') {
             $wd = Withdrawal::create([
                 'user_id' => $user->id,
+                'fund_account_id' => $account->id,
                 'amount' => abs((float) $data['amount']),
                 'currency' => 'USD',
                 'method' => 'Admin adjustment',
@@ -93,7 +108,15 @@ class TransactionController extends Controller
             $tx->update(['source_type' => Withdrawal::class, 'source_id' => $wd->id]);
         }
 
-        return back()->with('status', 'Transaction recorded.');
+        AppNotification::notify(
+            $user->id,
+            in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
+            ucfirst($data['type']) . ' recorded',
+            (($data['amount'] < 0 ? '-' : '+') . '$' . number_format(abs((float) $data['amount']), 2)) . ' · ' . $account->label,
+            route('client.transactions'),
+        );
+
+        return back()->with('status', 'Transaction recorded to ' . $account->code() . '.');
     }
 
     public function update(Request $request, Transaction $transaction)
@@ -122,15 +145,15 @@ class TransactionController extends Controller
             }
         }
 
-        $this->recalc($transaction->user_id);
-        optional(User::find($transaction->user_id))->recalcPlan();
+        $this->recalcAccount($transaction->fund_account_id);
+        optional(FundAccount::find($transaction->fund_account_id))->recalcPlan();
 
         return back()->with('status', 'Transaction updated.');
     }
 
     public function destroy(Transaction $transaction)
     {
-        $userId = $transaction->user_id;
+        $accountId = $transaction->fund_account_id;
 
         // Deleting a deposit/withdrawal ledger entry also removes its source
         // record, so Total Deposit / requests stay consistent with the balance.
@@ -151,17 +174,21 @@ class TransactionController extends Controller
         }
 
         $transaction->delete();
-        $this->recalc($userId);
-        optional(User::find($userId))->recalcPlan();
+        $this->recalcAccount($accountId);
+        optional(FundAccount::find($accountId))->recalcPlan();
 
         return back()->with('status', 'Transaction deleted.');
     }
 
-    /** Recompute the running balance for a client after an edit/delete. */
-    private function recalc(int $userId): void
+    /** Recompute the running balance for ONE fund account after an edit/delete. */
+    private function recalcAccount(?int $accountId): void
     {
+        if (! $accountId) {
+            return;
+        }
+
         $running = 0.0;
-        Transaction::where('user_id', $userId)->orderBy('id')->get()->each(function ($t) use (&$running) {
+        Transaction::where('fund_account_id', $accountId)->orderBy('id')->get()->each(function ($t) use (&$running) {
             $running = round($running + (float) $t->amount, 2);
             if ((float) $t->balance_after !== $running) {
                 $t->update(['balance_after' => $running]);

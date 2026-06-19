@@ -13,7 +13,7 @@ class WithdrawalController extends Controller
 {
     public function index(Request $request)
     {
-        $withdrawals = Withdrawal::with('user')
+        $withdrawals = Withdrawal::with('user', 'fundAccount')
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest()
             ->paginate(25)
@@ -29,11 +29,12 @@ class WithdrawalController extends Controller
         }
 
         DB::transaction(function () use ($withdrawal, $request) {
-            $last = Transaction::where('user_id', $withdrawal->user_id)->latest('id')->first();
+            $last = Transaction::where('fund_account_id', $withdrawal->fund_account_id)->latest('id')->first();
             $balanceAfter = round((float) ($last->balance_after ?? 0) - (float) $withdrawal->amount, 2);
 
             Transaction::create([
                 'user_id' => $withdrawal->user_id,
+                'fund_account_id' => $withdrawal->fund_account_id,
                 'type' => 'withdrawal',
                 'amount' => -1 * (float) $withdrawal->amount,
                 'currency' => $withdrawal->currency,

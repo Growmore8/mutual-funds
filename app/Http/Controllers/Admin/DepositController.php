@@ -16,7 +16,7 @@ class DepositController extends Controller
 {
     public function index(Request $request)
     {
-        $deposits = Deposit::with(['user', 'poolAccount', 'accountType'])
+        $deposits = Deposit::with(['user', 'poolAccount', 'accountType', 'fundAccount'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest()
             ->paginate(25)

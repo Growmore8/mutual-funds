@@ -23,6 +23,7 @@
                         <th class="px-3 py-3">Date</th>
                         <th class="px-3 py-3">Txn #</th>
                         <th class="px-3 py-3">Client</th>
+                        <th class="px-3 py-3">Account</th>
                         <th class="px-3 py-3 text-right">Debit / Credit</th>
                         <th class="px-3 py-3">Method / Details</th>
                         <th class="px-3 py-3">Note</th>
@@ -42,6 +43,7 @@
                             <td class="px-3 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}<br>{{ $t->created_at->format('h:i A') }}</td>
                             <td class="px-3 py-3 text-gray-400">{{ $t->id }}</td>
                             <td class="px-3 py-3"><div class="font-medium text-gray-900">{{ $t->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $t->user?->clientCode() }}</div></td>
+                            <td class="px-3 py-3">@if ($t->fundAccount)<div class="font-mono text-xs text-gray-700">{{ $t->fundAccount->code() }}</div><div class="text-[11px] text-gray-400">{{ $t->fundAccount->label }}</div>@else<span class="text-gray-300">—</span>@endif</td>
                             <td class="px-3 py-3 text-right">
                                 <span class="font-semibold {{ $t->amount < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($t->amount < 0 ? '-' : '+') . '$' . number_format(abs((float)$t->amount),2) }}</span>
                                 <div class="text-[11px] text-gray-400">{{ $t->amount < 0 ? 'Debit' : 'Credit' }} · {{ ucfirst($t->type) }}</div>
@@ -67,7 +69,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
+                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No transactions found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -101,14 +103,24 @@
                 <div class="absolute inset-0 bg-black/40" @click="add=false"></div>
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
-                    <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm">
+                    <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts) }">
                         @csrf
-                        <div>
-                            <label class="block text-gray-700 mb-1">Client</label>
-                            <select name="user_id" class="w-full border-gray-300 rounded-md" required>
-                                <option value="">Select…</option>
-                                @foreach ($clients as $c)<option value="{{ $c->id }}">{{ $c->clientCode() }} — {{ $c->name }}</option>@endforeach
-                            </select>
+                        <div class="relative">
+                            <label class="block text-gray-700 mb-1">Account (search by name / account ID)</label>
+                            <input type="hidden" name="fund_account_id" :value="sel ? sel.id : ''" required>
+                            <input type="text" x-model="q" @focus="open=true" @click="open=true"
+                                   :placeholder="sel ? sel.label : 'Type a name, GC ID or GCA account…'"
+                                   class="w-full border-gray-300 rounded-md" autocomplete="off">
+                            <div x-show="open" @click.outside="open=false" x-cloak
+                                 class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                                <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
+                                    <button type="button" @click="sel=a; q=''; open=false"
+                                            class="w-full text-left px-3 py-2 hover:bg-emerald-50 text-sm" x-text="a.label"></button>
+                                </template>
+                                <div x-show="accs.filter(x => x.search.includes(q.toLowerCase())).length === 0" class="px-3 py-2 text-gray-400 text-sm">No match</div>
+                            </div>
+                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
                         <div>
                             <label class="block text-gray-700 mb-1">Type</label>
