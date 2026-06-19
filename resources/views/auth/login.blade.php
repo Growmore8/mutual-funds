@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full dark">
-@php $appName = \App\Models\Setting::get('app_name', 'GrowthCapital'); $brandV = \App\Models\Setting::get('brand_v', '1'); @endphp
+@php $appName = \App\Models\Setting::get('app_name', 'GrowthCapital'); $brandV = \App\Models\Setting::get('brand_v', '1'); $hero = \App\Models\Setting::get('login_hero_path'); @endphp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -90,9 +90,11 @@
     </div>
 
     {{-- Brand / art side (desktop) --}}
-    <div class="hidden lg:block auth-hero relative overflow-hidden">
+    <div class="hidden lg:block auth-hero relative overflow-hidden" @if($hero) style="background-image:linear-gradient(120deg,rgba(7,11,22,.93),rgba(7,11,22,.5)),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center" @endif>
+        @unless($hero)
         <div class="absolute -top-10 right-10 w-72 h-72 rounded-full bg-blue-500/40 auth-blob"></div>
         <div class="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-emerald-500/40 auth-blob"></div>
+        @endunless
         <div class="relative z-10 h-full flex flex-col justify-center px-16 text-white">
             <h2 class="text-4xl font-extrabold leading-tight">Invest together.<br>Earn together.</h2>
             <p class="text-gray-300 mt-4 max-w-md">Your capital joins a professionally managed pool. Profit is distributed daily by your share — and your funds stay under your ownership.</p>

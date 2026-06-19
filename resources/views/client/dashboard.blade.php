@@ -23,7 +23,7 @@
     </style>
 
     {{-- Splash / loading screen (shows briefly when the app is opened) --}}
-    <div x-data="{ show: false }" x-init="try{ if(!sessionStorage.getItem('splashShown')){ show=true; setTimeout(()=>{ show=false; sessionStorage.setItem('splashShown','1'); }, 2200); } }catch(e){}">
+    <div x-data="{ show: false }" x-init="try{ if(!sessionStorage.getItem('splashShown')){ show=true; setTimeout(()=>{ show=false; sessionStorage.setItem('splashShown','1'); }, 3000); } }catch(e){}">
         <template x-teleport="body">
             <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
                  class="fixed inset-0 z-[100] grid place-items-center">

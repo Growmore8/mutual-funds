@@ -27,6 +27,7 @@ class SettingsController extends Controller
             'app_short_name' => ['nullable', 'string', 'max:30'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
             'favicon' => ['nullable', 'image', 'mimes:png,ico,jpg,jpeg', 'max:1024'],
+            'login_hero' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:5120'],
         ]);
 
         Setting::put('app_name', $data['app_name']);
@@ -40,7 +41,11 @@ class SettingsController extends Controller
             $request->file('favicon')->move(public_path(), 'favicon.png');
             Setting::put('favicon_path', '/favicon.png');
         }
-        if ($request->hasFile('logo') || $request->hasFile('favicon')) {
+        if ($request->hasFile('login_hero')) {
+            $request->file('login_hero')->move(public_path(), 'login-hero.jpg');
+            Setting::put('login_hero_path', '/login-hero.jpg');
+        }
+        if ($request->hasFile('logo') || $request->hasFile('favicon') || $request->hasFile('login_hero')) {
             Setting::put('brand_v', (string) now()->timestamp);
         }
 
