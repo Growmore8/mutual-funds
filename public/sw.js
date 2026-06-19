@@ -1,6 +1,11 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v6';
+const CACHE = 'gc-funds-v7';
+
+// The page asks us to activate the new version when the user taps "Update".
+self.addEventListener('message', (event) => {
+    if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
 
 // Web push: show the notification when one arrives.
 self.addEventListener('push', (event) => {
@@ -27,8 +32,8 @@ self.addEventListener('notificationclick', (event) => {
 const OFFLINE_URLS = ['/offline.html', '/logo.png'];
 
 self.addEventListener('install', (event) => {
+    // Do NOT skipWaiting here — we wait so the app can show an "Update available" prompt.
     event.waitUntil(caches.open(CACHE).then((c) => c.addAll(OFFLINE_URLS)));
-    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

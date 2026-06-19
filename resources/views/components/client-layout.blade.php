@@ -225,9 +225,48 @@
         </div>
     </nav>
 
+{{-- "Update available" banner (shown when a new app version is ready) --}}
+<div id="sw-update-banner" class="hidden fixed inset-x-0 bottom-24 lg:bottom-4 z-[60] px-4">
+    <div class="mx-auto max-w-md flex items-center gap-3 bg-emerald-600 text-white rounded-2xl shadow-xl px-4 py-3">
+        <i class="fa-solid fa-rotate"></i>
+        <div class="flex-1 text-sm font-medium">A new version is available.</div>
+        <button id="sw-update-btn" class="bg-white text-emerald-700 font-semibold text-sm px-3 py-1.5 rounded-lg">Update</button>
+    </div>
+</div>
+
 <script>
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').then(function (reg) {
+                function showBanner(worker) {
+                    var b = document.getElementById('sw-update-banner');
+                    var btn = document.getElementById('sw-update-btn');
+                    if (!b || !btn) return;
+                    b.classList.remove('hidden');
+                    btn.onclick = function () {
+                        btn.disabled = true; btn.textContent = 'Updating…';
+                        worker.postMessage('SKIP_WAITING');
+                    };
+                }
+                // A new version is already installed and waiting.
+                if (reg.waiting && navigator.serviceWorker.controller) showBanner(reg.waiting);
+                // A new version finishes installing while the app is open.
+                reg.addEventListener('updatefound', function () {
+                    var nw = reg.installing;
+                    if (!nw) return;
+                    nw.addEventListener('statechange', function () {
+                        if (nw.state === 'installed' && navigator.serviceWorker.controller) showBanner(nw);
+                    });
+                });
+                // Check for updates whenever the app regains focus.
+                document.addEventListener('visibilitychange', function () { if (!document.hidden) reg.update().catch(function () {}); });
+            }).catch(function () {});
+
+            var reloaded = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (reloaded) return; reloaded = true; window.location.reload();
+            });
+        });
     }
 </script>
 </body>
