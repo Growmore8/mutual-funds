@@ -80,12 +80,12 @@
                         </td>
                     </tr>
                     @if ($multi)
-                        <tr x-show="open" x-cloak class="bg-gray-50/70">
-                            <td colspan="9" class="px-3 pb-3 pt-0">
-                                <div class="rounded-lg border border-gray-200 overflow-hidden">
+                        <tr x-show="open" x-cloak class="bg-gray-50">
+                            <td colspan="9" class="px-3 pb-3 pt-0 bg-gray-50">
+                                <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
                                     <table class="min-w-full text-xs">
                                         <thead class="bg-gray-100 text-gray-500 text-left">
-                                            <tr><th class="px-3 py-1.5">Account</th><th class="px-3 py-1.5">Plan</th><th class="px-3 py-1.5">Pool ID</th><th class="px-3 py-1.5 text-right">Capital</th><th class="px-3 py-1.5 text-right">PnL</th><th class="px-3 py-1.5 text-right">Manage</th></tr>
+                                            <tr><th class="px-3 py-2 font-medium">Account</th><th class="px-3 py-2 font-medium">Plan</th><th class="px-3 py-2 font-medium">Pool ID</th><th class="px-3 py-2 font-medium text-right">Capital</th><th class="px-3 py-2 font-medium text-right">PnL</th><th class="px-3 py-2 font-medium text-right">Manage</th></tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100 bg-white">
                                             @foreach ($accs as $a)
