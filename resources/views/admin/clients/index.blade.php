@@ -31,10 +31,20 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($clients as $c)
-                    <tr class="hover:bg-gray-50">
+                    @php $accs = $c->fundAccounts; $multi = $accs->count() > 1; @endphp
+                    <tr class="hover:bg-gray-50" x-data="{ open:false }">
                         <td class="px-3 py-2 font-mono text-xs text-gray-600">{{ $c->clientCode() }}</td>
                         <td class="px-3 py-2 text-gray-400 text-xs">{{ $c->created_at->format('d M Y') }}</td>
-                        <td class="px-3 py-2"><div class="font-medium text-gray-900 leading-tight">{{ $c->name }}</div><div class="text-gray-400 text-xs">{{ $c->email }}</div>@if ($c->referrer)<div class="text-[11px] text-emerald-600 mt-0.5"><i class="fa-solid fa-gift text-[9px]"></i> Referred by {{ $c->referrer->name }}</div>@endif</td>
+                        <td class="px-3 py-2">
+                            <div class="font-medium text-gray-900 leading-tight">{{ $c->name }}</div>
+                            <div class="text-gray-400 text-xs">{{ $c->email }}</div>
+                            @if ($c->referrer)<div class="text-[11px] text-emerald-600 mt-0.5"><i class="fa-solid fa-gift text-[9px]"></i> Referred by {{ $c->referrer->name }}</div>@endif
+                            @if ($multi)
+                                <button type="button" @click="open=!open" class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full hover:bg-emerald-100">
+                                    <i class="fa-solid fa-layer-group text-[9px]"></i> {{ $accs->count() }} accounts <i class="fa-solid fa-chevron-down text-[8px]" :class="open && 'rotate-180'"></i>
+                                </button>
+                            @endif
+                        </td>
                         <td class="px-3 py-2 font-medium text-gray-700">{{ $c->poolAccount->account_ref ?? '—' }}</td>
                         <td class="px-3 py-2">
                             @if ($c->accountType)
@@ -69,6 +79,32 @@
                             </div>
                         </td>
                     </tr>
+                    @if ($multi)
+                        <tr x-show="open" x-cloak class="bg-gray-50/70">
+                            <td colspan="9" class="px-3 pb-3 pt-0">
+                                <div class="rounded-lg border border-gray-200 overflow-hidden">
+                                    <table class="min-w-full text-xs">
+                                        <thead class="bg-gray-100 text-gray-500 text-left">
+                                            <tr><th class="px-3 py-1.5">Account</th><th class="px-3 py-1.5">Plan</th><th class="px-3 py-1.5">Pool ID</th><th class="px-3 py-1.5 text-right">Capital</th><th class="px-3 py-1.5 text-right">PnL</th><th class="px-3 py-1.5 text-right">Manage</th></tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100 bg-white">
+                                            @foreach ($accs as $a)
+                                                @php $apnl = $a->runningPnl(); @endphp
+                                                <tr>
+                                                    <td class="px-3 py-1.5"><span class="font-medium text-gray-800">{{ $a->label }}</span> <span class="font-mono text-gray-400">{{ $a->code() }}</span>@if($a->is_primary)<span class="ml-1 text-[9px] px-1 rounded bg-gray-100 text-gray-500">primary</span>@endif</td>
+                                                    <td class="px-3 py-1.5">{{ $a->accountType->name ?? '—' }}</td>
+                                                    <td class="px-3 py-1.5">{{ $a->poolAccount->account_ref ?? '—' }}</td>
+                                                    <td class="px-3 py-1.5 text-right font-medium">${{ number_format($a->totalDeposited(), 2) }}</td>
+                                                    <td class="px-3 py-1.5 text-right font-semibold {{ $apnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($apnl < 0 ? '-' : '+') }}${{ number_format(abs($apnl), 2) }}</td>
+                                                    <td class="px-3 py-1.5 text-right"><a href="{{ route('admin.clients.show',$c) }}" class="text-emerald-600 hover:underline">Manage</a></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
                 @empty
                     <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
                 @endforelse
