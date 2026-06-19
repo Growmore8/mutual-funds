@@ -13,14 +13,18 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($snapshots as $s)
+                    @php
+                        $allocCount = $s->allocations()->count();
+                        // Floating/open only applies to the live (today) snapshot; past days are closed.
+                        $isClosed = abs((float) $s->floating_pnl) < 0.005 || $s->snapshot_date->lt(today());
+                    @endphp
                     <tr>
                         <td class="px-4 py-3 text-gray-500 text-xs">{{ $s->snapshot_date->format('d M Y') }}<br>{{ $s->updated_at->format('h:i A') }}</td>
                         <td class="px-4 py-3 text-gray-400 font-mono">PNL{{ str_pad($s->id, 5, '0', STR_PAD_LEFT) }}</td>
                         <td class="px-4 py-3">{{ $s->poolAccount->account_ref ?? '—' }}</td>
                         <td class="px-4 py-3 font-medium {{ $s->pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ($s->pnl < 0 ? '-' : '+') . '$' . number_format(abs((float)$s->pnl),2) }}</td>
-                        <td class="px-4 py-3 {{ (float)$s->floating_pnl < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ((float)$s->floating_pnl < 0 ? '-' : '+') . '$' . number_format(abs((float)$s->floating_pnl),2) }}</td>
+                        <td class="px-4 py-3 {{ $isClosed ? 'text-gray-400' : ((float)$s->floating_pnl < 0 ? 'text-red-600' : 'text-green-600') }}">{{ $isClosed ? '—' : (((float)$s->floating_pnl < 0 ? '-' : '+') . '$' . number_format(abs((float)$s->floating_pnl),2)) }}</td>
                         <td class="px-4 py-3">
-                            @php $allocCount = $s->allocations()->count(); $isClosed = abs((float) $s->floating_pnl) < 0.005; @endphp
                             @if ($isClosed)
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Closed · distributed ({{ $allocCount }})</span>
                             @else
