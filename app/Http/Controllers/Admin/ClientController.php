@@ -48,7 +48,7 @@ class ClientController extends Controller
             'address' => ['nullable', 'string', 'max:255'],
             'account_type_id' => ['nullable', 'exists:account_types,id'],
             'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
-            'status' => ['required', 'in:pending,active,suspended'],
+            'status' => ['required', 'in:pending,active,suspended,locked'],
         ]);
 
         $client = User::create($data + [
@@ -92,7 +92,7 @@ class ClientController extends Controller
             'address' => ['nullable', 'string', 'max:255'],
             'account_type_id' => ['nullable', 'exists:account_types,id'],
             'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
-            'status' => ['required', 'in:pending,active,suspended'],
+            'status' => ['required', 'in:pending,active,suspended,locked'],
         ]);
 
         $oldPool = $client->pool_account_id;
@@ -138,7 +138,7 @@ class ClientController extends Controller
 
     public function updateStatus(Request $request, User $client)
     {
-        $data = $request->validate(['status' => ['required', 'in:pending,active,suspended']]);
+        $data = $request->validate(['status' => ['required', 'in:pending,active,suspended,locked']]);
         $client->update($data);
 
         return back()->with('status', "Client status updated to {$data['status']}.");

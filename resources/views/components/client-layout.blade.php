@@ -127,8 +127,17 @@
         </header>
 
         <main class="px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:pb-8 page-in">
+            @if (auth()->user()?->status === 'locked')
+                <div class="mb-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3 flex items-start gap-2">
+                    <i class="fa-solid fa-lock mt-0.5"></i>
+                    <span>Your account is currently <strong>view-only</strong> while under review. Deposits, withdrawals and statement export are disabled. Please contact support.</span>
+                </div>
+            @endif
             @if (session('status'))
                 <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg p-3">{{ session('status') }}</div>
+            @endif
+            @if ($errors->has('locked'))
+                <div class="mb-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3">{{ $errors->first('locked') }}</div>
             @endif
             {{ $slot }}
         </main>

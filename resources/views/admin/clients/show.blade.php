@@ -57,7 +57,7 @@
                 <div>
                     <label class="block text-gray-700">Account status</label>
                     <select name="status" class="mt-1 w-full border-gray-300 rounded-md">
-                        @foreach (['pending','active','suspended'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
+                        @foreach (['pending','active','suspended','locked'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
                     </select>
                 </div>
                 <label class="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-md p-2">

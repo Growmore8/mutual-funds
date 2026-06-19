@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'onboarded' => \App\Http\Middleware\EnsureOnboarded::class,
             'locked' => \App\Http\Middleware\EnsureUnlocked::class,
+            'notlocked' => \App\Http\Middleware\EnsureNotLocked::class,
+            'singleadmin' => \App\Http\Middleware\SingleAdminSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

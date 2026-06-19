@@ -91,15 +91,15 @@ Route::middleware('auth')->group(function () {
 
         // My account (read-only; account type is managed by admin)
         Route::get('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'index'])->name('accounts.index');
-        Route::post('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'store'])->name('accounts.store');
+        Route::post('/accounts', [\App\Http\Controllers\AccountRequestController::class, 'store'])->middleware('notlocked')->name('accounts.store');
 
         // Deposit (client submits with slip -> admin approves)
         Route::get('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'create'])->name('client.deposit.create');
-        Route::post('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'store'])->name('client.deposit.store');
+        Route::post('/deposit', [\App\Http\Controllers\ClientDepositController::class, 'store'])->middleware('notlocked')->name('client.deposit.store');
 
         // Withdrawals (profit only; request -> admin approval)
         Route::get('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'create'])->name('withdraw.create');
-        Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->name('withdraw.store');
+        Route::post('/withdraw', [\App\Http\Controllers\WithdrawalController::class, 'store'])->middleware('notlocked')->name('withdraw.store');
 
         // Referrals
         Route::get('/referrals', function (\Illuminate\Http\Request $request) {
@@ -114,13 +114,13 @@ Route::middleware('auth')->group(function () {
 
         // Client payout (withdrawal) methods
         Route::get('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'index'])->name('payout.index');
-        Route::post('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'store'])->name('payout.store');
-        Route::delete('/payout-methods/{payout}', [\App\Http\Controllers\WithdrawalMethodController::class, 'destroy'])->name('payout.destroy');
+        Route::post('/payout-methods', [\App\Http\Controllers\WithdrawalMethodController::class, 'store'])->middleware('notlocked')->name('payout.store');
+        Route::delete('/payout-methods/{payout}', [\App\Http\Controllers\WithdrawalMethodController::class, 'destroy'])->middleware('notlocked')->name('payout.destroy');
 
         // Statements
         Route::get('/transactions', [\App\Http\Controllers\StatementController::class, 'transactions'])->name('client.transactions');
         Route::get('/profit', [\App\Http\Controllers\StatementController::class, 'profit'])->name('client.profit');
-        Route::get('/statement', [\App\Http\Controllers\StatementController::class, 'statement'])->name('client.statement');
+        Route::get('/statement', [\App\Http\Controllers\StatementController::class, 'statement'])->middleware('notlocked')->name('client.statement');
 
         // Support tickets / message center
         Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');

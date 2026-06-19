@@ -15,7 +15,7 @@ use App\Models\PoolAccount;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', function () {
         $pendingKyc = \App\Models\KycDocument::where('status', 'submitted')->count();

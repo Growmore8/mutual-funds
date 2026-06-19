@@ -32,6 +32,14 @@ class AuthenticatedSessionController extends Controller
         // doesn't immediately prompt again right after signing in.
         $request->session()->put('pin_unlocked_at', now()->timestamp);
 
+        // One active admin session: stamp a fresh token, invalidating any other device.
+        $user = $request->user();
+        if ($user && $user->isAdmin()) {
+            $token = \Illuminate\Support\Str::random(40);
+            $user->forceFill(['session_token' => $token])->save();
+            $request->session()->put('admin_session_token', $token);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

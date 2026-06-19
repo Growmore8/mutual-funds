@@ -5,7 +5,7 @@
                    class="border-gray-300 rounded-md text-sm w-64">
             <select name="status" class="border-gray-300 rounded-md text-sm">
                 <option value="">All statuses</option>
-                @foreach (['pending','active','suspended'] as $s)
+                @foreach (['pending','active','suspended','locked'] as $s)
                     <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
                 @endforeach
             </select>
@@ -44,21 +44,21 @@
                         <td class="px-3 py-2 text-right font-medium">${{ number_format($c->totalDeposited(), 2) }}</td>
                         @php $pnl = $c->runningPnl(); @endphp
                         <td class="px-3 py-2 text-right font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</td>
-                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
+                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
                         <td class="px-3 py-2">
                             <div class="flex items-center justify-end gap-1">
                                 <a href="{{ route('admin.clients.show',$c) }}" title="Edit" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
 
-                                {{-- Lock / unlock (suspend) --}}
+                                {{-- Lock / unlock (violation — view-only) --}}
                                 <form method="POST" action="{{ route('admin.clients.status',$c) }}">@csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="{{ $c->status === 'suspended' ? 'active' : 'suspended' }}">
-                                    <button title="{{ $c->status === 'suspended' ? 'Unlock' : 'Lock (suspend)' }}" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-amber-50 hover:text-amber-600"><i class="fa-solid {{ $c->status === 'suspended' ? 'fa-lock-open' : 'fa-lock' }}"></i></button>
+                                    <input type="hidden" name="status" value="{{ $c->status === 'locked' ? 'active' : 'locked' }}">
+                                    <button title="{{ $c->status === 'locked' ? 'Unlock (restore access)' : 'Lock (view-only / violation)' }}" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-amber-50 hover:text-amber-600"><i class="fa-solid {{ $c->status === 'locked' ? 'fa-lock-open' : 'fa-lock' }}"></i></button>
                                 </form>
 
-                                {{-- Deactivate / activate --}}
+                                {{-- Deactivate / activate (suspend = forces logout) --}}
                                 <form method="POST" action="{{ route('admin.clients.status',$c) }}">@csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="{{ $c->status === 'pending' ? 'active' : 'pending' }}">
-                                    <button title="{{ $c->status === 'pending' ? 'Activate' : 'Deactivate' }}" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600"><i class="fa-solid {{ $c->status === 'pending' ? 'fa-circle-check' : 'fa-user-slash' }}"></i></button>
+                                    <input type="hidden" name="status" value="{{ $c->status === 'suspended' ? 'active' : 'suspended' }}">
+                                    <button title="{{ $c->status === 'suspended' ? 'Reactivate' : 'Deactivate (sign out)' }}" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600"><i class="fa-solid {{ $c->status === 'suspended' ? 'fa-user-check' : 'fa-user-slash' }}"></i></button>
                                 </form>
 
                                 <x-statement-modal :base-url="route('admin.clients.statement',$c)" title="Statement (PDF) — download or email" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800"><i class="fa-solid fa-file-pdf"></i></x-statement-modal>
