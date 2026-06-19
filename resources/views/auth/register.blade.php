@@ -36,9 +36,9 @@
     {{-- Form side --}}
     <div class="relative lg:auth-hero lg:flex lg:items-center lg:justify-center lg:px-6 lg:py-10">
         @if($hero)
-            <div class="lg:hidden absolute inset-x-0 top-0 h-64 bg-cover bg-center" style="background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0%,rgba(7,11,22,.1) 35%,rgba(7,11,22,.6) 72%,#070b16 100%),url('{{ $hero }}?v={{ $brandV }}')"></div>
+            <div class="lg:hidden absolute inset-0" style="background-color:#070b16;background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0,rgba(7,11,22,.12) 35%,rgba(7,11,22,.6) 72%,#070b16 100%),url('{{ $hero }}?v={{ $brandV }}');background-repeat:no-repeat,no-repeat;background-size:100% 300px,100% 300px;background-position:center top,center top"></div>
         @endif
-        <div class="w-full max-w-sm mx-auto px-6 pb-10 relative z-10 {{ $hero ? 'pt-40 lg:pt-0 lg:px-0' : 'pt-8 lg:pt-0 lg:px-0' }}">
+        <div class="w-full max-w-sm mx-auto px-6 pb-10 relative z-10 {{ $hero ? 'pt-44 lg:pt-0 lg:px-0' : 'pt-8 lg:pt-0 lg:px-0' }}">
             <div class="flex items-center gap-2 mb-6">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
                 <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>

@@ -22,7 +22,7 @@
     {{-- Form side --}}
     <div class="relative lg:auth-hero lg:flex lg:items-center lg:justify-center lg:px-6 lg:py-12">
         @if($hero)
-            <div class="lg:hidden absolute inset-x-0 top-0 h-80 bg-cover bg-center" style="background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0%,rgba(7,11,22,.1) 35%,rgba(7,11,22,.55) 70%,#070b16 100%),url('{{ $hero }}?v={{ $brandV }}')"></div>
+            <div class="lg:hidden absolute inset-0" style="background-color:#070b16;background-image:linear-gradient(to bottom,rgba(7,11,22,0) 0,rgba(7,11,22,.12) 35%,rgba(7,11,22,.6) 72%,#070b16 100%),url('{{ $hero }}?v={{ $brandV }}');background-repeat:no-repeat,no-repeat;background-size:100% 360px,100% 360px;background-position:center top,center top"></div>
         @endif
         <div class="w-full max-w-sm mx-auto px-6 pb-12 relative z-10 {{ $hero ? 'pt-56 lg:pt-0 lg:px-0' : 'pt-10 lg:pt-0 lg:px-0' }}">
             <div class="flex items-center gap-2 mb-8">
