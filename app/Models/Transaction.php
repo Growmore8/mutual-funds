@@ -18,6 +18,11 @@ class Transaction extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function fundAccount()
+    {
+        return $this->belongsTo(FundAccount::class);
+    }
+
     /** Linked deposit/withdrawal record (for method + payout details). */
     public function source()
     {
