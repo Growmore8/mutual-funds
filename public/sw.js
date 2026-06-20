@@ -1,6 +1,6 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v7';
+const CACHE = 'gc-funds-v8';
 
 // The page asks us to activate the new version when the user taps "Update".
 self.addEventListener('message', (event) => {

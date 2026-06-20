@@ -18,7 +18,7 @@
     <script>(function(){try{if(!sessionStorage.getItem('gcAppLive')){sessionStorage.setItem('gcAppLive','1');document.documentElement.classList.add('gc-splash');}}catch(e){}})();</script>
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#0a1730">
+    <meta name="theme-color" content="#070b16">
     <link rel="apple-touch-icon" href="/logo.png?v={{ $brandV }}">
     <link rel="icon" href="{{ $favicon }}?v={{ $brandV }}" type="image/png">
     <meta name="apple-mobile-web-app-capable" content="yes">

@@ -18,8 +18,8 @@ Route::get('/manifest.webmanifest', function () {
         'scope' => '/',
         'display' => 'standalone',
         'orientation' => 'portrait',
-        'background_color' => '#0a1730',
-        'theme_color' => '#0a1730',
+        'background_color' => '#070b16',
+        'theme_color' => '#070b16',
         'icons' => [
             ['src' => '/logo.png?v=' . $v, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
             ['src' => '/logo.png?v=' . $v, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
