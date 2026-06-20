@@ -27,15 +27,16 @@
     </style>
 
     {{-- Splash / loading screen (shows briefly when the app is opened) --}}
-    <div x-data="{ show:false, flash(){ this.show=true; setTimeout(()=>{ this.show=false; }, 3500); } }"
+    <div x-data="{ show:false, flash(){ this.show=true; setTimeout(()=>{ this.show=false; }, 3000); } }"
          x-init="(function(c){
-            var r = document.referrer || '';
-            var internal = r.indexOf(location.origin)===0 && r.indexOf('/login')<0 && r.indexOf('/auth')<0;
-            if(!internal){ c.flash(); }            /* cold app open / after login — not internal navigation */
-            var hiddenAt = 0, IDLE = 10*60*1000;   /* re-show only after a long idle (10 min) */
+            // Show on a fresh app launch (per-session flag survives navigation, clears on full close).
+            try { if(!sessionStorage.getItem('gcAppLive')){ sessionStorage.setItem('gcAppLive','1'); c.flash(); } }
+            catch(e){ c.flash(); }
+            // Show again when the app is reopened from the background (not on navigation).
+            var hiddenAt = 0;
             document.addEventListener('visibilitychange', function(){
                 if(document.hidden){ hiddenAt = Date.now(); }
-                else if(hiddenAt && (Date.now()-hiddenAt) > IDLE){ c.flash(); }
+                else if(hiddenAt && (Date.now()-hiddenAt) > 3000){ c.flash(); }
             });
          })($data)">
         <template x-teleport="body">
