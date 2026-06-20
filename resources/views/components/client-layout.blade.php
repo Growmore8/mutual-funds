@@ -14,6 +14,8 @@
     <meta name="vapid-key" content="{{ config('services.webpush.public_key') }}">
     <title>{{ $title }} · {{ $appName }}</title>
     <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();</script>
+    {{-- Decide the loading screen BEFORE paint so the app/nav never flashes first --}}
+    <script>(function(){try{if(!sessionStorage.getItem('gcAppLive')){sessionStorage.setItem('gcAppLive','1');document.documentElement.classList.add('gc-splash');}}catch(e){}})();</script>
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#0a1730">
@@ -57,9 +59,41 @@
         .bead + .bead{margin-left:-14px}
         .beadcell{width:58px;height:58px;flex:0 0 auto;display:grid;place-items:center}
         .beadcell + .beadcell{margin-left:-14px}
+        /* Loading screen: hidden by default, shown only when html.gc-splash is set in <head> */
+        #gc-splash{display:none}
+        html.gc-splash #gc-splash{display:flex}
+        html.gc-splash{overflow:hidden}
     </style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
+
+{{-- Loading screen (painted before the app; covers nav so there's no glitch) --}}
+<div id="gc-splash" class="fixed inset-0 z-[200] items-center justify-center" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16">
+    <div class="text-center px-8">
+        <img src="/logo.png?v={{ $brandV }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
+        <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{!! preg_replace('/(capital)/i', '<span class="text-emerald-400">$1</span>', e($appName)) !!}</p>
+        <p class="text-[11px] tracking-[0.35em] uppercase text-gray-400 mt-1.5">Mutual Fund</p>
+        <p class="text-sm text-emerald-300/90 mt-2">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
+        <div class="flex items-center justify-center gap-2 mt-7">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0ms"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:150ms"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:300ms"></span>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        var el = document.getElementById('gc-splash'); if (!el) return;
+        function hide() { el.style.transition = 'opacity .5s'; el.style.opacity = '0'; setTimeout(function () { document.documentElement.classList.remove('gc-splash'); el.style.opacity = ''; el.style.transition = ''; }, 520); }
+        function show() { document.documentElement.classList.add('gc-splash'); setTimeout(hide, 3000); }
+        if (document.documentElement.classList.contains('gc-splash')) { setTimeout(hide, 3000); }
+        var hiddenAt = 0;
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) { hiddenAt = Date.now(); }
+            else if (hiddenAt && (Date.now() - hiddenAt) > 3000) { show(); }
+        });
+    })();
+</script>
 <div class="lg:flex lg:min-h-screen">
 
     {{-- Desktop sidebar --}}

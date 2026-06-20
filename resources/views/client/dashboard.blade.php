@@ -26,38 +26,6 @@
         .gcard:hover{transform:translateY(-2px)}
     </style>
 
-    {{-- Splash / loading screen (shows briefly when the app is opened) --}}
-    <div x-data="{ show:false, flash(){ this.show=true; setTimeout(()=>{ this.show=false; }, 3000); } }"
-         x-init="(function(c){
-            // Show on a fresh app launch (per-session flag survives navigation, clears on full close).
-            try { if(!sessionStorage.getItem('gcAppLive')){ sessionStorage.setItem('gcAppLive','1'); c.flash(); } }
-            catch(e){ c.flash(); }
-            // Show again when the app is reopened from the background (not on navigation).
-            var hiddenAt = 0;
-            document.addEventListener('visibilitychange', function(){
-                if(document.hidden){ hiddenAt = Date.now(); }
-                else if(hiddenAt && (Date.now()-hiddenAt) > 3000){ c.flash(); }
-            });
-         })($data)">
-        <template x-teleport="body">
-            <div x-show="show" x-transition.opacity.duration.600ms style="display:none"
-                 class="fixed inset-0 z-[100] grid place-items-center">
-                <div class="absolute inset-0" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16"></div>
-                <div class="relative text-center px-8">
-                    <img src="/logo.png?v={{ \App\Models\Setting::get('brand_v','1') }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
-                    <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{!! preg_replace('/(capital)/i', '<span class="text-emerald-400">$1</span>', e(\App\Models\Setting::get('app_name', 'GrowthCapital'))) !!}</p>
-                    <p class="text-[11px] tracking-[0.35em] uppercase text-gray-400 mt-1.5">Mutual Fund</p>
-                    <p class="text-sm text-emerald-300/90 mt-2">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
-                    <div class="flex items-center justify-center gap-2 mt-7">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0ms"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:150ms"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:300ms"></span>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-
     {{-- Admin-managed popup (maintenance / notice / offer / promotion) --}}
     @if (!empty($announcement))
         @php
