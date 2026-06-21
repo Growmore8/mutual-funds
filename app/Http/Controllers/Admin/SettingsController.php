@@ -51,12 +51,58 @@ class SettingsController extends Controller
         if ($request->hasFile('app_icon')) {
             $request->file('app_icon')->move(public_path(), 'app-icon.png');
             Setting::put('app_icon_path', '/app-icon.png');
+        } elseif (is_file(public_path('logo.png'))) {
+            // No custom icon uploaded — auto-build a solid (non-transparent) launch icon
+            // from the logo so iOS/Android don't add their own square to the transparent logo.
+            if ($this->generateAppIcon(public_path('logo.png'), public_path('app-icon.png'), '#070b16')) {
+                Setting::put('app_icon_path', '/app-icon.png');
+            }
         }
         if ($request->hasFile('logo') || $request->hasFile('favicon') || $request->hasFile('login_hero') || $request->hasFile('app_icon')) {
             Setting::put('brand_v', (string) now()->timestamp);
         }
 
         return back()->with('status', 'Branding updated.');
+    }
+
+    /** Composite the (transparent) logo onto a solid square so the home-screen/launch icon has no auto-added box. */
+    private function generateAppIcon(string $src, string $dest, string $hex): bool
+    {
+        if (! function_exists('imagecreatetruecolor') || ! function_exists('imagecreatefrompng')) {
+            return false;
+        }
+
+        try {
+            $logo = @imagecreatefrompng($src);
+            if (! $logo) {
+                return false;
+            }
+
+            $size = 512;
+            $pad = (int) ($size * 0.16);
+            $canvas = imagecreatetruecolor($size, $size);
+            [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+            imagefill($canvas, 0, 0, imagecolorallocate($canvas, $r, $g, $b));
+
+            $lw = imagesx($logo);
+            $lh = imagesy($logo);
+            $box = $size - 2 * $pad;
+            $scale = min($box / $lw, $box / $lh);
+            $nw = (int) ($lw * $scale);
+            $nh = (int) ($lh * $scale);
+            $dx = (int) (($size - $nw) / 2);
+            $dy = (int) (($size - $nh) / 2);
+
+            imagealphablending($canvas, true);
+            imagecopyresampled($canvas, $logo, $dx, $dy, 0, 0, $nw, $nh, $lw, $lh);
+            imagepng($canvas, $dest);
+            imagedestroy($canvas);
+            imagedestroy($logo);
+
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function security()
