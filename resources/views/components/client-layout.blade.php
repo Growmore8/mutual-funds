@@ -26,6 +26,18 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ $appShort }}">
+    {{-- iOS launch screens: dark splash w/ logo (stops iOS drawing an icon square on cold launch) --}}
+    @php
+        $iosDevices = [
+            [430, 932, 3], [428, 926, 3], [414, 896, 3], [414, 896, 2], [393, 852, 3], [390, 844, 3],
+            [375, 812, 3], [414, 736, 3], [375, 667, 2], [320, 568, 2],
+        ];
+    @endphp
+    @foreach ($iosDevices as [$dw, $dh, $ratio])
+        <link rel="apple-touch-startup-image"
+              media="(device-width: {{ $dw }}px) and (device-height: {{ $dh }}px) and (-webkit-device-pixel-ratio: {{ $ratio }}) and (orientation: portrait)"
+              href="/apple-splash?w={{ $dw * $ratio }}&h={{ $dh * $ratio }}&v={{ $brandV }}">
+    @endforeach
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

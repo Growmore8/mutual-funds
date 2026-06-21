@@ -29,6 +29,42 @@ Route::get('/manifest.webmanifest', function () {
     ])->header('Content-Type', 'application/manifest+json');
 });
 
+// iOS PWA launch image (apple-touch-startup-image): a dark splash with the centered logo,
+// so the cold-launch screen matches our loading screen instead of iOS adding an icon square.
+Route::get('/apple-splash', function (\Illuminate\Http\Request $r) {
+    $w = max(320, min(2400, (int) $r->get('w', 1170)));
+    $h = max(480, min(3200, (int) $r->get('h', 2532)));
+
+    abort_unless(function_exists('imagecreatetruecolor'), 404);
+
+    $img = imagecreatetruecolor($w, $h);
+    imagefill($img, 0, 0, imagecolorallocate($img, 0x07, 0x0b, 0x16)); // #070b16
+
+    $logoPath = public_path('logo.png');
+    if (function_exists('imagecreatefrompng') && is_file($logoPath) && ($logo = @imagecreatefrompng($logoPath))) {
+        $lw = imagesx($logo);
+        $lh = imagesy($logo);
+        $target = (int) ($w * 0.34);
+        $scale = $target / $lw;
+        $nw = (int) ($lw * $scale);
+        $nh = (int) ($lh * $scale);
+        $dx = (int) (($w - $nw) / 2);
+        $dy = (int) (($h - $nh) / 2);
+        imagealphablending($img, true);
+        imagecopyresampled($img, $logo, $dx, $dy, 0, 0, $nw, $nh, $lw, $lh);
+        imagedestroy($logo);
+    }
+
+    ob_start();
+    imagepng($img);
+    $png = ob_get_clean();
+    imagedestroy($img);
+
+    return response($png, 200)
+        ->header('Content-Type', 'image/png')
+        ->header('Cache-Control', 'public, max-age=86400');
+})->name('apple.splash');
+
 // Biometric (passkey) passwordless login — usable on the login page before auth.
 Route::post('/webauthn/login/options', [\App\Http\Controllers\WebAuthnController::class, 'loginOptions'])->name('webauthn.login.options');
 Route::post('/webauthn/login', [\App\Http\Controllers\WebAuthnController::class, 'login'])->name('webauthn.login');
