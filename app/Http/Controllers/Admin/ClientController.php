@@ -236,7 +236,15 @@ class ClientController extends Controller
             try {
                 Mail::to($client->email)->send(new StatementMail($data, $pdf?->output()));
             } catch (\Throwable $e) {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => 'Could not email statement: ' . $e->getMessage()], 500);
+                }
+
                 return back()->with('status', 'Could not email statement: ' . $e->getMessage());
+            }
+
+            if ($request->wantsJson()) {
+                return response()->json(['ok' => true, 'message' => 'Statement emailed to ' . $client->email . '.']);
             }
 
             return back()->with('status', 'Statement emailed to ' . $client->email . '.');

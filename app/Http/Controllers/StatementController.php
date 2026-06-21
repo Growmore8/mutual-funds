@@ -23,7 +23,15 @@ class StatementController extends Controller
             try {
                 Mail::to($user->email)->send(new StatementMail($data, $pdf?->output()));
             } catch (\Throwable $e) {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => 'Could not send the statement right now. Please try again later.'], 500);
+                }
+
                 return back()->with('status', 'Could not send statement right now. Please try again later.');
+            }
+
+            if ($request->wantsJson()) {
+                return response()->json(['ok' => true, 'message' => 'Statement emailed to ' . $user->email . '.']);
             }
 
             return back()->with('status', 'Statement sent to ' . $user->email . '.');

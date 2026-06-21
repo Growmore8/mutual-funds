@@ -1,11 +1,19 @@
 @props(['baseUrl'])
 {{-- Trigger + modal for choosing a statement period and downloading / emailing the PDF. --}}
 <div x-data="{
-        open:false, period:'month', from:'', to:'',
+        open:false, period:'month', from:'', to:'', sending:false, msg:'', ok:false,
         url(action){
             let p = new URLSearchParams({period:this.period, action});
             if(this.period==='custom'){ p.set('from', this.from); p.set('to', this.to); }
             return @js($baseUrl) + '?' + p.toString();
+        },
+        emailNow(){
+            this.sending=true; this.ok=false; this.msg='Sending…';
+            fetch(this.url('email'), {headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
+                .then(r => r.json().then(d => ({status:r.ok, d})))
+                .then(({status, d}) => { this.ok = status && d.ok; this.msg = d.message || (this.ok ? 'Sent.' : 'Could not send.'); })
+                .catch(() => { this.ok=false; this.msg='Could not send. Please try again.'; })
+                .finally(() => { this.sending=false; });
         }
      }" class="contents">
     <button type="button" @click="open=true" {{ $attributes }}>{{ $slot }}</button>
@@ -30,10 +38,11 @@
                 </div>
 
                 <div class="flex gap-2 mt-2">
-                    <a :href="url('download')" class="flex-1 text-center px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"><i class="fa-solid fa-download mr-1"></i> Download</a>
-                    <a :href="url('email')" @click="open=false" class="flex-1 text-center px-3 py-2.5 rounded-lg border border-emerald-600 text-emerald-700 dark:text-emerald-300 font-semibold"><i class="fa-solid fa-paper-plane mr-1"></i> Email</a>
+                    <a :href="url('download')" target="_blank" rel="noopener" class="flex-1 text-center px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"><i class="fa-solid fa-download mr-1"></i> Download</a>
+                    <button type="button" @click="emailNow()" :disabled="sending" class="flex-1 text-center px-3 py-2.5 rounded-lg border border-emerald-600 text-emerald-700 dark:text-emerald-300 font-semibold disabled:opacity-60"><i class="fa-solid fa-paper-plane mr-1"></i> <span x-text="sending ? 'Sending…' : 'Email'"></span></button>
                 </div>
-                <button type="button" @click="open=false" class="mt-3 w-full text-center text-gray-400 text-xs hover:text-gray-600">Cancel</button>
+                <p x-show="msg" x-cloak x-text="msg" :class="ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'" class="mt-3 text-xs text-center font-medium"></p>
+                <button type="button" @click="open=false; msg=''" class="mt-3 w-full text-center text-gray-400 text-xs hover:text-gray-600">Close</button>
             </div>
         </div>
     </template>
