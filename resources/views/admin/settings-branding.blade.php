@@ -30,23 +30,15 @@
                 <p class="text-xs text-gray-400 mt-1">Shown on the loading screen under the app name.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Logo</label>
-                    <div class="flex items-center gap-3 mt-1">
-                        <img src="/logo.png?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-12 h-12 rounded-lg border border-gray-200 object-contain bg-gray-50">
-                        <input type="file" name="logo" accept=".png,.jpg,.jpeg,.svg" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Square PNG recommended. Replaces the app logo &amp; PWA icon.</p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Logo</label>
+                <div class="flex items-center gap-3 mt-1">
+                    <img src="/logo.png?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-12 h-12 rounded-lg border border-gray-200 object-contain bg-gray-50">
+                    <span class="text-gray-300">→</span>
+                    <img src="{{ \App\Models\Setting::get('app_icon_path', '/logo.png') }}?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-12 h-12 rounded-2xl border border-gray-200 object-cover bg-[#070b16]" title="Auto-generated app icon">
+                    <input type="file" name="logo" accept=".png,.jpg,.jpeg" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Favicon</label>
-                    <div class="flex items-center gap-3 mt-1">
-                        <img src="{{ \App\Models\Setting::get('favicon_path', '/logo.png') }}?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-8 h-8 rounded border border-gray-200 object-contain bg-gray-50">
-                        <input type="file" name="favicon" accept=".png,.ico,.jpg,.jpeg" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Small square PNG. Shown in the browser tab.</p>
-                </div>
+                <p class="text-xs text-gray-400 mt-1">Upload one <strong>transparent square PNG</strong>. It's used everywhere — the in-app logo, the browser <strong>favicon</strong>, and the <strong>home-screen / launch icon</strong> (auto-placed on a dark tile, shown on the right) are all generated from it.</p>
             </div>
 
             <div>
@@ -56,15 +48,6 @@
                     <input type="file" name="login_hero" accept=".png,.jpg,.jpeg,.webp" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
                 </div>
                 <p class="text-xs text-gray-400 mt-1">Wide photo (e.g. lifestyle/family), up to 15&nbsp;MB. Shown on the login &amp; sign-up screens with a dark fade. Leave empty for the default gradient.</p>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">App icon (home screen / launch)</label>
-                <div class="flex items-center gap-3 mt-1">
-                    <img src="{{ \App\Models\Setting::get('app_icon_path', '/logo.png') }}?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-12 h-12 rounded-2xl border border-gray-200 object-cover bg-[#070b16]">
-                    <input type="file" name="app_icon" accept=".png,.jpg,.jpeg" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
-                </div>
-                <p class="text-xs text-gray-400 mt-1"><strong>Square (e.g. 512×512) with a solid background</strong> — this is the installed icon iOS/Android show on the home screen &amp; launch. Use a full-bleed design (logo on a dark/brand tile) so the launch screen looks intentional. If empty, the transparent logo is used (iOS will add a black square).</p>
             </div>
 
             <button class="px-5 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium">Save branding</button>

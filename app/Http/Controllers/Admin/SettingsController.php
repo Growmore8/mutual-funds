@@ -26,39 +26,38 @@ class SettingsController extends Controller
             'app_name' => ['required', 'string', 'max:60'],
             'app_short_name' => ['nullable', 'string', 'max:30'],
             'app_slogan' => ['nullable', 'string', 'max:80'],
-            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
-            'favicon' => ['nullable', 'image', 'mimes:png,ico,jpg,jpeg', 'max:1024'],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:8192'],
             'login_hero' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:15360'],
-            'app_icon' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:4096'],
         ]);
 
         Setting::put('app_name', $data['app_name']);
         Setting::put('app_short_name', $data['app_short_name'] ?: $data['app_name']);
         Setting::put('app_slogan', $data['app_slogan'] ?? 'Invest together · Earn together');
 
-        // Uploaded images overwrite the public files; bump a version for cache-busting.
+        $changed = false;
+
+        // One logo upload — the favicon (browser tab) and the app/launch icon are derived from it.
         if ($request->hasFile('logo')) {
             $request->file('logo')->move(public_path(), 'logo.png');
+            Setting::put('favicon_path', '/logo.png');
+            $changed = true;
         }
-        if ($request->hasFile('favicon')) {
-            $request->file('favicon')->move(public_path(), 'favicon.png');
-            Setting::put('favicon_path', '/favicon.png');
-        }
+
         if ($request->hasFile('login_hero')) {
             $request->file('login_hero')->move(public_path(), 'login-hero.jpg');
             Setting::put('login_hero_path', '/login-hero.jpg');
+            $changed = true;
         }
-        if ($request->hasFile('app_icon')) {
-            $request->file('app_icon')->move(public_path(), 'app-icon.png');
-            Setting::put('app_icon_path', '/app-icon.png');
-        } elseif (is_file(public_path('logo.png'))) {
-            // No custom icon uploaded — auto-build a solid (non-transparent) launch icon
-            // from the logo so iOS/Android don't add their own square to the transparent logo.
+
+        // (Re)build the solid app/launch icon from the logo so iOS/Android don't add their own
+        // square to the transparent logo. Regenerate when the logo changed or it's missing.
+        if (is_file(public_path('logo.png')) && ($request->hasFile('logo') || ! is_file(public_path('app-icon.png')))) {
             if ($this->generateAppIcon(public_path('logo.png'), public_path('app-icon.png'), '#070b16')) {
                 Setting::put('app_icon_path', '/app-icon.png');
             }
         }
-        if ($request->hasFile('logo') || $request->hasFile('favicon') || $request->hasFile('login_hero') || $request->hasFile('app_icon')) {
+
+        if ($changed) {
             Setting::put('brand_v', (string) now()->timestamp);
         }
 
