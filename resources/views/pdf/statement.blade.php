@@ -27,9 +27,18 @@
     .right { text-align:right; }
     .foot { margin-top:22px; border-top:1px solid #e5e7eb; padding-top:10px; color:#9ca3af; font-size:10px; }
     .sec { font-weight:bold; margin:18px 0 6px; color:#0a1730; }
+    .no-print{font-family:Arial,sans-serif}
+    @media print{.no-print{display:none !important}}
 </style>
 </head>
 <body>
+@isset($print)
+    <div class="no-print" style="position:sticky;top:0;z-index:10;background:#0a1730;color:#fff;padding:12px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <span style="font-weight:bold;margin-right:6px">GrowthCapital Statement</span>
+        <button onclick="window.print()" style="cursor:pointer;border:0;background:#10b981;color:#fff;font-weight:bold;padding:9px 16px;border-radius:8px">⬇ Download / Save PDF</button>
+        <button onclick="window.close()" style="cursor:pointer;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;padding:9px 16px;border-radius:8px">Close</button>
+    </div>
+@endisset
 <div class="wrap">
     <div class="head">
         <table>
@@ -102,8 +111,5 @@
     </div>
 </div>
 
-@isset($print)
-    <script>window.print();</script>
-@endisset
 </body>
 </html>
