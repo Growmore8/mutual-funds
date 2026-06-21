@@ -4,6 +4,7 @@
     $appShort = \App\Models\Setting::get('app_short_name', 'GC Fund');
     $brandV = \App\Models\Setting::get('brand_v', '1');
     $favicon = \App\Models\Setting::get('favicon_path', '/logo.png');
+    $appIcon = \App\Models\Setting::get('app_icon_path', '/logo.png');
 @endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full">
@@ -19,7 +20,7 @@
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#070b16">
-    <link rel="apple-touch-icon" href="/logo.png?v={{ $brandV }}">
+    <link rel="apple-touch-icon" href="{{ $appIcon }}?v={{ $brandV }}">
     <link rel="icon" href="{{ $favicon }}?v={{ $brandV }}" type="image/png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">

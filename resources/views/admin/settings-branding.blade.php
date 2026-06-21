@@ -58,6 +58,15 @@
                 <p class="text-xs text-gray-400 mt-1">Wide photo (e.g. lifestyle/family), up to 15&nbsp;MB. Shown on the login &amp; sign-up screens with a dark fade. Leave empty for the default gradient.</p>
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700">App icon (home screen / launch)</label>
+                <div class="flex items-center gap-3 mt-1">
+                    <img src="{{ \App\Models\Setting::get('app_icon_path', '/logo.png') }}?v={{ \App\Models\Setting::get('brand_v', '1') }}" alt="" class="w-12 h-12 rounded-2xl border border-gray-200 object-cover bg-[#070b16]">
+                    <input type="file" name="app_icon" accept=".png,.jpg,.jpeg" class="text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100">
+                </div>
+                <p class="text-xs text-gray-400 mt-1"><strong>Square (e.g. 512×512) with a solid background</strong> — this is the installed icon iOS/Android show on the home screen &amp; launch. Use a full-bleed design (logo on a dark/brand tile) so the launch screen looks intentional. If empty, the transparent logo is used (iOS will add a black square).</p>
+            </div>
+
             <button class="px-5 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium">Save branding</button>
         </form>
         <p class="text-xs text-gray-400 mt-3">After saving, clients may need to hard-refresh (or reinstall the PWA) to see a new logo/icon.</p>

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 // Dynamic PWA manifest (name/icon come from admin Branding settings).
 Route::get('/manifest.webmanifest', function () {
     $v = \App\Models\Setting::get('brand_v', '1');
+    $icon = \App\Models\Setting::get('app_icon_path', '/logo.png');
 
     return response()->json([
         'name' => \App\Models\Setting::get('app_name', 'GrowthCapital'),
@@ -21,8 +22,9 @@ Route::get('/manifest.webmanifest', function () {
         'background_color' => '#070b16',
         'theme_color' => '#070b16',
         'icons' => [
-            ['src' => '/logo.png?v=' . $v, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
-            ['src' => '/logo.png?v=' . $v, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => $icon . '?v=' . $v, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => $icon . '?v=' . $v, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => $icon . '?v=' . $v, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
         ],
     ])->header('Content-Type', 'application/manifest+json');
 });
