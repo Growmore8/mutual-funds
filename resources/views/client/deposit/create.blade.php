@@ -2,9 +2,9 @@
     @php
         $money = fn ($n) => '$' . number_format((float) $n, 2);
         $methodsJson = $methods->map(fn ($m) => [
-            'label' => trim($m->name . ($m->network ? ' · ' . $m->network : '')),
+            'label' => trim($m->name . ($m->type === 'crypto' && $m->network ? ' · ' . $m->network : '')),
             'type' => $m->type,
-            'network' => $m->network,
+            'network' => $m->type === 'crypto' ? $m->network : null,
             'currency' => $m->currency,
             'address' => $m->address,
             'instructions' => $m->instructions,
@@ -13,7 +13,8 @@
     @endphp
 
     <div class="max-w-2xl mx-auto"
-         x-data="{ sel: null, methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+         x-data="{ sel: null, copied: false, methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+                   copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
         <div class="bg-white rounded-2xl shadow-sm p-6">
@@ -36,7 +37,7 @@
                             <i class="fa-solid {{ $m->type==='crypto' ? 'fa-coins' : ($m->type==='upi' ? 'fa-mobile-screen' : 'fa-building-columns') }}"></i>
                         </span>
                         <div class="flex-1">
-                            <p class="font-medium text-gray-900">{{ $m->name }}{{ $m->network ? ' · '.$m->network : '' }}</p>
+                            <p class="font-medium text-gray-900">{{ $m->name }}{{ $m->type==='crypto' && $m->network ? ' · '.$m->network : '' }}</p>
                             <p class="text-xs text-gray-400">{{ $m->currency }}</p>
                         </div>
                         <i class="fa-solid fa-chevron-right text-gray-300"></i>
@@ -63,24 +64,38 @@
                             <p class="text-xs text-gray-500 mb-1" x-text="sel?.type==='upi' ? 'UPI ID' : 'Wallet address'"></p>
                             <div class="flex items-center gap-2">
                                 <code class="text-sm text-gray-800 break-all flex-1" x-text="sel?.address || '—'"></code>
-                                <button type="button" @click="navigator.clipboard.writeText(sel?.address || '')" class="w-8 h-8 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                                <button type="button" @click="copy(sel?.address)" class="w-8 h-8 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy"></i></button>
                             </div>
-                            <p class="text-xs text-amber-600 mt-2" x-show="sel?.network" x-text="'Send only on the ' + (sel?.network||'') + ' network.'"></p>
-                            <p class="text-xs text-gray-500 mt-1" x-show="sel?.type==='upi' && sel?.details?.provider" x-text="'Provider: ' + (sel?.details?.provider||'')"></p>
+                            <p class="text-xs text-amber-600 mt-2" x-show="sel?.type==='crypto' && sel?.network" x-text="'Send only on the ' + (sel?.network||'') + ' network.'"></p>
+                            <div class="flex items-center gap-2 mt-2" x-show="sel?.type==='upi' && sel?.details?.provider">
+                                <p class="text-xs text-gray-500 flex-1">Provider: <span class="text-gray-800 font-medium" x-text="sel?.details?.provider||''"></span></p>
+                                <button type="button" @click="copy(sel?.details?.provider)" class="w-7 h-7 rounded-md bg-gray-200 text-gray-700 grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy text-xs"></i></button>
+                            </div>
                         </div>
                     </template>
 
-                    {{-- Bank: structured details --}}
+                    {{-- Bank: structured details, each with a copy button --}}
                     <template x-if="sel && sel.type==='bank'">
-                        <dl class="text-sm space-y-1.5">
-                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Account name</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.account_name || '—'"></dd></div>
-                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Account number</dt><dd class="font-medium text-gray-800 text-right break-all" x-text="sel?.details?.account_number || '—'"></dd></div>
-                            <div class="flex justify-between gap-3"><dt class="text-gray-500">Bank</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.bank_name || '—'"></dd></div>
-                            <div class="flex justify-between gap-3"><dt class="text-gray-500">IFSC</dt><dd class="font-medium text-gray-800 text-right" x-text="sel?.details?.ifsc || '—'"></dd></div>
-                        </dl>
+                        <div class="text-sm space-y-2.5">
+                            <template x-for="row in [
+                                {k:'Account name', v: sel?.details?.account_name},
+                                {k:'Account number', v: sel?.details?.account_number},
+                                {k:'Bank', v: sel?.details?.bank_name},
+                                {k:'IFSC', v: sel?.details?.ifsc},
+                            ]" :key="row.k">
+                                <div class="flex items-center justify-between gap-2" x-show="row.v">
+                                    <div class="min-w-0">
+                                        <p class="text-xs text-gray-500" x-text="row.k"></p>
+                                        <p class="font-medium text-gray-800 break-all" x-text="row.v || '—'"></p>
+                                    </div>
+                                    <button type="button" @click="copy(row.v)" class="w-8 h-8 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </template>
+                        </div>
                     </template>
 
                     <p class="text-xs text-gray-400 mt-2" x-text="sel?.instructions"></p>
+                    <p x-show="copied" x-cloak x-transition class="text-xs text-emerald-600 font-medium mt-2"><i class="fa-solid fa-check mr-1"></i> Copied to clipboard</p>
                 </div>
 
                 <form method="POST" action="{{ route('client.deposit.store') }}" enctype="multipart/form-data" class="space-y-4 text-sm">
