@@ -116,7 +116,7 @@ class ClientDashboardController extends Controller
             'LKR', 'MAD', 'MNT', 'MXN', 'MYR', 'NGN', 'NOK', 'NZD', 'OMR', 'PEN', 'PHP', 'PKR', 'PLN', 'QAR', 'RON',
             'RUB', 'SAR', 'SEK', 'SGD', 'THB', 'TRY', 'TWD', 'UAH', 'VND', 'ZAR'];
 
-        $fxRates = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.map', 21600, function () use ($wanted, $usdInr) {
+        $fxRates = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.map', 21600, function () use ($wanted) {
             $map = ['USD' => 1.0];
             try {
                 $res = \Illuminate\Support\Facades\Http::timeout(8)->get('https://open.er-api.com/v6/latest/USD');
@@ -130,8 +130,8 @@ class ClientDashboardController extends Controller
             } catch (\Throwable $e) {
                 // fall through to minimal map
             }
-            if (count($map) < 2 && $usdInr > 0) {
-                $map['INR'] = $usdInr; // last-resort fallback so at least INR works
+            if (count($map) < 2) {
+                $map['INR'] = app(\App\Services\SpotTradingService::class)->usdInr(); // fallback so at least INR works
             }
 
             return $map;
