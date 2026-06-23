@@ -89,6 +89,12 @@ class ClientDashboardController extends Controller
                     'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price,
                     'cs' => $t->instrument->currencySymbol()]);
             });
+        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(5)->get()
+            ->each(fn ($d) => $recent->push((object) ['when' => $d->created_at, 'label' => 'Spot deposit (' . $d->currency . ')',
+                'amount' => (float) $d->amount, 'cs' => $d->currency === 'INR' ? '₹' : '$']));
+        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(5)->get()
+            ->each(fn ($w) => $recent->push((object) ['when' => $w->created_at, 'label' => 'Spot withdrawal (' . $w->currency . ')',
+                'amount' => -1 * (float) $w->amount, 'cs' => $w->currency === 'INR' ? '₹' : '$']));
         $recent = $recent->sortByDesc('when')->take(8)->values();
 
         $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');
