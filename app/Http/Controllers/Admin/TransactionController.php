@@ -42,10 +42,30 @@ class TransactionController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        // Spot Trading transactions (trades) — shown below, with delete (reverses everywhere).
-        $spotTrades = \App\Models\SpotTrade::with('instrument')->latest('id')->limit(60)->get();
-        $spotUsers = User::whereIn('id', $spotTrades->flatMap(fn ($t) => [$t->buyer_id, $t->seller_id])->filter()->unique())
-            ->get(['id', 'name'])->keyBy('id');
+        // Spot Trading transactions — trades + spot deposits/withdrawals, merged.
+        $trades = \App\Models\SpotTrade::with('instrument')->latest('id')->limit(50)->get();
+        $deps = Deposit::where('purpose', 'spot')->latest('id')->limit(50)->get();
+        $wds = Withdrawal::where('purpose', 'spot')->latest('id')->limit(50)->get();
+        $names = User::whereIn('id', $trades->flatMap(fn ($t) => [$t->buyer_id, $t->seller_id])
+            ->merge($deps->pluck('user_id'))->merge($wds->pluck('user_id'))->filter()->unique())
+            ->pluck('name', 'id');
+
+        $spotItems = collect();
+        $trades->each(function ($t) use ($spotItems, $names) {
+            $cid = $t->buyer_id ?: $t->seller_id;
+            $isBuy = (bool) $t->buyer_id;
+            $spotItems->push((object) ['when' => $t->created_at, 'client' => $names[$cid] ?? '—',
+                'detail' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol . ' ×' . rtrim(rtrim((string) $t->qty, '0'), '.'),
+                'cs' => $t->instrument->currencySymbol(), 'amount' => (float) $t->qty * (float) $t->price, 'credit' => ! $isBuy,
+                'kind' => 'Trade', 'del' => route('admin.spot.trade.delete', $t)]);
+        });
+        $deps->each(fn ($d) => $spotItems->push((object) ['when' => $d->created_at, 'client' => $names[$d->user_id] ?? '—',
+            'detail' => 'Deposit · ' . ($d->method ?: 'spot'), 'cs' => $d->currency === 'INR' ? '₹' : '$',
+            'amount' => (float) $d->amount, 'credit' => true, 'kind' => 'Deposit', 'del' => null]));
+        $wds->each(fn ($w) => $spotItems->push((object) ['when' => $w->created_at, 'client' => $names[$w->user_id] ?? '—',
+            'detail' => 'Withdrawal · ' . ($w->method ?: 'spot'), 'cs' => $w->currency === 'INR' ? '₹' : '$',
+            'amount' => (float) $w->amount, 'credit' => false, 'kind' => 'Withdrawal', 'del' => null]));
+        $spotItems = $spotItems->sortByDesc('when')->take(80)->values();
 
         // Account picker (searchable) for the "Add transaction" form.
         $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
@@ -54,7 +74,7 @@ class TransactionController extends Controller
             'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
         ])->values();
 
-        return view('admin.transactions.index', compact('transactions', 'accounts', 'search', 'spotTrades', 'spotUsers'));
+        return view('admin.transactions.index', compact('transactions', 'accounts', 'search', 'spotItems'));
     }
 
     public function store(Request $request)
@@ -76,6 +96,16 @@ class TransactionController extends Controller
             $currency = $destination === 'spot_inr' ? 'INR' : 'USD';
             $signed = in_array($data['type'], ['withdrawal', 'fee']) ? -abs($data['amount']) : abs($data['amount']);
             app(\App\Services\SpotTradingService::class)->adjustBalance($user->id, $signed, $currency);
+
+            // Record it so it shows in transactions (client + admin).
+            if ($signed >= 0) {
+                Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $currency,
+                    'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved',
+                    'value_date' => now()->toDateString(), 'approved_at' => now()]);
+            } else {
+                Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $currency,
+                    'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved', 'processed_at' => now()]);
+            }
 
             $sym = $currency === 'INR' ? '₹' : '$';
             AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',

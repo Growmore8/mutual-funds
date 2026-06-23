@@ -55,6 +55,16 @@ class SpotAdminController extends Controller
         $delta = $data['direction'] === 'credit' ? abs($data['amount']) : -abs($data['amount']);
         $this->svc->adjustBalance($client->id, $delta, $data['currency']);
 
+        // Record it so it shows in transactions (client + admin).
+        if ($delta >= 0) {
+            \App\Models\Deposit::create(['user_id' => $client->id, 'purpose' => 'spot', 'currency' => $data['currency'],
+                'amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved',
+                'value_date' => now()->toDateString(), 'approved_at' => now()]);
+        } else {
+            \App\Models\Withdrawal::create(['user_id' => $client->id, 'purpose' => 'spot', 'currency' => $data['currency'],
+                'amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved', 'processed_at' => now()]);
+        }
+
         $sym = $data['currency'] === 'INR' ? '₹' : '$';
         \App\Models\AppNotification::notify($client->id, 'deposit', 'Spot balance updated',
             ($delta < 0 ? '-' : '+') . $sym . number_format(abs($delta), 2) . ' on your Spot ' . $data['currency'] . ' wallet.', route('spot.index'));

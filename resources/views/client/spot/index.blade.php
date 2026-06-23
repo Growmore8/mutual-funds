@@ -155,14 +155,14 @@
         function spot(){
             return {
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
-                curSym: '{{ $cs }}', interval: '1day', book: {asks:[], bids:[], last:0}, showChart: false,
+                curSym: '{{ $cs }}', interval: '1day', book: {asks:[], bids:[], last:0}, showChart: true,
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', ototal:'', oqty:'',
                 avail: {{ (float)$account->balance }}, holdingQty: {{ (float)($selHolding ?? 0) }},
                 busy:false, msg:'', ok:false, _t:null,
                 candles: [], dir: 0,
                 dp(){ var p=Math.abs(this.price||0); return p>0 && p<10 ? 4 : 2; },
                 fmt(n){ var d=this.dp(); return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
-                init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
+                init(){ if(!this.id) return; this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
                 cost(){ return (parseFloat(this.oqty)||0) * this.price; },
                 setPct(p){
                     if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
@@ -171,8 +171,11 @@
                 async tick(){
                     try{
                         const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
-                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change; this.oprice=q.price; }
+                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change; this.oprice=q.price;
+                            // live chart: move the latest point with the price
+                            if(this.showChart && this.candles.length){ this.candles[this.candles.length-1].close = q.price; this.draw(); } }
                         const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
+                        this._c=(this._c||0)+1; if(this._c%30===0) this.loadCandles();   // refresh bars periodically
                     }catch(e){}
                 },
                 async loadCandles(){ try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.candles=d.values||[]; this.draw(); }catch(e){} },

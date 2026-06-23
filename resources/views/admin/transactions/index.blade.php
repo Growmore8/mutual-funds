@@ -80,25 +80,26 @@
                 <h3 class="font-semibold text-gray-900 dark:text-white mb-3"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading transactions</h3>
                 <table class="min-w-full text-sm whitespace-nowrap">
                     <thead class="bg-gray-50 text-gray-500 text-left">
-                        <tr><th class="px-3 py-2.5">Date</th><th class="px-3 py-2.5">Client</th><th class="px-3 py-2.5">Symbol</th><th class="px-3 py-2.5">Side</th><th class="px-3 py-2.5 text-right">Amount</th><th class="px-3 py-2.5 text-right">Action</th></tr>
+                        <tr><th class="px-3 py-2.5">Date</th><th class="px-3 py-2.5">Client</th><th class="px-3 py-2.5">Kind</th><th class="px-3 py-2.5">Detail</th><th class="px-3 py-2.5 text-right">Amount</th><th class="px-3 py-2.5 text-right">Action</th></tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($spotTrades as $t)
-                            @php $cid = $t->buyer_id ?: $t->seller_id; $isBuy = (bool) $t->buyer_id; $cs = $t->instrument->currencySymbol(); @endphp
+                        @forelse ($spotItems as $s)
                             <tr>
-                                <td class="px-3 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}<br>{{ $t->created_at->format('h:i A') }}</td>
-                                <td class="px-3 py-3 font-medium text-gray-900">{{ $spotUsers[$cid]->name ?? '—' }}</td>
-                                <td class="px-3 py-3">{{ $t->instrument->symbol }} <span class="text-gray-400 text-xs">{{ $t->instrument->currency }}</span></td>
-                                <td class="px-3 py-3 {{ $isBuy ? 'text-emerald-600' : 'text-red-600' }}">{{ $isBuy ? 'Buy' : 'Sell' }} {{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</td>
-                                <td class="px-3 py-3 text-right font-semibold">{{ $cs }}{{ number_format((float)$t->qty * (float)$t->price, 2) }}<div class="text-[11px] text-gray-400">@ {{ $cs }}{{ number_format((float)$t->price,2) }}</div></td>
+                                <td class="px-3 py-3 text-gray-400 text-xs">{{ $s->when->format('d M Y') }}<br>{{ $s->when->format('h:i A') }}</td>
+                                <td class="px-3 py-3 font-medium text-gray-900">{{ $s->client }}</td>
+                                <td class="px-3 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $s->kind }}</span></td>
+                                <td class="px-3 py-3 text-gray-600">{{ $s->detail }}</td>
+                                <td class="px-3 py-3 text-right font-semibold {{ $s->credit ? 'text-emerald-600' : 'text-red-600' }}">{{ ($s->credit ? '+' : '-') . $s->cs . number_format(abs((float)$s->amount), 2) }}</td>
                                 <td class="px-3 py-3 text-right">
-                                    <form method="POST" action="{{ route('admin.spot.trade.delete', $t) }}" onsubmit="return confirm('Delete this spot trade and reverse its balance/holding effect?')">@csrf
-                                        <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 inline-grid"><i class="fa-solid fa-trash"></i></button>
-                                    </form>
+                                    @if ($s->del)
+                                        <form method="POST" action="{{ $s->del }}" onsubmit="return confirm('Delete this spot trade and reverse its balance/holding effect?')">@csrf
+                                            <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 inline-grid"><i class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    @else <span class="text-gray-300">—</span> @endif
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No spot trades yet.</td></tr>
+                            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No spot transactions yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
