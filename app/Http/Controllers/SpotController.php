@@ -22,12 +22,18 @@ class SpotController extends Controller
         $user = $request->user();
         $account = $this->svc->account($user->id);
         $holdings = SpotHolding::with('instrument')->where('user_id', $user->id)->where('qty', '>', 0)->get();
+
+        // Spot P&L — kept entirely separate from the mutual-fund pool.
+        $holdingsValue = $holdings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price));
+        $holdingsCost = $holdings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price);
+        $unrealized = round($holdingsValue - $holdingsCost, 2);
+        $equity = round((float) $account->balance + $holdingsValue, 2);
         $orders = SpotOrder::with('instrument')->where('user_id', $user->id)
             ->whereIn('status', ['open', 'partial'])->latest('id')->get();
         $trades = SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
             ->latest('id')->limit(20)->get();
 
-        return view('client.spot.index', compact('instruments', 'selected', 'account', 'holdings', 'orders', 'trades'));
+        return view('client.spot.index', compact('instruments', 'selected', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity'));
     }
 
     /** Live quote (price + change) for one instrument. */

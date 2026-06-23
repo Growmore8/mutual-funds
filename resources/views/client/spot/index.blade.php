@@ -5,6 +5,18 @@
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
+        {{-- Spot account summary — SEPARATE from the mutual-fund pool --}}
+        @php $upnl = $unrealized ?? 0; @endphp
+        <div class="gcard rounded-2xl p-4 mb-3 mx-1 bg-white dark:bg-white/[0.04]">
+            <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold mb-1"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account</p>
+            <div class="grid grid-cols-3 gap-2">
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Balance (cash)</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">{{ $money($account->balance) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Holdings value</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">{{ $money($holdingsValue ?? 0) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Spot P&L</p><p class="text-lg font-extrabold {{ $upnl < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ ($upnl < 0 ? '-' : '+') . $money(abs($upnl)) }}</p></div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">Equity {{ $money($equity ?? 0) }} · Not linked to your Mutual Fund pool.</p>
+        </div>
+
         {{-- Symbol header --}}
         <div class="flex items-center justify-between px-1 mb-3" x-data="{ pick:false }">
             <div class="relative">
