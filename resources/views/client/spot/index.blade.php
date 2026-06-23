@@ -19,7 +19,7 @@
                 @else
                     <div><p class="text-xs text-gray-500 dark:text-gray-400">USD wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)$usd->balance,2) }}</p></div>
                 @endif
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ $selected->symbol ?? '' }} P&L</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').$sym(abs($upnl),$cs) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">P&L</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').$sym(abs($upnl),$cs) }}</p></div>
             </div>
         </div>
 

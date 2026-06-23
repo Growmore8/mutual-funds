@@ -43,9 +43,9 @@
                     <input type="hidden" name="purpose" value="{{ $purpose ?? 'fund' }}">
                     <input type="hidden" name="currency" value="{{ $currency ?? 'USD' }}">
                     <div>
-                        <label class="block text-gray-700 mb-1">Amount (USD)</label>
+                        <label class="block text-gray-700 mb-1">Amount ({{ $cur }})</label>
                         <input type="number" step="0.01" min="1" @if($available > 0) max="{{ $available }}" @endif name="amount" value="{{ old('amount') }}" required
-                               class="w-full border-gray-300 rounded-md" placeholder="0.00" {{ $available <= 0 ? 'disabled' : '' }}>
+                               class="w-full border-gray-300 rounded-md" placeholder="{{ $cur === 'INR' ? '₹ 0.00' : '$ 0.00' }}" {{ $available <= 0 ? 'disabled' : '' }}>
                     </div>
                     <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3 flex items-start gap-2">
                         <i class="fa-solid fa-shield-halved mt-0.5"></i>

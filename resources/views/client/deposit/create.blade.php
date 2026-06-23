@@ -118,7 +118,7 @@
                     <input type="hidden" name="purpose" :value="purpose">
                     <input type="hidden" name="currency" :value="currency">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div><label class="block text-gray-700 mb-1">Amount (USD)</label><input type="number" step="0.01" min="1" name="amount" required class="w-full border-gray-300 rounded-md" placeholder="0.00"></div>
+                        <div><label class="block text-gray-700 mb-1">Amount (<span x-text="currency"></span>)</label><input type="number" step="0.01" min="1" name="amount" required class="w-full border-gray-300 rounded-md" :placeholder="currency==='INR' ? '₹ 0.00' : '$ 0.00'"></div>
                         <div><label class="block text-gray-700 mb-1">Slip (image or PDF)</label><input type="file" name="slip" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700"></div>
                     </div>
                     <div><label class="block text-gray-700 mb-1">Note (optional)</label><textarea name="note" rows="2" maxlength="1000" class="w-full border-gray-300 rounded-md" placeholder="Reference, transaction hash…"></textarea></div>
