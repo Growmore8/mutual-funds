@@ -22,16 +22,13 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds</h2>
             <p class="text-sm text-gray-500 mb-3">Choose where to deposit, pick a method, send the funds, then upload your slip.</p>
 
-            {{-- Deposit destination --}}
-            <div class="grid grid-cols-3 gap-2 mb-5 text-center">
+            {{-- Deposit destination (single USD base) --}}
+            <div class="grid grid-cols-2 gap-2 mb-5 text-center">
                 <button type="button" @click="purpose='fund';currency='USD'" :class="purpose==='fund' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
                     <i class="fa-solid fa-layer-group"></i><br>Mutual Fund<br><span class="text-[10px] opacity-70">USD</span>
                 </button>
-                <button type="button" @click="purpose='spot';currency='USD'" :class="purpose==='spot'&&currency==='USD' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
-                    <i class="fa-solid fa-arrow-trend-up"></i><br>Spot · US/Global<br><span class="text-[10px] opacity-70">USD</span>
-                </button>
-                <button type="button" @click="purpose='spot';currency='INR'" :class="purpose==='spot'&&currency==='INR' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
-                    <i class="fa-solid fa-arrow-trend-up"></i><br>Spot · India<br><span class="text-[10px] opacity-70">INR</span>
+                <button type="button" @click="purpose='spot';currency='USD'" :class="purpose==='spot' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
+                    <i class="fa-solid fa-arrow-trend-up"></i><br>Spot Trading<br><span class="text-[10px] opacity-70">USD</span>
                 </button>
             </div>
 

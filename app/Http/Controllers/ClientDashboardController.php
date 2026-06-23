@@ -100,24 +100,14 @@ class ClientDashboardController extends Controller
         $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');
         $announcement = \App\Models\Announcement::active()->latest()->first();
 
-        // Spot wallets (separate products, separate currencies) for the home overview.
+        // Single USD spot wallet (Binance/Bybit model) for the home overview.
         $spotUsd = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'USD')->value('balance');
-        $spotInr = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'INR')->value('balance');
-
-        // Spot unrealized P&L per currency.
         $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $user->id)->where('qty', '>', 0)->get();
-        $spotPnl = fn ($curr) => round($spotHoldings->filter(fn ($h) => ($h->instrument->currency ?: 'USD') === $curr)
-            ->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
-        $usSpotPnl = $spotPnl('USD');
-        $inrSpotPnl = $spotPnl('INR');
+        $spotPnl = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
+        $spotEquity = round($spotUsd + $spotHoldings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price)), 2);
 
-        // Live USD/INR (Google-style mid-market via Twelve Data), cached 1h. Fallback 84.
-        $usdInr = (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
-            return (float) (app(\App\Services\TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
-        }) ?: 84.0;
-
-        // Combined portfolio P&L in USD (mutual fund + US spot + India spot converted).
-        $totalPnlUsd = round($runningPnl + $usSpotPnl + ($usdInr > 0 ? $inrSpotPnl / $usdInr : 0), 2);
+        // Combined portfolio P&L in USD (mutual fund + spot).
+        $totalPnlUsd = round($runningPnl + $spotPnl, 2);
 
         // Live FX rates (1 USD → currency) for the Binance-style currency switcher.
         // One call returns ~160 currencies; we curate a wide list. Cached 6h.
@@ -151,7 +141,7 @@ class ClientDashboardController extends Controller
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
-            'spotUsd', 'spotInr', 'usSpotPnl', 'inrSpotPnl', 'usdInr', 'totalPnlUsd', 'fxRates'
+            'spotUsd', 'spotPnl', 'spotEquity', 'totalPnlUsd', 'fxRates'
         ));
     }
 

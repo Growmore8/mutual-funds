@@ -167,18 +167,18 @@
         <a href="{{ route('spot.index') }}" class="text-xs text-emerald-500">Open →</a>
     </div>
     <div class="grid grid-cols-2 gap-3 mb-6">
-        <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">NYSE · US/Global/Crypto <span class="text-[10px]">USD</span></p>
+        <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Spot wallet <span class="text-[10px]">USD</span></p>
             <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
-            <p class="text-[11px] {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
+            <p class="text-[11px] {{ ($spotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($spotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($spotPnl ?? 0), 2) }}</p>
         </a>
-        <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">BSE · India <span class="text-[10px]">INR</span></p>
-            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
-            <p class="text-[11px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
-            <p class="text-[10px] text-gray-400 mt-0.5">≈ ${{ number_format(($usdInr ?? 0) > 0 ? ($spotInr ?? 0) / $usdInr : 0, 2) }} · 1$ = ₹{{ number_format($usdInr ?? 0, 2) }} (live)</p>
+        <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Est. spot value <span class="text-[10px]">USD</span></p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotEquity ?? 0, 2) }}</p>
+            <p class="text-[11px] text-gray-400">wallet + holdings</p>
         </a>
     </div>
+    <a href="{{ route('transfer.create') }}" class="block mb-6 gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Transfer between Mutual Fund &amp; Spot</a>
 
     {{-- Mutual Fund — separate section (details below) --}}
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</h3>

@@ -208,6 +208,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/spot/order', [\App\Http\Controllers\SpotController::class, 'order'])->middleware('notlocked')->name('spot.order');
         Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\SpotController::class, 'cancel'])->middleware('notlocked')->name('spot.cancel');
 
+        // Within-account transfer: Mutual Fund <-> Spot (single USD base)
+        Route::get('/transfer', [\App\Http\Controllers\TransferController::class, 'create'])->name('transfer.create');
+        Route::post('/transfer', [\App\Http\Controllers\TransferController::class, 'store'])->middleware('notlocked')->name('transfer.store');
+
         // Profile (Breeze)
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

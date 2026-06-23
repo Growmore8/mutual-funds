@@ -156,10 +156,13 @@
                             <label class="block text-gray-700 mb-1">Book to (currency follows the market)</label>
                             <select name="destination" x-model="dest" class="w-full border-gray-300 rounded-md">
                                 <option value="fund">Mutual Fund (USD)</option>
-                                <option value="spot_usd">Spot · NYSE — US/Global/Crypto (USD)</option>
-                                <option value="spot_inr">Spot · BSE — India (INR)</option>
+                                <option value="spot_usd">Spot wallet (USD)</option>
+                                <option value="spot_inr">Spot wallet — enter INR (auto-converts to USD)</option>
                             </select>
-                            <p class="text-xs mt-1" :class="dest==='spot_inr' ? 'text-orange-600' : 'text-blue-600'">Amount will be booked in <span class="font-semibold" x-text="dest==='spot_inr' ? 'INR (₹)' : 'USD ($)'"></span></p>
+                            <p class="text-xs mt-1" :class="dest==='spot_inr' ? 'text-orange-600' : 'text-blue-600'">
+                                <span x-show="dest==='spot_inr'">Enter the amount in <span class="font-semibold">INR (₹)</span> — it converts to USD on the wallet.</span>
+                                <span x-show="dest!=='spot_inr'">Amount is in <span class="font-semibold">USD ($)</span>.</span>
+                            </p>
                         </div>
                         <div>
                             <label class="block text-gray-700 mb-1">Type</label>

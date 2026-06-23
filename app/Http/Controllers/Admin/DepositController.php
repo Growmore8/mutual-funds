@@ -74,14 +74,15 @@ class DepositController extends Controller
             'value_date' => $deposit->value_date ?? now()->toDateString(),
         ]);
 
-        // Spot deposits credit the trading wallet (separate from the mutual-fund pool).
+        // Spot deposits credit the single USD trading wallet (INR amounts converted).
         if ($deposit->purpose === 'spot') {
-            $curr = $deposit->currency ?: 'USD';
-            app(\App\Services\SpotTradingService::class)->adjustBalance($deposit->user_id, (float) $deposit->amount, $curr);
-            $amt = ($curr === 'INR' ? '₹' : '$') . number_format((float) $deposit->amount, 2);
-            \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Spot deposit approved', $amt . ' added to your Spot ' . $curr . ' wallet.', route('spot.index'));
+            $svc = app(\App\Services\SpotTradingService::class);
+            $usd = round($svc->toUsd((float) $deposit->amount, $deposit->currency ?: 'USD'), 2);
+            $svc->adjustBalance($deposit->user_id, $usd, 'USD');
+            $amt = '$' . number_format($usd, 2);
+            \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Spot deposit approved', $amt . ' added to your Spot wallet.', route('spot.index'));
 
-            return back()->with('status', 'Spot deposit approved (' . $curr . ') and trading balance credited.');
+            return back()->with('status', 'Spot deposit approved and trading balance credited (' . $amt . ').');
         }
 
         $this->creditCapital($deposit);

@@ -93,32 +93,35 @@ class TransactionController extends Controller
         // Book to a Spot wallet instead of the mutual-fund ledger when chosen.
         $destination = $data['destination'] ?? 'fund';
         if ($destination !== 'fund') {
-            $currency = $destination === 'spot_inr' ? 'INR' : 'USD';
+            // Single USD base: if the admin enters an INR amount (BSE), convert to USD first.
+            $spotSvc = app(\App\Services\SpotTradingService::class);
             $amt = (float) $data['amount'];
+            if ($destination === 'spot_inr') {
+                $amt = round($spotSvc->toUsd($amt, 'INR'), 2);
+            }
             $signed = match ($data['type']) {
                 'deposit' => abs($amt),
                 'withdrawal', 'fee' => -abs($amt),
                 default => $amt, // adjustment / reversal: respect entered sign (use − to debit)
             };
-            app(\App\Services\SpotTradingService::class)->adjustBalance($user->id, $signed, $currency);
+            $spotSvc->adjustBalance($user->id, $signed, 'USD');
 
             // Record it so it shows in transactions (client + admin).
             if ($signed >= 0) {
-                Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $currency,
+                Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
                     'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved',
                     'value_date' => now()->toDateString(), 'approved_at' => now()]);
             } else {
-                Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $currency,
+                Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
                     'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved', 'processed_at' => now()]);
             }
 
-            $sym = $currency === 'INR' ? '₹' : '$';
             AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
-                ucfirst($data['type']) . ' · Spot ' . $currency,
-                ($signed < 0 ? '-' : '+') . $sym . number_format(abs($signed), 2) . ' on your Spot ' . $currency . ' wallet.',
+                ucfirst($data['type']) . ' · Spot USD',
+                ($signed < 0 ? '-' : '+') . '$' . number_format(abs($signed), 2) . ' on your Spot wallet.',
                 route('spot.index'));
 
-            return back()->with('status', ucfirst($data['type']) . ' booked to ' . $user->name . "'s Spot {$currency} wallet.");
+            return back()->with('status', ucfirst($data['type']) . ' booked to ' . $user->name . "'s Spot wallet (USD).");
         }
 
         // Balance runs per fund account.

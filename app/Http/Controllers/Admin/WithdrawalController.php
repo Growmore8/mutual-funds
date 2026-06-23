@@ -28,15 +28,16 @@ class WithdrawalController extends Controller
             return back()->with('status', 'This request is already ' . $withdrawal->status . '.');
         }
 
-        // Spot withdrawals debit the spot wallet (separate from the mutual-fund pool).
+        // Spot withdrawals debit the single USD spot wallet (INR amounts converted).
         if ($withdrawal->purpose === 'spot') {
-            $curr = $withdrawal->currency ?: 'USD';
-            app(\App\Services\SpotTradingService::class)->adjustBalance($withdrawal->user_id, -1 * (float) $withdrawal->amount, $curr);
+            $svc = app(\App\Services\SpotTradingService::class);
+            $usd = round($svc->toUsd((float) $withdrawal->amount, $withdrawal->currency ?: 'USD'), 2);
+            $svc->adjustBalance($withdrawal->user_id, -1 * $usd, 'USD');
             $withdrawal->update(['status' => 'approved', 'processed_at' => now(), 'admin_note' => $request->input('admin_note')]);
-            $amt = ($curr === 'INR' ? '₹' : '$') . number_format((float) $withdrawal->amount, 2);
-            \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Spot withdrawal approved', $amt . ' debited from your Spot ' . $curr . ' wallet.', route('spot.index'));
+            $amt = '$' . number_format($usd, 2);
+            \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Spot withdrawal approved', $amt . ' debited from your Spot wallet.', route('spot.index'));
 
-            return back()->with('status', 'Spot withdrawal approved (' . $curr . ') and trading balance debited.');
+            return back()->with('status', 'Spot withdrawal approved and trading balance debited (' . $amt . ').');
         }
 
         DB::transaction(function () use ($withdrawal, $request) {

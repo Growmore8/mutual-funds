@@ -74,27 +74,23 @@ class ClientController extends Controller
             'accountRequests.accountType',
         ]);
 
-        // Spot Trading (managed here too — one place per client).
+        // Spot Trading — single USD base (managed here too — one place per client).
         $svc = app(\App\Services\SpotTradingService::class);
         $spotUsd = $svc->account($client->id, 'USD');
-        $spotInr = $svc->account($client->id, 'INR');
         $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $client->id)->where('qty', '>', 0)->get();
         $spotTrades = \App\Models\SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))->latest('id')->limit(15)->get();
 
-        // Unrealized spot P&L per currency (US/Global+Crypto = USD, India = INR).
-        $spotPnl = fn ($curr) => round($spotHoldings->filter(fn ($h) => ($h->instrument->currency ?: 'USD') === $curr)
-            ->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
+        // Unrealized spot P&L (all holdings, USD).
+        $spotPnl = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
 
         return view('admin.clients.show', [
             'client' => $client,
             'accountTypes' => AccountType::orderBy('sort_order')->get(),
             'pools' => PoolAccount::orderBy('account_ref')->get(),
             'spotUsd' => $spotUsd,
-            'spotInr' => $spotInr,
             'spotHoldings' => $spotHoldings,
             'spotTrades' => $spotTrades,
-            'usSpotPnl' => $spotPnl('USD'),
-            'inrSpotPnl' => $spotPnl('INR'),
+            'spotPnl' => $spotPnl,
         ]);
     }
 

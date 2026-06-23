@@ -23,13 +23,13 @@
         </div>
     </div>
 
-    {{-- Per-product overview: Mutual Fund · Spot NYSE (USD) · Spot BSE (INR) --}}
+    {{-- Per-product overview: Mutual Fund · Spot (single USD) --}}
     @php
         $mfCapital = (float) $client->totalDeposited();
         $mfBalance = $mfCapital + (float) $cpnl;
-        $usBal = (float) $spotUsd->balance; $inrBal = (float) $spotInr->balance;
+        $usBal = (float) $spotUsd->balance;
     @endphp
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <div class="bg-white shadow rounded-xl p-5 border-l-4 border-emerald-500">
             <p class="text-xs font-semibold text-emerald-700"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund (USD)</p>
             <div class="flex justify-between mt-2">
@@ -38,17 +38,10 @@
             </div>
         </div>
         <div class="bg-white shadow rounded-xl p-5 border-l-4 border-blue-500">
-            <p class="text-xs font-semibold text-blue-700"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot · NYSE — US/Global/Crypto (USD)</p>
+            <p class="text-xs font-semibold text-blue-700"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading (USD)</p>
             <div class="flex justify-between mt-2">
-                <div><p class="text-[11px] text-gray-400">Balance</p><p class="text-lg font-bold text-gray-900">${{ number_format($usBal, 2) }}</p></div>
-                <div class="text-right"><p class="text-[11px] text-gray-400">P&L</p><p class="text-lg font-bold {{ $usSpotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($usSpotPnl < 0 ? '-' : '+') }}${{ number_format(abs($usSpotPnl), 2) }}</p></div>
-            </div>
-        </div>
-        <div class="bg-white shadow rounded-xl p-5 border-l-4 border-orange-500">
-            <p class="text-xs font-semibold text-orange-700"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot · BSE — India (INR)</p>
-            <div class="flex justify-between mt-2">
-                <div><p class="text-[11px] text-gray-400">Balance</p><p class="text-lg font-bold text-gray-900">₹{{ number_format($inrBal, 2) }}</p></div>
-                <div class="text-right"><p class="text-[11px] text-gray-400">P&L</p><p class="text-lg font-bold {{ $inrSpotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($inrSpotPnl < 0 ? '-' : '+') }}₹{{ number_format(abs($inrSpotPnl), 2) }}</p></div>
+                <div><p class="text-[11px] text-gray-400">Wallet</p><p class="text-lg font-bold text-gray-900">${{ number_format($usBal, 2) }}</p></div>
+                <div class="text-right"><p class="text-[11px] text-gray-400">P&L</p><p class="text-lg font-bold {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl < 0 ? '-' : '+') }}${{ number_format(abs($spotPnl), 2) }}</p></div>
             </div>
         </div>
     </div>
@@ -150,25 +143,26 @@
                 </div>
             </div>
 
-            {{-- Spot Trading (manage US + India wallets here) --}}
+            {{-- Spot Trading (single USD wallet) --}}
             <div class="bg-white shadow rounded-xl p-6" id="spot">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading</h3>
-                    <form method="POST" action="{{ route('admin.spot.reset', $client) }}" onsubmit="return confirm('Reset spot account? Wallets set to 0 and all spot holdings/orders/trades deleted.')">
+                    <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading (USD)</h3>
+                    <form method="POST" action="{{ route('admin.spot.reset', $client) }}" onsubmit="return confirm('Reset spot account? Wallet set to 0 and all spot holdings/orders/trades deleted.')">
                         @csrf<button class="text-xs text-red-600 hover:underline">Reset spot account</button>
                     </form>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">USD wallet</p><p class="text-xl font-bold text-gray-900">${{ number_format((float)$spotUsd->balance,2) }}</p></div>
-                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">INR wallet</p><p class="text-xl font-bold text-gray-900">₹{{ number_format((float)$spotInr->balance,2) }}</p></div>
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">Unrealized P&L</p><p class="text-xl font-bold {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl<0?'-':'+') }}${{ number_format(abs($spotPnl),2) }}</p></div>
                 </div>
-                <form method="POST" action="{{ route('admin.spot.adjust', $client) }}" class="grid grid-cols-4 gap-2 text-sm mb-4">
+                <form method="POST" action="{{ route('admin.spot.adjust', $client) }}" class="grid grid-cols-4 gap-2 text-sm mb-1">
                     @csrf
-                    <select name="currency" class="border-gray-300 rounded-md"><option value="USD">USD</option><option value="INR">INR</option></select>
+                    <input type="hidden" name="currency" value="USD">
                     <select name="direction" class="border-gray-300 rounded-md"><option value="credit">Credit +</option><option value="debit">Debit −</option></select>
-                    <input type="number" step="0.01" name="amount" placeholder="0.00" class="border-gray-300 rounded-md" required>
+                    <input type="number" step="0.01" name="amount" placeholder="USD 0.00" class="border-gray-300 rounded-md col-span-2" required>
                     <button class="px-3 py-2 bg-emerald-600 text-white rounded-md">Apply</button>
                 </form>
+                <p class="text-[11px] text-gray-400 mb-4">Wallet is USD. To fund from an INR amount, convert first or use Add transaction → “enter INR”.</p>
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>

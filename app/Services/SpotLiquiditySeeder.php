@@ -35,10 +35,13 @@ class SpotLiquiditySeeder
     public function seed(SpotInstrument $ins): bool
     {
         $q = $this->td->quote($ins->symbol, $ins->exchange) ?? $this->td->price($ins->symbol, $ins->exchange);
-        $price = (float) ($q['close'] ?? $q['price'] ?? 0);
-        if ($price <= 0) {
+        $native = (float) ($q['close'] ?? $q['price'] ?? 0);
+        if ($native <= 0) {
             return false;
         }
+
+        // Single USD base: store every instrument's price in USD (INR markets converted).
+        $price = round($this->engine->toUsd($native, $ins->currency), 6);
 
         $ins->update(['last_price' => $price]);
 

@@ -25,6 +25,7 @@ class SpotInstrument extends Model
 
     public function currencySymbol(): string
     {
-        return ($this->currency ?: 'USD') === 'INR' ? '₹' : '$';
+        // Single USD base: all spot prices are stored & displayed in USD.
+        return '$';
     }
 }

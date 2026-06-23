@@ -19,6 +19,26 @@ class SpotTradingService
 {
     private const EPS = 0.0000001;
 
+    /** Live USD/INR rate (cached 1h, fallback 84). */
+    public function usdInr(): float
+    {
+        return (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
+            return (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
+        }) ?: 84.0;
+    }
+
+    /** Convert a native amount/price to the single USD base. */
+    public function toUsd(float $amount, ?string $currency): float
+    {
+        if ($currency === 'INR') {
+            $r = $this->usdInr();
+
+            return $r > 0 ? $amount / $r : $amount / 84;
+        }
+
+        return $amount; // already USD
+    }
+
     /** Credit / debit a client's spot wallet for a given currency (used by funding + admin). */
     public function adjustBalance(int $userId, float $delta, string $currency = 'USD'): SpotAccount
     {
@@ -43,7 +63,7 @@ class SpotTradingService
             throw new RuntimeException('Limit orders need a price.');
         }
 
-        $cur = $instrument->currency ?: 'USD';
+        $cur = 'USD'; // single USD base — instrument prices are stored in USD
 
         return DB::transaction(function () use ($userId, $instrument, $side, $type, $price, $qty, $cur) {
             $acc = SpotAccount::lockForUpdate()->firstOrCreate(['user_id' => $userId, 'currency' => $cur], ['balance' => 0]);
@@ -125,7 +145,7 @@ class SpotTradingService
 
             // Cap a market BUY by the taker's remaining balance (in the instrument's currency).
             if ($taker->side === 'buy') {
-                $bal = (float) SpotAccount::where('user_id', $taker->user_id)->where('currency', $instrument->currency ?: 'USD')->value('balance');
+                $bal = (float) SpotAccount::where('user_id', $taker->user_id)->where('currency', 'USD')->value('balance');
                 $affordable = $mp > 0 ? $bal / $mp : 0;
                 $fill = min($fill, $affordable);
             }
@@ -164,7 +184,7 @@ class SpotTradingService
         }
 
         $cash = $qty * $price;
-        $cur = $instrument->currency ?: 'USD';
+        $cur = 'USD'; // prices are stored in USD; the spot wallet is single-currency USD
 
         // Buyer (skip if house maker).
         if ($buy->user_id) {
@@ -210,7 +230,7 @@ class SpotTradingService
         if ($livePrice <= 0) {
             return 0;
         }
-        $cur = $instrument->currency ?: 'USD';
+        $cur = 'USD';
         $touched = 0;
 
         DB::transaction(function () use ($instrument, $livePrice, $cur, &$touched) {

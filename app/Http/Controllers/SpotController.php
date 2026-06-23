@@ -20,18 +20,15 @@ class SpotController extends Controller
         $selected = $instruments->firstWhere('symbol', $request->get('symbol'))
             ?? ($request->get('market') ? $instruments->firstWhere('market', $request->get('market')) : null)
             ?? $instruments->first();
-        $cur = $selected->currency ?? 'USD';
+        $cur = 'USD'; // single USD base — every spot price/balance is in USD now
 
         $user = $request->user();
-        $usd = $this->svc->account($user->id, 'USD');
-        $inr = $this->svc->account($user->id, 'INR');
-        $account = $cur === 'INR' ? $inr : $usd;
+        $account = $this->svc->account($user->id, 'USD');
         $holdings = SpotHolding::with('instrument')->where('user_id', $user->id)->where('qty', '>', 0)->get();
 
-        // Spot P&L for the ACTIVE currency — kept entirely separate from the mutual-fund pool.
-        $curHoldings = $holdings->filter(fn ($h) => ($h->instrument->currency ?: 'USD') === $cur);
-        $holdingsValue = $curHoldings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price));
-        $holdingsCost = $curHoldings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price);
+        // Spot P&L (all holdings, USD) — kept entirely separate from the mutual-fund pool.
+        $holdingsValue = $holdings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price));
+        $holdingsCost = $holdings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price);
         $unrealized = round($holdingsValue - $holdingsCost, 2);
         $equity = round((float) $account->balance + $holdingsValue, 2);
         $orders = SpotOrder::with('instrument')->where('user_id', $user->id)
@@ -39,7 +36,7 @@ class SpotController extends Controller
         $trades = SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
             ->latest('id')->limit(20)->get();
 
-        return view('client.spot.index', compact('instruments', 'selected', 'cur', 'usd', 'inr', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity'));
+        return view('client.spot.index', compact('instruments', 'selected', 'cur', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity'));
     }
 
     /** Live quote (price + change) for one instrument. */
@@ -49,7 +46,8 @@ class SpotController extends Controller
         // /price is the most real-time value; /quote gives the day change %.
         $p = $this->td->price($ins->symbol, $ins->exchange);
         $q = $this->td->quote($ins->symbol, $ins->exchange);
-        $price = (float) ($p['price'] ?? $q['close'] ?? $ins->last_price ?? 0);
+        $native = (float) ($p['price'] ?? $q['close'] ?? 0);
+        $price = $native > 0 ? round($this->svc->toUsd($native, $ins->currency), 6) : (float) $ins->last_price;
 
         // Auto-execute any resting limit orders the live price has now reached.
         if ($price > 0) {
@@ -72,7 +70,7 @@ class SpotController extends Controller
         $data = $this->td->timeSeries($ins->symbol, $interval, 90, $ins->exchange);
         $values = collect($data['values'] ?? [])->reverse()->values()->map(fn ($c) => [
             'time' => $c['datetime'],
-            'close' => (float) $c['close'],
+            'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
         ]);
 
         return response()->json(['values' => $values]);
