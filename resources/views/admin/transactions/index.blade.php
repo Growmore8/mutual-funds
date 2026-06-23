@@ -123,6 +123,14 @@
                             <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
                         <div>
+                            <label class="block text-gray-700 mb-1">Book to</label>
+                            <select name="destination" class="w-full border-gray-300 rounded-md">
+                                <option value="fund">Mutual Fund (account)</option>
+                                <option value="spot_usd">Spot Trading · US/Global (USD)</option>
+                                <option value="spot_inr">Spot Trading · India (INR)</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-gray-700 mb-1">Type</label>
                             <select name="type" class="w-full border-gray-300 rounded-md">
                                 @foreach (['deposit','withdrawal','reversal','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach

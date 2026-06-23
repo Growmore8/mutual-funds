@@ -59,10 +59,27 @@ class TransactionController extends Controller
             'type' => ['required', 'in:deposit,withdrawal,profit,fee,reversal,adjustment'],
             'amount' => ['required', 'numeric'],
             'description' => ['nullable', 'string', 'max:255'],
+            'destination' => ['nullable', 'in:fund,spot_usd,spot_inr'],
         ]);
 
         $account = FundAccount::findOrFail($data['fund_account_id']);
         $user = $account->user;
+
+        // Book to a Spot wallet instead of the mutual-fund ledger when chosen.
+        $destination = $data['destination'] ?? 'fund';
+        if ($destination !== 'fund') {
+            $currency = $destination === 'spot_inr' ? 'INR' : 'USD';
+            $signed = in_array($data['type'], ['withdrawal', 'fee']) ? -abs($data['amount']) : abs($data['amount']);
+            app(\App\Services\SpotTradingService::class)->adjustBalance($user->id, $signed, $currency);
+
+            $sym = $currency === 'INR' ? '₹' : '$';
+            AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
+                ucfirst($data['type']) . ' · Spot ' . $currency,
+                ($signed < 0 ? '-' : '+') . $sym . number_format(abs($signed), 2) . ' on your Spot ' . $currency . ' wallet.',
+                route('spot.index'));
+
+            return back()->with('status', ucfirst($data['type']) . ' booked to ' . $user->name . "'s Spot {$currency} wallet.");
+        }
 
         // Balance runs per fund account.
         $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
