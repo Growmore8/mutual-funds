@@ -78,55 +78,6 @@
         </div>
     </div>
 
-    {{-- Total portfolio P&L (Mutual Fund + US spot + India spot, converted to USD) --}}
-    @php $tp = $totalPnlUsd ?? 0; @endphp
-    <div class="gcard rounded-2xl p-4 mb-3 bg-white dark:bg-white/[0.04]">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Total Portfolio P&L <span class="text-[10px]">(all accounts · USD)</span></p>
-        <p class="text-3xl font-extrabold {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }} mt-0.5">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</p>
-        <p class="text-[11px] text-gray-400">USD/INR ≈ {{ number_format($usdInr ?? 0, 2) }} · India P&L converted at this rate</p>
-    </div>
-
-    {{-- Per-product cards — click opens that product (page + market + transactions) --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        {{-- Mutual Fund --}}
-        <a href="{{ route('client.transactions') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] border border-emerald-200 dark:border-emerald-500/20 block">
-            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund <span class="text-[10px]">USD</span></p>
-            <p class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">{{ $money($investment) }}</p>
-            <p class="text-xs {{ $runningPnl < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
-        </a>
-        {{-- US / Global spot --}}
-        <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> US / Global Spot <span class="text-[10px]">USD</span></p>
-            <p class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">${{ number_format($spotUsd ?? 0, 2) }}</p>
-            <p class="text-xs {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
-        </a>
-        {{-- India spot --}}
-        <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> India Spot <span class="text-[10px]">INR</span></p>
-            <p class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">₹{{ number_format($spotInr ?? 0, 2) }}</p>
-            <p class="text-xs {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
-        </a>
-    </div>
-
-    {{-- Easy withdraw: pick the account, go straight to its withdrawal flow --}}
-    <div class="gcard rounded-2xl p-4 mb-6 bg-white dark:bg-white/[0.04]">
-        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2"><i class="fa-solid fa-money-bill-transfer text-emerald-500 mr-1"></i> Withdraw — choose account</p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <a href="{{ route('withdraw.create') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-emerald-400 text-sm">
-                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</span>
-                <span class="text-gray-400">{{ $money($withdrawable) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
-            </a>
-            <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-blue-400 text-sm">
-                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> US Spot</span>
-                <span class="text-gray-400">${{ number_format($spotUsd ?? 0,2) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
-            </a>
-            <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-orange-400 text-sm">
-                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> India Spot</span>
-                <span class="text-gray-400">₹{{ number_format($spotInr ?? 0,2) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
-            </a>
-        </div>
-    </div>
-
     {{-- Balance + performance chart (exchange-style hero) --}}
     @php
         $hcoords = [];
@@ -173,6 +124,39 @@
             <div class="h-36 mt-4 grid place-items-center text-sm text-gray-400 text-center">Your performance chart appears once the pool starts distributing daily profit.</div>
         @endif
         <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Running P&amp;L movements</p>
+    </div>
+
+    {{-- Compact 4-card overview (click opens each product) --}}
+    @php $tp = $totalPnlUsd ?? 0; @endphp
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
+            <p class="text-[11px] text-gray-500 dark:text-gray-400">Total P&L <span class="text-[9px]">USD</span></p>
+            <p class="text-base font-extrabold {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }} mt-0.5">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</p>
+            <p class="text-[9px] text-gray-400">₹ @ {{ number_format($usdInr ?? 0, 1) }}</p>
+        </div>
+        <a href="{{ route('client.transactions') }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
+            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-layer-group text-emerald-500"></i> Mutual Fund</p>
+            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">{{ $money($investment) }}</p>
+            <p class="text-[10px] {{ $runningPnl < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
+        </a>
+        <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
+            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-blue-500"></i> US Spot</p>
+            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
+            <p class="text-[10px] {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
+        </a>
+        <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
+            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-orange-500"></i> India Spot</p>
+            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
+            <p class="text-[10px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
+        </a>
+    </div>
+
+    {{-- Slim withdraw chooser --}}
+    <div class="flex flex-wrap gap-2 mb-6 text-xs">
+        <span class="text-gray-400 self-center mr-1"><i class="fa-solid fa-money-bill-transfer"></i> Withdraw:</span>
+        <a href="{{ route('withdraw.create') }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-emerald-400">Mutual Fund</a>
+        <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-blue-400">US Spot</a>
+        <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-orange-400">India Spot</a>
     </div>
 
     @php

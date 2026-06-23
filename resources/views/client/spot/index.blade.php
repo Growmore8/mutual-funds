@@ -144,7 +144,6 @@
         {{-- Orders / Holdings / Trades — mobile (below everything) --}}
         <div x-data="{ tab:'holdings' }" class="lg:hidden mt-4 px-1">
             <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
-                <button @click="tab='orders'" :class="tab==='orders'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Orders ({{ $orders->count() }})</button>
                 <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
                 <button @click="tab='trades'" :class="tab==='trades'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Trades</button>
             </div>
