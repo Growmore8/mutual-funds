@@ -20,6 +20,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    // Spot Trading market data — SEPARATE from the mutual-fund / CubeX pool API.
+    'twelvedata' => [
+        'spot_key' => env('TWELVEDATA_SPOT_KEY'),
+    ],
+
     'webpush' => [
         'public_key' => env('VAPID_PUBLIC_KEY'),
         'private_key' => env('VAPID_PRIVATE_KEY'),
