@@ -5,15 +5,20 @@
         {{-- Request form --}}
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-2xl shadow-sm p-6">
-                <div class="flex items-center justify-between mb-1">
-                    <h2 class="text-lg font-semibold text-gray-900">Withdraw profit</h2>
-                    <span class="text-xs text-gray-400"><i class="fa-solid fa-lock"></i> Capital stays invested</span>
-                </div>
-                <p class="text-sm text-gray-500 mb-5">You can withdraw your accumulated <strong>profit</strong>. Requests are reviewed by our team before payout.</p>
+                @php $isSpot = ($purpose ?? 'fund') === 'spot'; @endphp
+                <h2 class="text-lg font-semibold text-gray-900 mb-3">{{ $isSpot ? 'Withdraw — Spot Trading' : 'Withdraw profit' }}</h2>
 
-                <div class="rounded-xl bg-emerald-50 p-4 mb-5">
-                    <p class="text-xs text-gray-500">Available to withdraw</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $money($available) }}</p>
+                {{-- Withdraw from: Mutual Fund or Spot Trading --}}
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <a href="{{ route('withdraw.create') }}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold {{ !$isSpot ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-layer-group"></i> Mutual Fund</a>
+                    <a href="{{ route('withdraw.create', ['for' => 'spot']) }}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold {{ $isSpot ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading</a>
+                </div>
+
+                <p class="text-sm text-gray-500 mb-5">{{ $isSpot ? 'Withdraw cash from your Spot Trading balance.' : 'You can withdraw your accumulated profit. Your capital stays invested.' }} Requests are reviewed before payout.</p>
+
+                <div class="rounded-xl {{ $isSpot ? 'bg-blue-50' : 'bg-emerald-50' }} p-4 mb-5">
+                    <p class="text-xs text-gray-500">{{ $isSpot ? 'Spot balance available' : 'Available to withdraw' }}</p>
+                    <p class="text-2xl font-bold {{ $isSpot ? 'text-blue-600' : 'text-emerald-600' }}">{{ $money($available) }}</p>
                 </div>
 
                 @if ($errors->any())
@@ -27,6 +32,7 @@
                 @endif
                 <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm">
                     @csrf
+                    <input type="hidden" name="purpose" value="{{ $purpose ?? 'fund' }}">
                     <div>
                         <label class="block text-gray-700 mb-1">Amount (USD)</label>
                         <input type="number" step="0.01" min="1" @if($available > 0) max="{{ $available }}" @endif name="amount" value="{{ old('amount') }}" required

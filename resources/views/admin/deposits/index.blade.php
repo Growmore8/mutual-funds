@@ -23,7 +23,11 @@
                             <div class="font-medium text-gray-900">{{ $d->user->name ?? '—' }}</div>
                             <div class="text-gray-400 text-xs font-mono">{{ $d->user?->clientCode() }}</div>
                             <div class="text-gray-400 text-xs">{{ $d->user->email ?? '' }}</div>
-                            @if ($d->fundAccount)<div class="mt-1 inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ $d->fundAccount->code() }} · {{ $d->fundAccount->label }}</div>@endif
+                            @if (($d->purpose ?? 'fund') === 'spot')
+                                <div class="mt-1 inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading</div>
+                            @elseif ($d->fundAccount)
+                                <div class="mt-1 inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ $d->fundAccount->code() }} · {{ $d->fundAccount->label }}</div>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-gray-600">{{ $d->method ?? '—' }}</td>
                         <td class="px-4 py-3 font-medium">${{ number_format((float)$d->amount,2) }}</td>

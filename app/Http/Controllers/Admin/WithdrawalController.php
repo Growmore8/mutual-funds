@@ -28,6 +28,16 @@ class WithdrawalController extends Controller
             return back()->with('status', 'This request is already ' . $withdrawal->status . '.');
         }
 
+        // Spot withdrawals debit the spot wallet (separate from the mutual-fund pool).
+        if ($withdrawal->purpose === 'spot') {
+            app(\App\Services\SpotTradingService::class)->adjustBalance($withdrawal->user_id, -1 * (float) $withdrawal->amount);
+            $withdrawal->update(['status' => 'approved', 'processed_at' => now(), 'admin_note' => $request->input('admin_note')]);
+            $amt = '$' . number_format((float) $withdrawal->amount, 2);
+            \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Spot withdrawal approved', $amt . ' debited from your Spot balance.', route('spot.index'));
+
+            return back()->with('status', 'Spot withdrawal approved and trading balance debited.');
+        }
+
         DB::transaction(function () use ($withdrawal, $request) {
             $last = Transaction::where('fund_account_id', $withdrawal->fund_account_id)->latest('id')->first();
             $balanceAfter = round((float) ($last->balance_after ?? 0) - (float) $withdrawal->amount, 2);

@@ -28,7 +28,7 @@
                 @forelse ($withdrawals as $w)
                     <tr>
                         <td class="px-4 py-3 text-gray-400 text-xs">{{ $w->created_at->format('d M Y') }}<br>{{ $w->created_at->format('h:i A') }}</td>
-                        <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $w->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $w->user?->clientCode() }}</div><div class="text-gray-400 text-xs">{{ $w->user->email ?? '' }}</div>@if ($w->fundAccount)<div class="mt-1 inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ $w->fundAccount->code() }} · {{ $w->fundAccount->label }}</div>@endif</td>
+                        <td class="px-4 py-3"><div class="font-medium text-gray-900">{{ $w->user->name ?? '—' }}</div><div class="text-gray-400 text-xs font-mono">{{ $w->user?->clientCode() }}</div><div class="text-gray-400 text-xs">{{ $w->user->email ?? '' }}</div>@if (($w->purpose ?? 'fund') === 'spot')<div class="mt-1 inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading</div>@elseif ($w->fundAccount)<div class="mt-1 inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ $w->fundAccount->code() }} · {{ $w->fundAccount->label }}</div>@endif</td>
                         <td class="px-4 py-3 font-semibold">{{ $money($w->amount) }}</td>
                         <td class="px-4 py-3 text-gray-600"><div>{{ $w->method }}</div><div class="text-xs text-gray-400 max-w-xs whitespace-pre-line">{{ $w->payout_details }}</div></td>
                         <td class="px-4 py-3">

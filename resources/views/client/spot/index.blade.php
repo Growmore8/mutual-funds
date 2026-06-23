@@ -107,7 +107,7 @@
         {{-- Funds shortcut --}}
         <div class="flex gap-2 px-1 mt-3">
             <a href="{{ route('client.deposit.create', ['for' => 'spot']) }}" class="flex-1 text-center py-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 text-sm font-semibold"><i class="fa-solid fa-plus mr-1"></i> Add funds</a>
-            <a href="{{ route('withdraw.create') }}" class="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 text-sm font-semibold">Withdraw</a>
+            <a href="{{ route('withdraw.create', ['for' => 'spot']) }}" class="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 text-sm font-semibold">Withdraw</a>
         </div>
 
         {{-- Collapsible chart --}}
