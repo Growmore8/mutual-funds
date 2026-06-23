@@ -108,6 +108,25 @@
         </a>
     </div>
 
+    {{-- Easy withdraw: pick the account, go straight to its withdrawal flow --}}
+    <div class="gcard rounded-2xl p-4 mb-6 bg-white dark:bg-white/[0.04]">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2"><i class="fa-solid fa-money-bill-transfer text-emerald-500 mr-1"></i> Withdraw — choose account</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <a href="{{ route('withdraw.create') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-emerald-400 text-sm">
+                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</span>
+                <span class="text-gray-400">{{ $money($withdrawable) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
+            </a>
+            <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-blue-400 text-sm">
+                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> US Spot</span>
+                <span class="text-gray-400">${{ number_format($spotUsd ?? 0,2) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
+            </a>
+            <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 hover:border-orange-400 text-sm">
+                <span class="text-gray-700 dark:text-gray-200"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> India Spot</span>
+                <span class="text-gray-400">₹{{ number_format($spotInr ?? 0,2) }} <i class="fa-solid fa-chevron-right text-xs"></i></span>
+            </a>
+        </div>
+    </div>
+
     {{-- Balance + performance chart (exchange-style hero) --}}
     @php
         $hcoords = [];
