@@ -1,5 +1,5 @@
 <x-admin-layout title="Transactions">
-    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
+    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, transfer:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
         {{-- Tabs on top --}}
         <div class="p-4 pb-0 flex items-center gap-2">
             <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
@@ -23,6 +23,7 @@
                     <a href="{{ route('admin.transactions.index') }}" class="px-4 py-2 border rounded-md text-gray-600">Clear</a>
                 @endif
             </form>
+            <button type="button" @click="transfer=true" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm"><i class="fa-solid fa-right-left mr-1"></i> Transfer</button>
             <button type="button" @click="add=true" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add transaction</button>
         </div>
 
@@ -214,6 +215,50 @@
                         <div class="flex gap-2 pt-2">
                             <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save</button>
                             <button type="button" @click="add=false" class="px-4 py-2 border rounded-md text-gray-600">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Within-account Transfer modal (Mutual Fund ⟷ Spot) --}}
+            <div x-show="transfer" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/40" @click="transfer=false"></div>
+                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4"><i class="fa-solid fa-right-left text-blue-600 mr-1"></i> Within Account Transfer</h3>
+                    <form method="POST" action="{{ route('admin.transactions.transfer') }}" class="space-y-3 text-sm"
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dir:'mf_to_spot',
+                                    get fromLabel(){ return this.dir==='mf_to_spot' ? 'Mutual Fund (profit)' : 'Spot wallet'; },
+                                    get toLabel(){ return this.dir==='mf_to_spot' ? 'Spot wallet' : 'Mutual Fund'; },
+                                    flip(){ this.dir = this.dir==='mf_to_spot' ? 'spot_to_mf' : 'mf_to_spot'; } }">
+                        @csrf
+                        <input type="hidden" name="direction" :value="dir">
+                        <div class="relative">
+                            <label class="block text-gray-700 mb-1">Client account</label>
+                            <input type="hidden" name="fund_account_id" :value="sel ? sel.id : ''" required>
+                            <input type="text" x-model="q" @focus="open=true" @click="open=true"
+                                   :placeholder="sel ? sel.label : 'Type a name, GC ID or GCA account…'"
+                                   class="w-full border-gray-300 rounded-md" autocomplete="off">
+                            <div x-show="open" @click.outside="open=false" x-cloak
+                                 class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
+                                <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
+                                    <button type="button" @click="sel=a; q=''; open=false" class="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-100 dark:hover:bg-white/10" x-text="a.label"></button>
+                                </template>
+                            </div>
+                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 mt-1">Selected: <span x-text="sel?.label"></span></p>
+                        </div>
+
+                        {{-- From → To with flip --}}
+                        <div class="relative border border-gray-200 rounded-lg px-3">
+                            <div class="flex items-center justify-between py-3 border-b border-gray-100"><span class="text-xs text-gray-400 w-12">From</span><span class="font-semibold text-gray-900" x-text="fromLabel"></span></div>
+                            <button type="button" @click="flip()" class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 w-8 h-8 grid place-items-center rounded-full bg-blue-600 text-white shadow"><i class="fa-solid fa-arrow-down-up-across-line text-xs"></i></button>
+                            <div class="flex items-center justify-between py-3"><span class="text-xs text-gray-400 w-12">To</span><span class="font-semibold text-gray-900" x-text="toLabel"></span></div>
+                        </div>
+                        <p class="text-[11px] text-amber-600" x-show="dir==='mf_to_spot'" x-cloak><i class="fa-solid fa-circle-info"></i> Only mutual-fund profit can be moved (not invested capital).</p>
+
+                        <div><label class="block text-gray-700 mb-1">Amount (USD)</label><input type="number" step="0.01" min="0.01" name="amount" class="w-full border-gray-300 rounded-md" placeholder="$ 0.00" required></div>
+                        <div class="flex gap-2 pt-2">
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-md">Transfer</button>
+                            <button type="button" @click="transfer=false" class="px-4 py-2 border rounded-md text-gray-600">Cancel</button>
                         </div>
                     </form>
                 </div>

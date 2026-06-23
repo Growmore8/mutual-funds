@@ -191,6 +191,62 @@ class TransactionController extends Controller
         return back()->with('status', 'Transaction recorded to ' . $account->code() . '.');
     }
 
+    /** Move a client's funds between Mutual Fund and Spot (single USD base). */
+    public function transfer(Request $request)
+    {
+        $data = $request->validate([
+            'fund_account_id' => ['required', 'exists:fund_accounts,id'],
+            'direction' => ['required', 'in:mf_to_spot,spot_to_mf'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $account = FundAccount::findOrFail($data['fund_account_id']);
+        $user = $account->user;
+        $amount = round((float) $data['amount'], 2);
+        $spot = app(\App\Services\SpotTradingService::class);
+
+        if ($data['direction'] === 'mf_to_spot') {
+            $max = $account->availableToWithdraw();
+            if ($amount > $max + 0.001) {
+                return back()->with('status', "Only mutual-fund profit can be moved (max $" . number_format($max, 2) . ' for ' . $account->code() . ').');
+            }
+            $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
+            $tx = Transaction::create([
+                'user_id' => $user->id, 'fund_account_id' => $account->id, 'type' => 'withdrawal',
+                'amount' => -$amount, 'currency' => 'USD',
+                'balance_after' => round((float) ($last->balance_after ?? 0) - $amount, 2),
+                'status' => 'completed', 'description' => 'Transfer to Spot wallet (admin)',
+            ]);
+            $wd = Withdrawal::create(['user_id' => $user->id, 'fund_account_id' => $account->id, 'purpose' => 'fund',
+                'amount' => $amount, 'currency' => 'USD', 'method' => 'Internal transfer to Spot', 'status' => 'approved', 'processed_at' => now()]);
+            $tx->update(['source_type' => Withdrawal::class, 'source_id' => $wd->id]);
+            $spot->adjustBalance($user->id, $amount, 'USD');
+
+            return back()->with('status', '$' . number_format($amount, 2) . ' moved from Mutual Fund to Spot for ' . $user->name . '.');
+        }
+
+        // spot_to_mf
+        $spotBal = (float) $spot->account($user->id, 'USD')->balance;
+        if ($amount > $spotBal + 0.001) {
+            return back()->with('status', 'Insufficient Spot balance ($' . number_format($spotBal, 2) . ') for ' . $user->name . '.');
+        }
+        $spot->adjustBalance($user->id, -$amount, 'USD');
+        $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
+        $tx = Transaction::create([
+            'user_id' => $user->id, 'fund_account_id' => $account->id, 'type' => 'deposit',
+            'amount' => $amount, 'currency' => 'USD',
+            'balance_after' => round((float) ($last->balance_after ?? 0) + $amount, 2),
+            'status' => 'completed', 'description' => 'Transfer from Spot wallet (admin)',
+        ]);
+        $dep = Deposit::create(['user_id' => $user->id, 'fund_account_id' => $account->id,
+            'pool_account_id' => $account->pool_account_id, 'account_type_id' => $account->account_type_id,
+            'amount' => $amount, 'currency' => 'USD', 'status' => 'approved', 'value_date' => now()->toDateString(), 'approved_at' => now()]);
+        $tx->update(['source_type' => Deposit::class, 'source_id' => $dep->id]);
+        $account->recalcPlan();
+
+        return back()->with('status', '$' . number_format($amount, 2) . ' moved from Spot to Mutual Fund for ' . $user->name . '.');
+    }
+
     public function update(Request $request, Transaction $transaction)
     {
         $data = $request->validate([
