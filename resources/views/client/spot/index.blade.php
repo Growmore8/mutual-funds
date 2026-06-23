@@ -92,6 +92,7 @@
                 <div x-data="{ tab:'holdings' }" class="hidden lg:block mt-4">
                     <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
                         <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
+                        <button @click="tab='orders'" :class="tab==='orders'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Open orders</button>
                         <button @click="tab='trades'" :class="tab==='trades'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Trades</button>
                     </div>
                     @include('client.spot._tabs')
@@ -107,7 +108,16 @@
                             <button @click="side='buy'"  :class="side==='buy'  ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Buy</button>
                             <button @click="side='sell'" :class="side==='sell' ? 'bg-red-500 text-white'     : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Sell</button>
                         </div>
-                        <div class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2 text-gray-400 text-center"><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Market order · fills at current price</div>
+                        {{-- Market / Limit --}}
+                        <div class="grid grid-cols-2 rounded-lg overflow-hidden mb-2 text-xs font-semibold border border-gray-200 dark:border-white/10">
+                            <button type="button" @click="otype='market'" :class="otype==='market' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Market</button>
+                            <button type="button" @click="otype='limit'; if(!oprice||oprice==0) oprice=price.toFixed(dp())" :class="otype==='limit' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Limit</button>
+                        </div>
+                        <div x-show="otype==='market'" class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs mb-2 text-gray-400 text-center"><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Fills at current market price</div>
+                        <div x-show="otype==='limit'" x-cloak class="mb-2">
+                            <label class="block text-[11px] text-gray-400 mb-1">Limit price ({{ $cs }})</label>
+                            <input x-model="oprice" type="number" step="any" min="0" inputmode="decimal" placeholder="Price" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm">
+                        </div>
                         <input x-model="oqty" type="number" step="any" min="0" inputmode="decimal" placeholder="Quantity ({{ $selected->symbol ?? '' }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
                         <div class="flex gap-1 mb-2">
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
@@ -151,6 +161,7 @@
         <div x-data="{ tab:'holdings' }" class="lg:hidden mt-4 px-1">
             <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
                 <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
+                <button @click="tab='orders'" :class="tab==='orders'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Open orders</button>
                 <button @click="tab='trades'" :class="tab==='trades'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Trades</button>
             </div>
             @include('client.spot._tabs')
@@ -169,7 +180,7 @@
                 dp(){ var p=Math.abs(this.price||0); return p>0 && p<10 ? 4 : 2; },
                 fmt(n){ var d=this.dp(); return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
                 init(){ if(!this.id) return; this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
-                cost(){ return (parseFloat(this.oqty)||0) * this.price; },
+                cost(){ const px = this.otype==='limit' ? (parseFloat(this.oprice)||0) : this.price; return (parseFloat(this.oqty)||0) * px; },
                 setPct(p){
                     if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
                     else { this.oqty=(this.holdingQty*p/100).toFixed(6); }

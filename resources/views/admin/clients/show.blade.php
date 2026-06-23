@@ -23,6 +23,36 @@
         </div>
     </div>
 
+    {{-- Per-product overview: Mutual Fund · Spot NYSE (USD) · Spot BSE (INR) --}}
+    @php
+        $mfCapital = (float) $client->totalDeposited();
+        $mfBalance = $mfCapital + (float) $cpnl;
+        $usBal = (float) $spotUsd->balance; $inrBal = (float) $spotInr->balance;
+    @endphp
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+        <div class="bg-white shadow rounded-xl p-5 border-l-4 border-emerald-500">
+            <p class="text-xs font-semibold text-emerald-700"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund (USD)</p>
+            <div class="flex justify-between mt-2">
+                <div><p class="text-[11px] text-gray-400">Capital</p><p class="text-lg font-bold text-gray-900">{{ $money($mfCapital) }}</p></div>
+                <div class="text-right"><p class="text-[11px] text-gray-400">Balance</p><p class="text-lg font-bold text-gray-900">{{ $money($mfBalance) }}</p></div>
+            </div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5 border-l-4 border-blue-500">
+            <p class="text-xs font-semibold text-blue-700"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot · NYSE — US/Global/Crypto (USD)</p>
+            <div class="flex justify-between mt-2">
+                <div><p class="text-[11px] text-gray-400">Balance</p><p class="text-lg font-bold text-gray-900">${{ number_format($usBal, 2) }}</p></div>
+                <div class="text-right"><p class="text-[11px] text-gray-400">P&L</p><p class="text-lg font-bold {{ $usSpotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($usSpotPnl < 0 ? '-' : '+') }}${{ number_format(abs($usSpotPnl), 2) }}</p></div>
+            </div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5 border-l-4 border-orange-500">
+            <p class="text-xs font-semibold text-orange-700"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot · BSE — India (INR)</p>
+            <div class="flex justify-between mt-2">
+                <div><p class="text-[11px] text-gray-400">Balance</p><p class="text-lg font-bold text-gray-900">₹{{ number_format($inrBal, 2) }}</p></div>
+                <div class="text-right"><p class="text-[11px] text-gray-400">P&L</p><p class="text-lg font-bold {{ $inrSpotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($inrSpotPnl < 0 ? '-' : '+') }}₹{{ number_format(abs($inrSpotPnl), 2) }}</p></div>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {{-- Edit client --}}
         <div class="bg-white shadow rounded-xl p-6 lg:col-span-1">
