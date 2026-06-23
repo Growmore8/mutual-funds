@@ -200,6 +200,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/support/{ticket}', [\App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
         Route::post('/support/{ticket}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])->name('support.reply');
 
+        // Spot Trading (separate module — uses Twelve Data, not the mutual-fund pool)
+        Route::get('/spot', [\App\Http\Controllers\SpotController::class, 'index'])->name('spot.index');
+        Route::get('/spot/quote', [\App\Http\Controllers\SpotController::class, 'quote'])->name('spot.quote');
+        Route::get('/spot/candles', [\App\Http\Controllers\SpotController::class, 'candles'])->name('spot.candles');
+        Route::get('/spot/book', [\App\Http\Controllers\SpotController::class, 'book'])->name('spot.book');
+        Route::post('/spot/order', [\App\Http\Controllers\SpotController::class, 'order'])->middleware('notlocked')->name('spot.order');
+        Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\SpotController::class, 'cancel'])->middleware('notlocked')->name('spot.cancel');
+
         // Profile (Breeze)
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -121,6 +121,7 @@
                 $head = '<p class="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">';
             @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $link(request()->routeIs('client.dashboard')) }}"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a>
+            <a href="{{ route('spot.index') }}" class="{{ $link(request()->routeIs('spot.*')) }}"><i class="fa-solid fa-arrow-trend-up w-5 text-center"></i> Spot Trading</a>
 
             {!! $head !!}Money</p>
             <a href="{{ route('client.deposit.create') }}" class="{{ $link(request()->routeIs('client.deposit.*')) }}"><i class="fa-solid fa-arrow-down w-5 text-center"></i> Deposit</a>
@@ -235,6 +236,9 @@
             </a>
             <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                 <i class="fa-solid fa-money-bill-transfer text-xl"></i><span class="text-sm font-medium">Withdraw</span>
+            </a>
+            <a href="{{ route('spot.index') }}" class="col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                <i class="fa-solid fa-arrow-trend-up"></i><span class="text-sm font-medium">Spot Trading</span>
             </a>
         </div>
     </div>
