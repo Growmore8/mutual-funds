@@ -44,8 +44,11 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
 
         return view('admin.dashboard', [
             'clients' => User::where('role', 'client')->count(),
-            'totalDeposits' => (float) \App\Models\Deposit::where('status', 'approved')->sum('amount'),
-            'totalWithdrawals' => (float) \App\Models\Withdrawal::where('status', 'approved')->sum('amount'),
+            'totalDeposits' => (float) \App\Models\Deposit::where('status', 'approved')->where('purpose', 'fund')->sum('amount'),
+            'totalWithdrawals' => (float) \App\Models\Withdrawal::where('status', 'approved')->where('purpose', 'fund')->sum('amount'),
+            'spotUsdTotal' => (float) \App\Models\SpotAccount::where('currency', 'USD')->sum('balance'),
+            'spotInrTotal' => (float) \App\Models\SpotAccount::where('currency', 'INR')->sum('balance'),
+            'spotTraders' => \App\Models\SpotAccount::where('balance', '>', 0)->distinct('user_id')->count('user_id'),
             'poolCount' => $pools->count(),
             'pendingRequests' => $pendingKyc + $pendingDeposits + $pendingWithdrawals + $pendingAccountRequests,
             'pendingKyc' => $pendingKyc,

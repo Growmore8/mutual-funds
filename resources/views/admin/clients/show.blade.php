@@ -120,6 +120,47 @@
                 </div>
             </div>
 
+            {{-- Spot Trading (manage US + India wallets here) --}}
+            <div class="bg-white shadow rounded-xl p-6" id="spot">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading</h3>
+                    <form method="POST" action="{{ route('admin.spot.reset', $client) }}" onsubmit="return confirm('Reset spot account? Wallets set to 0 and all spot holdings/orders/trades deleted.')">
+                        @csrf<button class="text-xs text-red-600 hover:underline">Reset spot account</button>
+                    </form>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">USD wallet</p><p class="text-xl font-bold text-gray-900">${{ number_format((float)$spotUsd->balance,2) }}</p></div>
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">INR wallet</p><p class="text-xl font-bold text-gray-900">₹{{ number_format((float)$spotInr->balance,2) }}</p></div>
+                </div>
+                <form method="POST" action="{{ route('admin.spot.adjust', $client) }}" class="grid grid-cols-4 gap-2 text-sm mb-4">
+                    @csrf
+                    <select name="currency" class="border-gray-300 rounded-md"><option value="USD">USD</option><option value="INR">INR</option></select>
+                    <select name="direction" class="border-gray-300 rounded-md"><option value="credit">Credit +</option><option value="debit">Debit −</option></select>
+                    <input type="number" step="0.01" name="amount" placeholder="0.00" class="border-gray-300 rounded-md" required>
+                    <button class="px-3 py-2 bg-emerald-600 text-white rounded-md">Apply</button>
+                </form>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 mb-1">Holdings</p>
+                        @forelse ($spotHoldings as $h)
+                            <div class="flex justify-between text-xs py-1 border-b border-gray-100 last:border-0"><span>{{ $h->instrument->symbol }} ×{{ rtrim(rtrim((string)$h->qty,'0'),'.') }}</span><span class="text-gray-400">avg {{ $h->instrument->currencySymbol() }}{{ number_format((float)$h->avg_price,2) }}</span></div>
+                        @empty <p class="text-xs text-gray-400 py-1">No holdings.</p> @endforelse
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 mb-1">Recent trades</p>
+                        @forelse ($spotTrades as $t)
+                            @php $isBuy = $t->buyer_id === $client->id; @endphp
+                            <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 last:border-0">
+                                <span class="{{ $isBuy?'text-emerald-600':'text-red-600' }}">{{ $isBuy?'Buy':'Sell' }} {{ $t->instrument->symbol }} ×{{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</span>
+                                <span class="flex items-center gap-2"><span class="text-gray-400">{{ $t->instrument->currencySymbol() }}{{ number_format((float)$t->price,2) }}</span>
+                                <form method="POST" action="{{ route('admin.spot.trade.delete', $t) }}" onsubmit="return confirm('Delete this trade and reverse its effect?')">@csrf<button class="text-red-600 hover:underline">del</button></form></span>
+                            </div>
+                        @empty <p class="text-xs text-gray-400 py-1">No trades.</p> @endforelse
+                    </div>
+                </div>
+            </div>
+
             {{-- Account requests --}}
             <div class="bg-white shadow rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Account requests</h3>

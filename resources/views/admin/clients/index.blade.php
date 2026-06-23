@@ -58,7 +58,7 @@
                         <td class="px-3 py-2">
                             <div class="flex items-center justify-end gap-1">
                                 <a href="{{ route('admin.clients.show',$c) }}" title="Mutual Fund manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
-                                <a href="{{ route('admin.spot.client',$c) }}" title="Spot Trading manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600"><i class="fa-solid fa-arrow-trend-up"></i></a>
+                                <a href="{{ route('admin.clients.show',$c) }}#spot" title="Spot Trading manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600"><i class="fa-solid fa-arrow-trend-up"></i></a>
 
                                 {{-- Lock / unlock (violation — view-only) --}}
                                 <form method="POST" action="{{ route('admin.clients.status',$c) }}">@csrf @method('PATCH')

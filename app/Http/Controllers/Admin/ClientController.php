@@ -74,10 +74,21 @@ class ClientController extends Controller
             'accountRequests.accountType',
         ]);
 
+        // Spot Trading (managed here too — one place per client).
+        $svc = app(\App\Services\SpotTradingService::class);
+        $spotUsd = $svc->account($client->id, 'USD');
+        $spotInr = $svc->account($client->id, 'INR');
+        $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $client->id)->where('qty', '>', 0)->get();
+        $spotTrades = \App\Models\SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))->latest('id')->limit(15)->get();
+
         return view('admin.clients.show', [
             'client' => $client,
             'accountTypes' => AccountType::orderBy('sort_order')->get(),
             'pools' => PoolAccount::orderBy('account_ref')->get(),
+            'spotUsd' => $spotUsd,
+            'spotInr' => $spotInr,
+            'spotHoldings' => $spotHoldings,
+            'spotTrades' => $spotTrades,
         ]);
     }
 

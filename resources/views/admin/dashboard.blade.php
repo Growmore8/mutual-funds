@@ -1,7 +1,8 @@
 <x-admin-layout title="Dashboard">
     @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
-    {{-- Stat cards --}}
+    {{-- Mutual Fund --}}
+    <h3 class="text-sm font-semibold text-gray-500 mb-2"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <a href="{{ route('admin.clients.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
             <p class="text-sm text-gray-500"><i class="fa-solid fa-users text-gray-400 mr-1"></i> Total clients</p>
@@ -23,6 +24,23 @@
             <p class="text-sm text-gray-500"><i class="fa-solid fa-inbox text-gray-400 mr-1"></i> Requests pending</p>
             <p class="text-3xl font-bold text-amber-600 mt-1">{{ $pendingRequests }}</p>
             <p class="text-[11px] text-gray-400 mt-1">KYC {{ $pendingKyc }} · Dep {{ $pendingDeposits }} · Wd {{ $pendingWithdrawals }} · Acc {{ $pendingAccountRequests }}</p>
+        </a>
+    </div>
+
+    {{-- Spot Trading --}}
+    <h3 class="text-sm font-semibold text-gray-500 mb-2 mt-6"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <a href="{{ route('admin.spot.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-dollar-sign text-gray-400 mr-1"></i> Spot wallets · USD</p>
+            <p class="text-3xl font-bold text-blue-600 mt-1">${{ number_format($spotUsdTotal ?? 0, 2) }}</p>
+        </a>
+        <a href="{{ route('admin.spot.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-indian-rupee-sign text-gray-400 mr-1"></i> Spot wallets · INR</p>
+            <p class="text-3xl font-bold text-orange-600 mt-1">₹{{ number_format($spotInrTotal ?? 0, 2) }}</p>
+        </a>
+        <a href="{{ route('admin.spot.index') }}" class="bg-white shadow rounded-xl p-5 hover:shadow-md transition">
+            <p class="text-sm text-gray-500"><i class="fa-solid fa-users text-gray-400 mr-1"></i> Spot traders</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $spotTraders ?? 0 }}</p>
         </a>
     </div>
 
