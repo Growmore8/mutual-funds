@@ -1,5 +1,5 @@
 <x-admin-layout title="Transactions">
-    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', f:{id:null,type:'profit',amount:0,description:''} }">
+    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
         {{-- Tabs on top --}}
         <div class="p-4 pb-0 flex items-center gap-2">
             <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
@@ -89,6 +89,12 @@
 
         {{-- ===== Spot Trading tab ===== --}}
         <div x-show="tab==='spot'" x-cloak>
+            <div class="px-4 pt-4 flex items-center gap-2 text-sm">
+                <span class="text-gray-500">Filter:</span>
+                @foreach (['all' => 'All', 'trade' => 'Trades', 'deposit' => 'Deposits', 'withdrawal' => 'Withdrawals'] as $k => $lbl)
+                    <button type="button" @click="spotKind='{{ $k }}'" :class="spotKind==='{{ $k }}' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'" class="px-3 py-1 rounded-full text-xs font-semibold">{{ $lbl }}</button>
+                @endforeach
+            </div>
             <div class="p-4">
                 <table class="min-w-full text-sm whitespace-nowrap">
                     <thead class="bg-gray-50 text-gray-500 text-left">
@@ -96,7 +102,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse ($spotItems as $s)
-                            <tr>
+                            <tr x-show="spotKind==='all' || spotKind==='{{ strtolower($s->kind) }}'">
                                 <td class="px-3 py-3 text-gray-400 text-xs">{{ $s->when->format('d M Y') }}<br>{{ $s->when->format('h:i A') }}</td>
                                 <td class="px-3 py-3 font-medium text-gray-900">{{ $s->client }}</td>
                                 <td class="px-3 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $s->kind }}</span></td>
