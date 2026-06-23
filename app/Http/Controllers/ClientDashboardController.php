@@ -119,22 +119,33 @@ class ClientDashboardController extends Controller
         // Combined portfolio P&L in USD (mutual fund + US spot + India spot converted).
         $totalPnlUsd = round($runningPnl + $usSpotPnl + ($usdInr > 0 ? $inrSpotPnl / $usdInr : 0), 2);
 
-        // Live FX rates (1 USD → currency) for the Binance-style currency switcher. Cached 1h.
-        $fxRates = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.map', 3600, function () {
-            $td = app(\App\Services\TwelveDataClient::class);
+        // Live FX rates (1 USD → currency) for the Binance-style currency switcher.
+        // One call returns ~160 currencies; we curate a wide list. Cached 6h.
+        $wanted = ['USD', 'AED', 'ARS', 'AUD', 'BDT', 'BHD', 'BOB', 'BRL', 'CAD', 'CHF', 'CLP', 'CNY', 'COP', 'CZK',
+            'DKK', 'EGP', 'EUR', 'GBP', 'GEL', 'HKD', 'HUF', 'IDR', 'ILS', 'INR', 'JPY', 'KES', 'KRW', 'KWD', 'KZT',
+            'LKR', 'MAD', 'MNT', 'MXN', 'MYR', 'NGN', 'NOK', 'NZD', 'OMR', 'PEN', 'PHP', 'PKR', 'PLN', 'QAR', 'RON',
+            'RUB', 'SAR', 'SEK', 'SGD', 'THB', 'TRY', 'TWD', 'UAH', 'VND', 'ZAR'];
+
+        $fxRates = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.map', 21600, function () use ($wanted, $usdInr) {
             $map = ['USD' => 1.0];
-            foreach (['INR', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD', 'JPY', 'CNY'] as $c) {
-                $r = (float) ($td->price('USD/' . $c)['price'] ?? 0);
-                if ($r > 0) {
-                    $map[$c] = $r;
+            try {
+                $res = \Illuminate\Support\Facades\Http::timeout(8)->get('https://open.er-api.com/v6/latest/USD');
+                if ($res->ok() && $res->json('result') === 'success') {
+                    foreach ((array) $res->json('rates') as $code => $rate) {
+                        if (in_array($code, $wanted, true) && (float) $rate > 0) {
+                            $map[$code] = round((float) $rate, 6);
+                        }
+                    }
                 }
+            } catch (\Throwable $e) {
+                // fall through to minimal map
+            }
+            if (count($map) < 2 && $usdInr > 0) {
+                $map['INR'] = $usdInr; // last-resort fallback so at least INR works
             }
 
             return $map;
         });
-        if (empty($fxRates['INR']) && $usdInr > 0) {
-            $fxRates['INR'] = $usdInr; // guarantee INR even if the batch call missed it
-        }
 
         return view('client.dashboard', compact(
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',

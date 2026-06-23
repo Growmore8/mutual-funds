@@ -97,10 +97,9 @@
                 show: true, curOpen: false, cur: 'USD',
                 base: {{ $tp }},
                 rates: @js($fxRates ?? ['USD' => 1]),
-                sym: { USD:'$', INR:'₹', EUR:'€', GBP:'£', AED:'AED ', AUD:'A$', CAD:'C$', SGD:'S$', JPY:'¥', CNY:'¥' },
+                get codes(){ return Object.keys(this.rates).filter(c => c!=='USD').sort(); },
                 conv(){ return this.base * (this.rates[this.cur] || 1); },
-                fmt(){ const v = this.conv(); const d = (this.cur==='JPY') ? 0 : 2;
-                       return (v < 0 ? '-' : '+') + (this.sym[this.cur]||'') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:d, maximumFractionDigits:d}); }
+                fmt(){ const v = this.conv(); return (v < 0 ? '-' : '+') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
              }">
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Portfolio P&L <span class="text-[10px]">all accounts</span>
@@ -110,19 +109,33 @@
                     <span x-show="show" x-text="fmt()">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</span>
                     <span x-show="!show" style="display:none">••••••</span>
                     {{-- Binance-style currency switcher --}}
-                    <span class="relative inline-block align-middle">
-                        <button type="button" @click="curOpen=!curOpen" class="text-base font-medium text-gray-400 hover:text-gray-200 inline-flex items-center gap-1">
-                            <span x-text="cur"></span><i class="fa-solid fa-chevron-down text-xs"></i>
-                        </button>
-                        <span x-show="curOpen" @click.outside="curOpen=false" x-cloak class="absolute z-30 mt-1 left-0 w-28 max-h-60 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 text-sm">
-                            <template x-for="c in Object.keys(rates)" :key="c">
-                                <button type="button" @click="cur=c; curOpen=false" :class="cur===c ? 'text-emerald-500 font-semibold' : 'text-gray-700 dark:text-gray-200'" class="block w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-white/10">
-                                    <span x-text="c"></span> <span class="text-[10px] text-gray-400" x-text="'×'+(rates[c]||1).toLocaleString()"></span>
-                                </button>
-                            </template>
-                        </span>
-                    </span>
+                    <button type="button" @click="curOpen=true" class="text-base font-medium text-gray-400 hover:text-gray-200 inline-flex items-center gap-1 align-middle">
+                        <span x-text="cur"></span><i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
                 </p>
+
+                {{-- Select a Currency sheet --}}
+                <template x-teleport="body">
+                    <div x-show="curOpen" x-cloak style="display:none" class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center">
+                        <div class="absolute inset-0 bg-black/50" @click="curOpen=false"></div>
+                        <div class="relative w-full sm:max-w-md bg-white dark:bg-[#0a1730] rounded-t-2xl sm:rounded-2xl shadow-xl p-5 max-h-[80vh] overflow-y-auto">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Select a Currency</h3>
+                                <button @click="curOpen=false" class="text-gray-400 hover:text-gray-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-2">Most Used</p>
+                            <button @click="cur='USD'; curOpen=false" :class="cur==='USD' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200'" class="px-4 py-2 rounded-full border text-sm font-medium mb-4 inline-flex items-center gap-1">
+                                USD <i x-show="cur==='USD'" class="fa-solid fa-check text-xs"></i>
+                            </button>
+                            <p class="text-xs text-gray-400 mb-2">More</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <template x-for="c in codes" :key="c">
+                                    <button @click="cur=c; curOpen=false" :class="cur===c ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200'" class="py-2.5 rounded-lg text-sm font-medium" x-text="c"></button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
                 <p class="text-sm mt-1 text-gray-500 dark:text-gray-400">Floating P&L
                     <span id="live-floating-hero" class="font-semibold {{ $floatingShare < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span>
                     <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse align-middle"></span>
