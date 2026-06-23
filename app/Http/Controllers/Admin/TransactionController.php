@@ -65,6 +65,10 @@ class TransactionController extends Controller
         $wds->each(fn ($w) => $spotItems->push((object) ['when' => $w->created_at, 'client' => $names[$w->user_id] ?? '—',
             'detail' => 'Withdrawal · ' . ($w->method ?: 'spot'), 'cs' => $w->currency === 'INR' ? '₹' : '$',
             'amount' => (float) $w->amount, 'credit' => false, 'kind' => 'Withdrawal', 'del' => null]));
+        if ($search !== '') {
+            $needle = strtolower($search);
+            $spotItems = $spotItems->filter(fn ($s) => str_contains(strtolower((string) $s->client), $needle));
+        }
         $spotItems = $spotItems->sortByDesc('when')->take(80)->values();
 
         // Account picker (searchable) for the "Add transaction" form.

@@ -1,10 +1,11 @@
 <x-admin-layout title="Transactions">
-    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, f:{id:null,type:'profit',amount:0,description:''} }">
+    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', f:{id:null,type:'profit',amount:0,description:''} }">
         <div class="p-4 border-b flex flex-wrap items-center gap-2">
             <form method="GET" class="flex flex-wrap gap-2 text-sm flex-1">
+                <input type="hidden" name="tab" :value="tab">
                 <input name="q" value="{{ $search }}" placeholder="Search by client name, email, ID or txn #…"
                        class="flex-1 min-w-[200px] border-gray-300 rounded-md">
-                <select name="type" class="border-gray-300 rounded-md">
+                <select name="type" class="border-gray-300 rounded-md" x-show="tab==='fund'">
                     <option value="">All types</option>
                     @foreach (['deposit','withdrawal','profit','fee','reversal','adjustment'] as $t)
                         <option value="{{ $t }}" @selected(request('type')===$t)>{{ ucfirst($t) }}</option>
@@ -17,6 +18,15 @@
             </form>
             <button type="button" @click="add=true" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add transaction</button>
         </div>
+
+        {{-- Tabs: Mutual Fund | Spot Trading --}}
+        <div class="px-4 pt-3 flex gap-6 border-b text-sm">
+            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'text-emerald-600 border-emerald-600' : 'text-gray-400 border-transparent'" class="pb-3 border-b-2 font-semibold"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
+            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'text-blue-600 border-blue-600' : 'text-gray-400 border-transparent'" class="pb-3 border-b-2 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
+        </div>
+
+        {{-- ===== Mutual Fund tab ===== --}}
+        <div x-show="tab==='fund'">
             <table class="min-w-full text-sm whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-500 text-left">
                     <tr>
@@ -74,10 +84,11 @@
                 </tbody>
             </table>
             <div class="p-4">{{ $transactions->links() }}</div>
+        </div>
 
-            {{-- Spot Trading transactions --}}
-            <div class="p-4 border-t border-gray-100">
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-3"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading transactions</h3>
+        {{-- ===== Spot Trading tab ===== --}}
+        <div x-show="tab==='spot'" x-cloak>
+            <div class="p-4">
                 <table class="min-w-full text-sm whitespace-nowrap">
                     <thead class="bg-gray-50 text-gray-500 text-left">
                         <tr><th class="px-3 py-2.5">Date</th><th class="px-3 py-2.5">Client</th><th class="px-3 py-2.5">Kind</th><th class="px-3 py-2.5">Detail</th><th class="px-3 py-2.5 text-right">Amount</th><th class="px-3 py-2.5 text-right">Action</th></tr>
@@ -104,6 +115,7 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
             {{-- Edit modal --}}
             <div x-show="edit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
