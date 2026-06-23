@@ -44,14 +44,17 @@ class SpotController extends Controller
     public function quote(Request $request)
     {
         $ins = SpotInstrument::findOrFail($request->get('id'));
+        // /price is the most real-time value; /quote gives the day change %.
+        $p = $this->td->price($ins->symbol, $ins->exchange);
         $q = $this->td->quote($ins->symbol, $ins->exchange);
+        $price = (float) ($p['price'] ?? $q['close'] ?? $ins->last_price ?? 0);
 
         return response()->json([
-            'price' => (float) ($q['close'] ?? $ins->last_price ?? 0),
+            'price' => $price,
             'change' => (float) ($q['percent_change'] ?? 0),
             'name' => $q['name'] ?? $ins->name,
-            'last' => (float) ($ins->last_price ?? 0),
-        ]);
+            'last' => $price,
+        ])->header('Cache-Control', 'no-store');
     }
 
     /** OHLC candles for the in-house chart. */

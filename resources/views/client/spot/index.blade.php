@@ -4,7 +4,7 @@
         $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
-        $marketTabs = ['india' => 'India (₹)', 'global' => 'US / Global ($)', 'crypto' => 'Crypto', 'forex' => 'Forex', 'commodity' => 'Commodity'];
+        $marketTabs = ['india' => 'India (₹)', 'global' => 'US / Global ($)', 'crypto' => 'Crypto', 'commodity' => 'Commodity'];
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
@@ -163,7 +163,7 @@
                 candles: [], dir: 0,
                 dp(){ var p=Math.abs(this.price||0); return p>0 && p<10 ? 4 : 2; },
                 fmt(n){ var d=this.dp(); return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
-                init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 2500); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
+                init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
                 cost(){ return (parseFloat(this.oqty)||0) * this.price; },
                 setPct(p){
                     if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
@@ -171,9 +171,9 @@
                 },
                 async tick(){
                     try{
-                        const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id)).json();
+                        const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
                         if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change; this.oprice=q.price; }
-                        const b=await (await fetch('{{ route('spot.book') }}?id='+this.id)).json(); this.book=b;
+                        const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
                     }catch(e){}
                 },
                 async loadCandles(){ try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.candles=d.values||[]; this.draw(); }catch(e){} },

@@ -31,10 +31,10 @@ class TwelveDataClient
         return $this->get('/quote', $this->sym($symbol, $exchange), 2);
     }
 
-    /** Lightweight last price. */
+    /** Lightweight last price (most real-time). */
     public function price(string $symbol, ?string $exchange = null): ?array
     {
-        return $this->get('/price', $this->sym($symbol, $exchange), 2);
+        return $this->get('/price', $this->sym($symbol, $exchange), 1);
     }
 
     /** OHLC candles for the in-house chart. */
