@@ -240,6 +240,39 @@ class ClientController extends Controller
         abort_unless($client->role === 'client', 404);
 
         [$start, $end, $label] = $svc->period($request->get('period', 'month'), $request->get('from'), $request->get('to'));
+        $scope = $request->get('scope', 'fund');
+
+        // Spot / combined (all) scopes use the multi-section statement view.
+        if (in_array($scope, ['spot_usd', 'spot_inr', 'all'])) {
+            $payload = [
+                'client' => $client, 'name' => $client->name, 'email' => $client->email, 'code' => $client->clientCode(),
+                'label' => $label, 'start' => $start, 'end' => $end, 'generatedAt' => now(), 'scope' => $scope,
+                'fund' => $scope === 'all' ? $svc->data($client, $start, $end, $label) : null,
+                'usd' => in_array($scope, ['spot_usd', 'all']) ? $svc->spotSection($client, $start, $end, 'USD') : null,
+                'inr' => in_array($scope, ['spot_inr', 'all']) ? $svc->spotSection($client, $start, $end, 'INR') : null,
+            ];
+
+            if ($request->get('action') === 'email') {
+                $pdf = $svc->pdfFromView('pdf.account-statement', $payload);
+                try {
+                    Mail::to($client->email)->send(new StatementMail($payload, $pdf?->output(), 'emails.statement-generic', 'Your GrowthCapital statement · ' . $label));
+                } catch (\Throwable $e) {
+                    return $request->wantsJson()
+                        ? response()->json(['ok' => false, 'message' => 'Could not email statement.'], 500)
+                        : back()->with('status', 'Could not email statement.');
+                }
+
+                return $request->wantsJson()
+                    ? response()->json(['ok' => true, 'message' => 'Statement emailed to ' . $client->email . '.'])
+                    : back()->with('status', 'Statement emailed to ' . $client->email . '.');
+            }
+
+            $pdf = $svc->pdfFromView('pdf.account-statement', $payload);
+
+            return $pdf ? $pdf->download('GrowthCapital-Statement-' . $client->clientCode() . '.pdf')
+                : view('pdf.account-statement', $payload + ['print' => true]);
+        }
+
         $data = $svc->data($client, $start, $end, $label);
 
         if ($request->get('action') === 'email') {
