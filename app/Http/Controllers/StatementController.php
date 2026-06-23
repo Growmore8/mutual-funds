@@ -101,6 +101,35 @@ class StatementController extends Controller
 
         $totalProfit = (float) Transaction::where('fund_account_id', $aid)->where('type', 'profit')->sum('amount');
 
-        return view('client.profit', compact('rows', 'totalProfit', 'period'));
+        // Spot realized profit — reconstruct per instrument from the trade sequence (sell − avg cost).
+        $user = $request->user();
+        $trades = \App\Models\SpotTrade::with('instrument')
+            ->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
+            ->orderBy('id')->get();
+
+        $pos = [];           // instrument_id => ['qty','avg']
+        $spotProfits = collect();
+        foreach ($trades as $t) {
+            $iid = $t->instrument_id;
+            $pos[$iid] ??= ['qty' => 0.0, 'avg' => 0.0];
+            $qty = (float) $t->qty;
+            $price = (float) $t->price;
+
+            if ($t->buyer_id === $user->id) {
+                $newQty = $pos[$iid]['qty'] + $qty;
+                $pos[$iid]['avg'] = $newQty > 0 ? (($pos[$iid]['qty'] * $pos[$iid]['avg']) + ($qty * $price)) / $newQty : 0;
+                $pos[$iid]['qty'] = $newQty;
+            } elseif ($t->seller_id === $user->id) {
+                $realized = round(($price - $pos[$iid]['avg']) * $qty, 2);
+                $pos[$iid]['qty'] = max(0, $pos[$iid]['qty'] - $qty);
+                $spotProfits->push((object) [
+                    'when' => $t->created_at, 'symbol' => $t->instrument->symbol,
+                    'qty' => $qty, 'realized' => $realized, 'cs' => $t->instrument->currencySymbol(),
+                ]);
+            }
+        }
+        $spotProfits = $spotProfits->sortByDesc('when')->values();
+
+        return view('client.profit', compact('rows', 'totalProfit', 'period', 'spotProfits'));
     }
 }
