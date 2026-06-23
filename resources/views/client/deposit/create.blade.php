@@ -18,7 +18,7 @@
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
         <div class="bg-white rounded-2xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds @if(($purpose ?? 'fund')==='spot')<span class="text-xs align-middle ml-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Spot Trading</span>@endif</h2>
             <p class="text-sm text-gray-500 mb-5">Choose a method, send the funds, then upload your slip. Your balance updates once an admin approves.</p>
 
             @if (session('status'))
@@ -101,6 +101,7 @@
                 <form method="POST" action="{{ route('client.deposit.store') }}" enctype="multipart/form-data" class="space-y-4 text-sm">
                     @csrf
                     <input type="hidden" name="method" :value="sel?.label">
+                    <input type="hidden" name="purpose" value="{{ $purpose ?? 'fund' }}">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><label class="block text-gray-700 mb-1">Amount (USD)</label><input type="number" step="0.01" min="1" name="amount" required class="w-full border-gray-300 rounded-md" placeholder="0.00"></div>
                         <div><label class="block text-gray-700 mb-1">Slip (image or PDF)</label><input type="file" name="slip" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700"></div>

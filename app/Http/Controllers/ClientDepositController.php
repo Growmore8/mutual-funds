@@ -12,11 +12,13 @@ class ClientDepositController extends Controller
     public function create(Request $request)
     {
         $user = $request->user()->load('accountType');
+        $purpose = $request->get('for') === 'spot' ? 'spot' : 'fund';
 
         return view('client.deposit.create', [
             'user' => $user,
             'methods' => PaymentMethod::orderBy('sort_order')->get(),
             'recent' => $user->deposits()->latest()->limit(8)->get(),
+            'purpose' => $purpose,
         ]);
     }
 
@@ -29,17 +31,20 @@ class ClientDepositController extends Controller
             'amount' => ['required', 'numeric', 'min:1'],
             'slip' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'purpose' => ['nullable', 'in:fund,spot'],
         ]);
 
+        $purpose = $data['purpose'] ?? 'fund';
         $slip = $request->file('slip')->store('deposits', 'local');
 
         $account = $user->currentAccount();
 
         $deposit = Deposit::create([
             'user_id' => $user->id,
-            'fund_account_id' => $account?->id,
-            'pool_account_id' => $account?->pool_account_id ?? $user->pool_account_id,
-            'account_type_id' => $account?->account_type_id ?? $user->account_type_id,
+            // Spot deposits are not tied to a fund account / pool.
+            'fund_account_id' => $purpose === 'spot' ? null : $account?->id,
+            'pool_account_id' => $purpose === 'spot' ? null : ($account?->pool_account_id ?? $user->pool_account_id),
+            'account_type_id' => $purpose === 'spot' ? null : ($account?->account_type_id ?? $user->account_type_id),
             'amount' => $data['amount'],
             'currency' => 'USD',
             'method' => $data['method'],
@@ -47,6 +52,7 @@ class ClientDepositController extends Controller
             'note' => $data['note'] ?? null,
             'value_date' => now()->toDateString(),
             'status' => 'pending',
+            'purpose' => $purpose,
         ]);
 
         AppNotification::notifyAdmins(

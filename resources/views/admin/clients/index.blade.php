@@ -57,7 +57,8 @@
                         <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
                         <td class="px-3 py-2">
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{{ route('admin.clients.show',$c) }}" title="Edit" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
+                                <a href="{{ route('admin.clients.show',$c) }}" title="Mutual Fund manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
+                                <a href="{{ route('admin.spot.client',$c) }}" title="Spot Trading manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600"><i class="fa-solid fa-arrow-trend-up"></i></a>
 
                                 {{-- Lock / unlock (violation — view-only) --}}
                                 <form method="POST" action="{{ route('admin.clients.status',$c) }}">@csrf @method('PATCH')

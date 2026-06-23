@@ -9,7 +9,7 @@
                 <div><p class="text-xs text-gray-500 dark:text-gray-400">Holdings</p><p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $holdings->count() }}</p></div>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('client.deposit.create') }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"><i class="fa-solid fa-arrow-down mr-1"></i> Add funds</a>
+                <a href="{{ route('client.deposit.create', ['for' => 'spot']) }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"><i class="fa-solid fa-arrow-down mr-1"></i> Add funds</a>
                 <a href="{{ route('withdraw.create') }}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/15 text-sm font-semibold"><i class="fa-solid fa-arrow-up mr-1"></i> Withdraw</a>
             </div>
         </div>

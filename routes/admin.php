@@ -76,6 +76,14 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::post('/account-requests/{accountRequest}/approve', [AccountRequestController::class, 'approve'])->name('account-requests.approve');
     Route::post('/account-requests/{accountRequest}/reject', [AccountRequestController::class, 'reject'])->name('account-requests.reject');
 
+    // Spot Trading management (separate from mutual fund)
+    Route::get('/spot', [\App\Http\Controllers\Admin\SpotAdminController::class, 'index'])->name('spot.index');
+    Route::get('/spot/client/{client}', [\App\Http\Controllers\Admin\SpotAdminController::class, 'client'])->name('spot.client');
+    Route::post('/spot/client/{client}/adjust', [\App\Http\Controllers\Admin\SpotAdminController::class, 'adjust'])->name('spot.adjust');
+    Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\Admin\SpotAdminController::class, 'cancelOrder'])->name('spot.order.cancel');
+    Route::post('/spot/instruments', [\App\Http\Controllers\Admin\SpotAdminController::class, 'storeInstrument'])->name('spot.instruments.store');
+    Route::post('/spot/instruments/{instrument}/toggle', [\App\Http\Controllers\Admin\SpotAdminController::class, 'toggleInstrument'])->name('spot.instruments.toggle');
+
     // KYC review
     Route::get('/kyc', [KycReviewController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/{document}/file/{side?}', [KycReviewController::class, 'file'])->name('kyc.file');
