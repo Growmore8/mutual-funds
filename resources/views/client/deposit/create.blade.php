@@ -13,7 +13,7 @@
     @endphp
 
     <div class="max-w-5xl mx-auto"
-         x-data="{ sel: null, copied: false, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+         x-data="{ sel: null, copied: false, amount: '', rate: {{ (float) ($usdInr ?? 84) }}, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
                    copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
@@ -115,7 +115,16 @@
                     <input type="hidden" name="purpose" :value="purpose">
                     <input type="hidden" name="currency" :value="currency">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div><label class="block text-gray-700 mb-1">Amount (<span x-text="currency"></span>)</label><input type="number" step="0.01" min="1" name="amount" required class="w-full border-gray-300 rounded-md" :placeholder="currency==='INR' ? '₹ 0.00' : '$ 0.00'"></div>
+                        <div>
+                            <label class="block text-gray-700 mb-1">Amount (USD)</label>
+                            <input type="number" step="0.01" min="1" name="amount" x-model="amount" required class="w-full border-gray-300 rounded-md" placeholder="$ 0.00">
+                            {{-- Binance-style live conversion shown beside the amount --}}
+                            <p x-show="sel && sel.currency==='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+                                ≈ <span class="font-semibold" x-text="'₹'+(parseFloat(amount)*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
+                                to pay via <span x-text="sel ? sel.label : ''"></span> · $<span x-text="parseFloat(amount||0).toFixed(2)"></span> credited
+                            </p>
+                            <p x-show="sel && sel.currency!=='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-gray-400">$<span x-text="parseFloat(amount||0).toFixed(2)"></span> will be credited to your account.</p>
+                        </div>
                         <div><label class="block text-gray-700 mb-1">Slip (image or PDF)</label><input type="file" name="slip" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700"></div>
                     </div>
                     <div><label class="block text-gray-700 mb-1">Note (optional)</label><textarea name="note" rows="2" maxlength="1000" class="w-full border-gray-300 rounded-md" placeholder="Reference, transaction hash…"></textarea></div>

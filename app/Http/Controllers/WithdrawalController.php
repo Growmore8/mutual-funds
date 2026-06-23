@@ -42,6 +42,7 @@ class WithdrawalController extends Controller
             'withdrawals' => $withdrawals,
             'purpose' => $purpose,
             'currency' => $currency,
+            'usdInr' => app(SpotTradingService::class)->usdInr(),
         ]);
     }
 

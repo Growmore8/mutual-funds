@@ -16,10 +16,9 @@
                 <h2 class="text-lg font-semibold text-gray-900 mb-3">{{ $isSpot ? 'Withdraw — Spot Trading' : 'Withdraw profit' }}</h2>
 
                 {{-- Withdraw from --}}
-                <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-                    <a href="{{ route('withdraw.create') }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ !$isSpot ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-layer-group"></i><br>Mutual Fund<br><span class="text-[10px] opacity-70">USD</span></a>
-                    <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ $isUsdSpot ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-arrow-trend-up"></i><br>Spot · US/Global<br><span class="text-[10px] opacity-70">USD</span></a>
-                    <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ $isInr ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-arrow-trend-up"></i><br>Spot · India<br><span class="text-[10px] opacity-70">INR</span></a>
+                <div class="grid grid-cols-2 gap-2 mb-4 text-center">
+                    <a href="{{ route('withdraw.create') }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ !$isSpot ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-layer-group"></i><br>Mutual Fund</a>
+                    <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ $isSpot ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-arrow-trend-up"></i><br>Spot Trading</a>
                 </div>
 
                 <p class="text-sm text-gray-500 mb-5">{{ $isSpot ? 'Withdraw your Spot ' . $cur . ' profit. Your deposited capital stays available for trading.' : 'You can withdraw your accumulated profit. Your capital stays invested.' }} Requests are reviewed before payout.</p>
@@ -38,14 +37,28 @@
                         <i class="fa-solid fa-circle-info"></i> You can submit a withdrawal once you have profit. Your capital stays locked — only profit is withdrawable.
                     </div>
                 @endif
-                <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm">
+                <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm"
+                      x-data="{ amount: '{{ old('amount') }}', avail: {{ (float) $available }}, rate: {{ (float) ($usdInr ?? 84) }}, recv: 'USD',
+                                get over(){ return parseFloat(this.amount) > this.avail + 0.001; } }">
                     @csrf
                     <input type="hidden" name="purpose" value="{{ $purpose ?? 'fund' }}">
-                    <input type="hidden" name="currency" value="{{ $currency ?? 'USD' }}">
+                    <input type="hidden" name="currency" value="USD">
                     <div>
-                        <label class="block text-gray-700 mb-1">Amount ({{ $cur }})</label>
-                        <input type="number" step="0.01" min="1" @if($available > 0) max="{{ $available }}" @endif name="amount" value="{{ old('amount') }}" required
-                               class="w-full border-gray-300 rounded-md" placeholder="{{ $cur === 'INR' ? '₹ 0.00' : '$ 0.00' }}" {{ $available <= 0 ? 'disabled' : '' }}>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-gray-700">Amount (USD)</label>
+                            <div class="inline-flex rounded-lg overflow-hidden border border-gray-200 text-[11px] font-semibold">
+                                <button type="button" @click="recv='USD'" :class="recv==='USD' ? 'bg-emerald-600 text-white' : 'text-gray-500'" class="px-2 py-1">Receive USD</button>
+                                <button type="button" @click="recv='INR'" :class="recv==='INR' ? 'bg-emerald-600 text-white' : 'text-gray-500'" class="px-2 py-1">Receive INR</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 border rounded-md px-3" :class="over ? 'border-red-400' : 'border-gray-300'">
+                            <input type="number" step="0.01" min="1" name="amount" x-model="amount" required
+                                   class="flex-1 border-0 focus:ring-0 py-2.5" placeholder="$ 0.00" {{ $available <= 0 ? 'disabled' : '' }}>
+                            <button type="button" @click="amount = avail.toFixed(2)" class="text-emerald-600 font-semibold text-xs">Max</button>
+                        </div>
+                        {{-- conversion + balance error --}}
+                        <p x-show="recv==='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-emerald-600">≈ <span class="font-semibold" x-text="'₹'+(parseFloat(amount)*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span> payout at ₹<span x-text="rate.toLocaleString()"></span>/$</p>
+                        <p x-show="over" x-cloak class="mt-1 text-xs text-red-600 font-medium"><i class="fa-solid fa-triangle-exclamation"></i> Amount exceeds your available balance ($<span x-text="avail.toFixed(2)"></span>).</p>
                     </div>
                     <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3 flex items-start gap-2">
                         <i class="fa-solid fa-shield-halved mt-0.5"></i>
@@ -73,7 +86,7 @@
                             </div>
                         @endforelse
                     </div>
-                    <button {{ $available <= 0 || $payoutMethods->isEmpty() ? 'disabled' : '' }} class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button {{ $available <= 0 || $payoutMethods->isEmpty() ? 'disabled' : '' }} :disabled="over || !amount || parseFloat(amount)<=0" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fa-solid fa-money-bill-transfer"></i> Submit request
                     </button>
                 </form>
