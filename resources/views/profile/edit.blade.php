@@ -1,5 +1,5 @@
 <x-client-layout title="Profile">
-    <div class="max-w-3xl space-y-6">
+    <div class="max-w-5xl space-y-6">
         {{-- Account info (read-only) --}}
         <div class="p-6 bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm flex items-center gap-4">
             <div class="w-14 h-14 rounded-full bg-emerald-500 text-[#04231a] grid place-items-center font-bold text-xl">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</div>

@@ -1,5 +1,5 @@
 <x-client-layout title="Security">
-    <div class="max-w-2xl space-y-6">
+    <div class="max-w-5xl space-y-6">
         <x-back-link />
         <div>
             <h2 class="text-xl font-semibold text-gray-900">Security &amp; app lock</h2>

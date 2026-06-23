@@ -1,5 +1,5 @@
 <x-client-layout title="New ticket">
-    <div class="max-w-2xl">
+    <div class="max-w-5xl">
         <a href="{{ route('support.index') }}" class="text-sm text-gray-500 hover:text-gray-700"><i class="fa-solid fa-arrow-left"></i> Back to tickets</a>
 
         <div class="bg-white shadow rounded-xl p-6 mt-4">

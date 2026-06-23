@@ -12,7 +12,7 @@
         ])->values();
     @endphp
 
-    <div class="max-w-2xl mx-auto"
+    <div class="max-w-5xl mx-auto"
          x-data="{ sel: null, copied: false, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
                    copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"

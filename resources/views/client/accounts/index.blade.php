@@ -5,7 +5,7 @@
         $card = 'bg-white dark:bg-white/[0.04] dark:border dark:border-white/[0.06] rounded-2xl shadow-sm';
     @endphp
 
-    <div class="max-w-2xl space-y-6">
+    <div class="max-w-5xl space-y-6">
         <x-back-link />
         {{-- Current account --}}
         <div class="{{ $card }} p-6">

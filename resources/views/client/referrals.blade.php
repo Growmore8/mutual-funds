@@ -1,7 +1,7 @@
 <x-client-layout title="Refer & Earn">
     @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
-    <div class="max-w-2xl mx-auto space-y-6" x-data="{ link: @js($user->referralLink()), copied: false,
+    <div class="max-w-5xl mx-auto space-y-6" x-data="{ link: @js($user->referralLink()), copied: false,
             copy(){ navigator.clipboard.writeText(this.link); this.copied=true; setTimeout(()=>this.copied=false,1500); } }">
         <x-back-link />
         <div>

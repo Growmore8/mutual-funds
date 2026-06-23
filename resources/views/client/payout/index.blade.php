@@ -1,5 +1,5 @@
 <x-client-layout title="Withdrawal Methods">
-    <div class="max-w-2xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-6">
         <x-back-link />
         <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Withdrawal methods</h2>
