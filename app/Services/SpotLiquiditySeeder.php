@@ -46,7 +46,9 @@ class SpotLiquiditySeeder
         SpotOrder::where('instrument_id', $ins->id)->where('is_maker', true)
             ->whereIn('status', ['open', 'partial'])->update(['status' => 'cancelled']);
 
-        for ($i = 1; $i <= $this->levels; $i++) {
+        // Level 0 sits at the exact reference price so market orders fill at qty × price.
+        // Levels 1..n add depth around it for the order-book display.
+        for ($i = 0; $i < $this->levels; $i++) {
             SpotOrder::create([
                 'user_id' => null, 'instrument_id' => $ins->id, 'side' => 'sell', 'type' => 'limit',
                 'price' => round($price * (1 + $this->spread * $i), 6), 'qty' => $this->depth,

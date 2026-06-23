@@ -107,10 +107,13 @@
                         </select>
                         <input x-show="otype==='limit'" x-model="oprice" type="number" placeholder="Price ({{ $cs }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
                         <div x-show="otype==='market'" class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2 text-gray-400">Fill at market price</div>
-                        <template x-if="side==='buy'"><input x-model="ototal" type="number" placeholder="Total ({{ $selected->currency ?? 'USD' }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2"></template>
-                        <template x-if="side==='sell'"><input x-model="oqty" type="number" placeholder="Quantity" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2"></template>
+                        <input x-model="oqty" type="number" step="any" min="0" inputmode="decimal" placeholder="Quantity ({{ $selected->symbol ?? '' }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
                         <div class="flex gap-1 mb-2">
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span x-text="side==='buy' ? 'Order cost' : 'You receive'"></span>
+                            <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="fmt(cost())"></span>
                         </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
                             <span>Available</span>
@@ -164,7 +167,11 @@
                 busy:false, msg:'', ok:false, _t:null,
                 fmt(n){ return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); },
                 init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 6000); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); },
-                setPct(p){ if(this.side==='buy'){ this.ototal=(this.avail*p/100).toFixed(2); } else { this.oqty=(this.holdingQty*p/100).toFixed(6); } },
+                cost(){ let p=(this.otype==='limit')?(parseFloat(this.oprice)||0):this.price; return (parseFloat(this.oqty)||0)*p; },
+                setPct(p){
+                    if(this.side==='buy'){ let pr=(this.otype==='limit')?(parseFloat(this.oprice)||this.price):this.price; let maxq= pr>0 ? this.avail/pr : 0; this.oqty=(maxq*p/100).toFixed(6); }
+                    else { this.oqty=(this.holdingQty*p/100).toFixed(6); }
+                },
                 async tick(){
                     try{
                         const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id)).json();
@@ -184,10 +191,8 @@
                     x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.strokeStyle='#10b981'; x.lineWidth=2; x.stroke();
                 },
                 async submit(){
-                    let qty;
-                    if(this.side==='sell'){ qty=parseFloat(this.oqty)||0; }
-                    else { let p=(this.otype==='limit')?parseFloat(this.oprice):this.price; qty=p>0?((parseFloat(this.ototal)||0)/p):0; }
-                    if(qty<=0){ this.ok=false; this.msg='Enter an amount.'; return; }
+                    let qty = parseFloat(this.oqty)||0;
+                    if(qty<=0){ this.ok=false; this.msg='Enter a quantity.'; return; }
                     this.busy=true; this.msg='';
                     try{
                         const res=await fetch('{{ route('spot.order') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
