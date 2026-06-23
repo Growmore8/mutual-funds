@@ -37,27 +37,23 @@
                         <i class="fa-solid fa-circle-info"></i> You can submit a withdrawal once you have profit. Your capital stays locked — only profit is withdrawable.
                     </div>
                 @endif
+                @php $firstFiat = $payoutMethods->first() && in_array($payoutMethods->first()->type, ['upi','bank']); @endphp
                 <form method="POST" action="{{ route('withdraw.store') }}" class="space-y-4 text-sm"
-                      x-data="{ amount: '{{ old('amount') }}', avail: {{ (float) $available }}, rate: {{ (float) ($usdInr ?? 84) }}, recv: 'USD',
+                      x-data="{ amount: '{{ old('amount') }}', avail: {{ (float) $available }}, localCur: '{{ $localCur ?? 'USD' }}', localRate: {{ (float) ($localRate ?? 1) }},
+                                recvLocal: {{ $firstFiat && ($localCur ?? 'USD') !== 'USD' ? 'true' : 'false' }},
                                 get over(){ return parseFloat(this.amount) > this.avail + 0.001; } }">
                     @csrf
                     <input type="hidden" name="purpose" value="{{ $purpose ?? 'fund' }}">
                     <input type="hidden" name="currency" value="USD">
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-gray-700">Amount (USD)</label>
-                            <div class="inline-flex rounded-lg overflow-hidden border border-gray-200 text-[11px] font-semibold">
-                                <button type="button" @click="recv='USD'" :class="recv==='USD' ? 'bg-emerald-600 text-white' : 'text-gray-500'" class="px-2 py-1">Receive USD</button>
-                                <button type="button" @click="recv='INR'" :class="recv==='INR' ? 'bg-emerald-600 text-white' : 'text-gray-500'" class="px-2 py-1">Receive INR</button>
-                            </div>
-                        </div>
+                        <label class="block text-gray-700 mb-1">Amount (USD)</label>
                         <div class="flex items-center gap-2 border rounded-md px-3" :class="over ? 'border-red-400' : 'border-gray-300'">
                             <input type="number" step="0.01" min="1" name="amount" x-model="amount" required
                                    class="flex-1 border-0 focus:ring-0 py-2.5" placeholder="$ 0.00" {{ $available <= 0 ? 'disabled' : '' }}>
                             <button type="button" @click="amount = avail.toFixed(2)" class="text-emerald-600 font-semibold text-xs">Max</button>
                         </div>
-                        {{-- conversion + balance error --}}
-                        <p x-show="recv==='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-emerald-600">≈ <span class="font-semibold" x-text="'₹'+(parseFloat(amount)*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span> payout at ₹<span x-text="rate.toLocaleString()"></span>/$</p>
+                        {{-- UPI/Bank payout: show the client's country-currency they'll receive --}}
+                        <p x-show="recvLocal && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-emerald-600">≈ <span class="font-semibold" x-text="localCur+' '+(parseFloat(amount)*localRate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span> you'll receive (at <span x-text="localCur+' '+localRate.toLocaleString()"></span>/$)</p>
                         <p x-show="over" x-cloak class="mt-1 text-xs text-red-600 font-medium"><i class="fa-solid fa-triangle-exclamation"></i> Amount exceeds your available balance ($<span x-text="avail.toFixed(2)"></span>).</p>
                     </div>
                     <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-3 flex items-start gap-2">

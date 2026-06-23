@@ -1,5 +1,12 @@
 <x-admin-layout title="Transactions">
     <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', f:{id:null,type:'profit',amount:0,description:''} }">
+        {{-- Tabs on top --}}
+        <div class="p-4 pb-0 flex items-center gap-2">
+            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
+            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
+        </div>
+
+        {{-- Search + filter below the tabs --}}
         <div class="p-4 border-b flex flex-wrap items-center gap-2">
             <form method="GET" class="flex flex-wrap gap-2 text-sm flex-1">
                 <input type="hidden" name="tab" :value="tab">
@@ -17,12 +24,6 @@
                 @endif
             </form>
             <button type="button" @click="add=true" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add transaction</button>
-        </div>
-
-        {{-- Tabs: Mutual Fund | Spot Trading --}}
-        <div class="px-4 pt-3 flex gap-6 border-b text-sm">
-            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'text-emerald-600 border-emerald-600' : 'text-gray-400 border-transparent'" class="pb-3 border-b-2 font-semibold"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
-            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'text-blue-600 border-blue-600' : 'text-gray-400 border-transparent'" class="pb-3 border-b-2 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
         </div>
 
         {{-- ===== Mutual Fund tab ===== --}}

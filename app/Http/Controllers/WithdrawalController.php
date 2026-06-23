@@ -38,11 +38,13 @@ class WithdrawalController extends Controller
 
         return view('client.withdraw.create', [
             'available' => $available,
-            'payoutMethods' => $user->withdrawalMethods,
+            // No crypto withdrawals — fiat payout (bank/UPI) only.
+            'payoutMethods' => $user->withdrawalMethods->where('type', '!=', 'crypto')->values(),
             'withdrawals' => $withdrawals,
             'purpose' => $purpose,
             'currency' => $currency,
-            'usdInr' => app(SpotTradingService::class)->usdInr(),
+            'localCur' => $user->localCurrency(),
+            'localRate' => app(SpotTradingService::class)->usdRate($user->localCurrency()),
         ]);
     }
 

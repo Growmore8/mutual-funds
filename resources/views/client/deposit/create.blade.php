@@ -13,7 +13,10 @@
     @endphp
 
     <div class="max-w-5xl mx-auto"
-         x-data="{ sel: null, copied: false, amount: '', rate: {{ (float) ($usdInr ?? 84) }}, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+         x-data="{ sel: null, copied: false, localAmount: '', localCur: '{{ $localCur ?? 'USD' }}', localRate: {{ (float) ($localRate ?? 1) }}, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+                   get isLocal(){ return this.sel && (this.sel.type==='upi' || this.sel.type==='bank') && this.localCur!=='USD'; },
+                   get inputCur(){ return this.isLocal ? this.localCur : 'USD'; },
+                   get usdAmount(){ const a = parseFloat(this.localAmount)||0; return this.isLocal ? (this.localRate>0 ? a/this.localRate : a) : a; },
                    copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
@@ -113,17 +116,20 @@
                     @csrf
                     <input type="hidden" name="method" :value="sel?.label">
                     <input type="hidden" name="purpose" :value="purpose">
-                    <input type="hidden" name="currency" :value="currency">
+                    <input type="hidden" name="currency" value="USD">
+                    {{-- Submit the USD amount that actually gets credited (converted from local for UPI/Bank). --}}
+                    <input type="hidden" name="amount" :value="usdAmount.toFixed(2)">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-gray-700 mb-1">Amount (USD)</label>
-                            <input type="number" step="0.01" min="1" name="amount" x-model="amount" required class="w-full border-gray-300 rounded-md" placeholder="$ 0.00">
-                            {{-- Binance-style live conversion shown beside the amount --}}
-                            <p x-show="sel && sel.currency==='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-                                ≈ <span class="font-semibold" x-text="'₹'+(parseFloat(amount)*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
-                                to pay via <span x-text="sel ? sel.label : ''"></span> · $<span x-text="parseFloat(amount||0).toFixed(2)"></span> credited
+                            <label class="block text-gray-700 mb-1">Amount (<span x-text="inputCur"></span>)</label>
+                            <input type="number" step="0.01" min="1" x-model="localAmount" required class="w-full border-gray-300 rounded-md"
+                                   :placeholder="(isLocal ? localCur : '$') + ' 0.00'">
+                            {{-- UPI/Bank: input is in the client's country currency; show the USD that will be credited --}}
+                            <p x-show="isLocal && parseFloat(localAmount)>0" x-cloak class="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+                                ≈ <span class="font-semibold" x-text="'$'+usdAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
+                                will be credited (at <span x-text="localCur+' '+localRate.toLocaleString()"></span>/$) — only this USD amount is added.
                             </p>
-                            <p x-show="sel && sel.currency!=='INR' && parseFloat(amount)>0" x-cloak class="mt-1 text-xs text-gray-400">$<span x-text="parseFloat(amount||0).toFixed(2)"></span> will be credited to your account.</p>
+                            <p x-show="!isLocal && parseFloat(localAmount)>0" x-cloak class="mt-1 text-xs text-gray-400">$<span x-text="usdAmount.toFixed(2)"></span> will be credited.</p>
                         </div>
                         <div><label class="block text-gray-700 mb-1">Slip (image or PDF)</label><input type="file" name="slip" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700"></div>
                     </div>

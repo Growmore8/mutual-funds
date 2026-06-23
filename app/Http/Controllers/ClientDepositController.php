@@ -21,7 +21,8 @@ class ClientDepositController extends Controller
             'recent' => $user->deposits()->latest()->limit(8)->get(),
             'purpose' => $purpose,
             'currency' => $currency,
-            'usdInr' => app(\App\Services\SpotTradingService::class)->usdInr(),
+            'localCur' => $user->localCurrency(),
+            'localRate' => app(\App\Services\SpotTradingService::class)->usdRate($user->localCurrency()),
         ]);
     }
 

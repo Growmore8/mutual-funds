@@ -122,6 +122,24 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return 'GC' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
     }
 
+    /** Local fiat currency from the client's registered country (for deposit/withdraw conversion). */
+    public function localCurrency(): string
+    {
+        $map = [
+            'india' => 'INR', 'bharat' => 'INR',
+            'united states' => 'USD', 'usa' => 'USD', 'us' => 'USD', 'america' => 'USD',
+            'united arab emirates' => 'AED', 'uae' => 'AED', 'dubai' => 'AED',
+            'united kingdom' => 'GBP', 'uk' => 'GBP', 'england' => 'GBP',
+            'singapore' => 'SGD', 'australia' => 'AUD', 'canada' => 'CAD',
+            'sri lanka' => 'LKR', 'bangladesh' => 'BDT', 'pakistan' => 'PKR', 'nepal' => 'NPR',
+            'saudi arabia' => 'SAR', 'qatar' => 'QAR', 'kuwait' => 'KWD', 'oman' => 'OMR', 'bahrain' => 'BHD',
+            'malaysia' => 'MYR', 'philippines' => 'PHP', 'indonesia' => 'IDR', 'japan' => 'JPY',
+            'south africa' => 'ZAR', 'nigeria' => 'NGN', 'kenya' => 'KES',
+        ];
+
+        return $map[strtolower(trim((string) $this->country))] ?? 'USD';
+    }
+
     public function accountType()
     {
         return $this->belongsTo(AccountType::class);
