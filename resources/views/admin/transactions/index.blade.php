@@ -134,7 +134,7 @@
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
                     <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
-                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts) }">
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dest:'fund' }">
                         @csrf
                         <div class="relative">
                             <label class="block text-gray-700 mb-1">Account (search by name / account ID)</label>
@@ -153,12 +153,13 @@
                             <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
                         <div>
-                            <label class="block text-gray-700 mb-1">Book to</label>
-                            <select name="destination" class="w-full border-gray-300 rounded-md">
-                                <option value="fund">Mutual Fund (account)</option>
-                                <option value="spot_usd">Spot Trading · US/Global (USD)</option>
-                                <option value="spot_inr">Spot Trading · India (INR)</option>
+                            <label class="block text-gray-700 mb-1">Book to (currency follows the market)</label>
+                            <select name="destination" x-model="dest" class="w-full border-gray-300 rounded-md">
+                                <option value="fund">Mutual Fund (USD)</option>
+                                <option value="spot_usd">Spot · NYSE — US/Global/Crypto (USD)</option>
+                                <option value="spot_inr">Spot · BSE — India (INR)</option>
                             </select>
+                            <p class="text-xs mt-1" :class="dest==='spot_inr' ? 'text-orange-600' : 'text-blue-600'">Amount will be booked in <span class="font-semibold" x-text="dest==='spot_inr' ? 'INR (₹)' : 'USD ($)'"></span></p>
                         </div>
                         <div>
                             <label class="block text-gray-700 mb-1">Type</label>
@@ -166,7 +167,7 @@
                                 @foreach (['deposit','withdrawal','reversal','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
                             </select>
                         </div>
-                        <div><label class="block text-gray-700 mb-1">Amount (use − for debit)</label><input type="number" step="0.01" name="amount" class="w-full border-gray-300 rounded-md" required></div>
+                        <div><label class="block text-gray-700 mb-1">Amount <span x-text="dest==='spot_inr' ? '(₹)' : '($)'"></span> <span class="text-gray-400">(use − for debit)</span></label><input type="number" step="0.01" name="amount" class="w-full border-gray-300 rounded-md" required></div>
                         <div><label class="block text-gray-700 mb-1">Description</label><input name="description" class="w-full border-gray-300 rounded-md"></div>
                         <div class="flex gap-2 pt-2">
                             <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save</button>
