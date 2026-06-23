@@ -84,11 +84,26 @@ class ClientDashboardController extends Controller
         $spotUsd = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'USD')->value('balance');
         $spotInr = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'INR')->value('balance');
 
+        // Spot unrealized P&L per currency.
+        $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $user->id)->where('qty', '>', 0)->get();
+        $spotPnl = fn ($curr) => round($spotHoldings->filter(fn ($h) => ($h->instrument->currency ?: 'USD') === $curr)
+            ->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
+        $usSpotPnl = $spotPnl('USD');
+        $inrSpotPnl = $spotPnl('INR');
+
+        // Live USD/INR (Google-style mid-market via Twelve Data), cached 1h. Fallback 84.
+        $usdInr = (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
+            return (float) (app(\App\Services\TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
+        }) ?: 84.0;
+
+        // Combined portfolio P&L in USD (mutual fund + US spot + India spot converted).
+        $totalPnlUsd = round($runningPnl + $usSpotPnl + ($usdInr > 0 ? $inrSpotPnl / $usdInr : 0), 2);
+
         return view('client.dashboard', compact(
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
-            'spotUsd', 'spotInr'
+            'spotUsd', 'spotInr', 'usSpotPnl', 'inrSpotPnl', 'usdInr', 'totalPnlUsd'
         ));
     }
 

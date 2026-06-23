@@ -17,7 +17,9 @@ class SpotController extends Controller
     public function index(Request $request)
     {
         $instruments = SpotInstrument::enabled()->orderBy('sort')->get();
-        $selected = $instruments->firstWhere('symbol', $request->get('symbol')) ?? $instruments->first();
+        $selected = $instruments->firstWhere('symbol', $request->get('symbol'))
+            ?? ($request->get('market') ? $instruments->firstWhere('market', $request->get('market')) : null)
+            ?? $instruments->first();
         $cur = $selected->currency ?? 'USD';
 
         $user = $request->user();
