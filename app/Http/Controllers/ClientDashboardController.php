@@ -119,11 +119,28 @@ class ClientDashboardController extends Controller
         // Combined portfolio P&L in USD (mutual fund + US spot + India spot converted).
         $totalPnlUsd = round($runningPnl + $usSpotPnl + ($usdInr > 0 ? $inrSpotPnl / $usdInr : 0), 2);
 
+        // Live FX rates (1 USD → currency) for the Binance-style currency switcher. Cached 1h.
+        $fxRates = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.map', 3600, function () {
+            $td = app(\App\Services\TwelveDataClient::class);
+            $map = ['USD' => 1.0];
+            foreach (['INR', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD', 'JPY', 'CNY'] as $c) {
+                $r = (float) ($td->price('USD/' . $c)['price'] ?? 0);
+                if ($r > 0) {
+                    $map[$c] = $r;
+                }
+            }
+
+            return $map;
+        });
+        if (empty($fxRates['INR']) && $usdInr > 0) {
+            $fxRates['INR'] = $usdInr; // guarantee INR even if the batch call missed it
+        }
+
         return view('client.dashboard', compact(
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
-            'spotUsd', 'spotInr', 'usSpotPnl', 'inrSpotPnl', 'usdInr', 'totalPnlUsd'
+            'spotUsd', 'spotInr', 'usSpotPnl', 'inrSpotPnl', 'usdInr', 'totalPnlUsd', 'fxRates'
         ));
     }
 

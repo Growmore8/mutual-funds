@@ -91,16 +91,37 @@
         $harea = $n ? ('0,120 ' . $hline . ' 600,120') : '';
     @endphp
     <div class="mb-6 rounded-2xl p-6 bg-white dark:bg-white/[0.04] shadow-sm border border-transparent dark:border-white/[0.06] dark:backdrop-blur">
-        <div class="flex items-start justify-between gap-4" x-data="{ show: true }">
-            @php $tp = $totalPnlUsd ?? 0; @endphp
+        @php $tp = $totalPnlUsd ?? 0; @endphp
+        <div class="flex items-start justify-between gap-4"
+             x-data="{
+                show: true, curOpen: false, cur: 'USD',
+                base: {{ $tp }},
+                rates: @js($fxRates ?? ['USD' => 1]),
+                sym: { USD:'$', INR:'₹', EUR:'€', GBP:'£', AED:'AED ', AUD:'A$', CAD:'C$', SGD:'S$', JPY:'¥', CNY:'¥' },
+                conv(){ return this.base * (this.rates[this.cur] || 1); },
+                fmt(){ const v = this.conv(); const d = (this.cur==='JPY') ? 0 : 2;
+                       return (v < 0 ? '-' : '+') + (this.sym[this.cur]||'') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:d, maximumFractionDigits:d}); }
+             }">
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Portfolio P&L <span class="text-[10px]">all accounts</span>
                     <button type="button" @click="show=!show" class="text-gray-400 hover:text-emerald-400"><i class="fa-regular" :class="show?'fa-eye':'fa-eye-slash'"></i></button>
                 </p>
                 <p class="text-4xl font-bold mt-1 tracking-tight glow {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }}">
-                    <span x-show="show">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</span>
+                    <span x-show="show" x-text="fmt()">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</span>
                     <span x-show="!show" style="display:none">••••••</span>
-                    <span class="text-base font-medium text-gray-400">USD</span>
+                    {{-- Binance-style currency switcher --}}
+                    <span class="relative inline-block align-middle">
+                        <button type="button" @click="curOpen=!curOpen" class="text-base font-medium text-gray-400 hover:text-gray-200 inline-flex items-center gap-1">
+                            <span x-text="cur"></span><i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <span x-show="curOpen" @click.outside="curOpen=false" x-cloak class="absolute z-30 mt-1 left-0 w-28 max-h-60 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 text-sm">
+                            <template x-for="c in Object.keys(rates)" :key="c">
+                                <button type="button" @click="cur=c; curOpen=false" :class="cur===c ? 'text-emerald-500 font-semibold' : 'text-gray-700 dark:text-gray-200'" class="block w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-white/10">
+                                    <span x-text="c"></span> <span class="text-[10px] text-gray-400" x-text="'×'+(rates[c]||1).toLocaleString()"></span>
+                                </button>
+                            </template>
+                        </span>
+                    </span>
                 </p>
                 <p class="text-sm mt-1 text-gray-500 dark:text-gray-400">Floating P&L
                     <span id="live-floating-hero" class="font-semibold {{ $floatingShare < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</span>
