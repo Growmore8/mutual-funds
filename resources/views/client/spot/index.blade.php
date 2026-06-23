@@ -83,9 +83,8 @@
                 </div>
 
                 {{-- Orders / Holdings / Trades — desktop shows here under the chart --}}
-                <div x-data="{ tab:'orders' }" class="hidden lg:block mt-4">
+                <div x-data="{ tab:'holdings' }" class="hidden lg:block mt-4">
                     <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
-                        <button @click="tab='orders'" :class="tab==='orders'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Orders ({{ $orders->count() }})</button>
                         <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
                         <button @click="tab='trades'" :class="tab==='trades'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Trades</button>
                     </div>
@@ -102,11 +101,7 @@
                             <button @click="side='buy'"  :class="side==='buy'  ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Buy</button>
                             <button @click="side='sell'" :class="side==='sell' ? 'bg-red-500 text-white'     : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Sell</button>
                         </div>
-                        <select x-model="otype" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
-                            <option value="market">Market</option><option value="limit">Limit</option>
-                        </select>
-                        <input x-show="otype==='limit'" x-model="oprice" type="number" placeholder="Price ({{ $cs }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
-                        <div x-show="otype==='market'" class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2 text-gray-400">Fill at market price</div>
+                        <div class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2 text-gray-400 text-center"><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Market order · fills at current price</div>
                         <input x-model="oqty" type="number" step="any" min="0" inputmode="decimal" placeholder="Quantity ({{ $selected->symbol ?? '' }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
                         <div class="flex gap-1 mb-2">
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
@@ -147,7 +142,7 @@
         </div>
 
         {{-- Orders / Holdings / Trades — mobile (below everything) --}}
-        <div x-data="{ tab:'orders' }" class="lg:hidden mt-4 px-1">
+        <div x-data="{ tab:'holdings' }" class="lg:hidden mt-4 px-1">
             <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
                 <button @click="tab='orders'" :class="tab==='orders'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Orders ({{ $orders->count() }})</button>
                 <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
