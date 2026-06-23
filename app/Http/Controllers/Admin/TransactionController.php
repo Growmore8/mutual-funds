@@ -94,7 +94,12 @@ class TransactionController extends Controller
         $destination = $data['destination'] ?? 'fund';
         if ($destination !== 'fund') {
             $currency = $destination === 'spot_inr' ? 'INR' : 'USD';
-            $signed = in_array($data['type'], ['withdrawal', 'fee']) ? -abs($data['amount']) : abs($data['amount']);
+            $amt = (float) $data['amount'];
+            $signed = match ($data['type']) {
+                'deposit' => abs($amt),
+                'withdrawal', 'fee' => -abs($amt),
+                default => $amt, // adjustment / reversal: respect entered sign (use − to debit)
+            };
             app(\App\Services\SpotTradingService::class)->adjustBalance($user->id, $signed, $currency);
 
             // Record it so it shows in transactions (client + admin).

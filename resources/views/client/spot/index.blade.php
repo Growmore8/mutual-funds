@@ -10,12 +10,15 @@
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
-        {{-- Spot account summary — both wallets --}}
+        {{-- Spot account summary — active market's wallet only (NYSE → USD, BSE → INR) --}}
         <div class="gcard rounded-2xl p-4 mb-3 mx-1 bg-white dark:bg-white/[0.04]">
-            <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold mb-2"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account</p>
+            <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold mb-2"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account · {{ $selGroup==='inr' ? 'BSE' : 'NYSE' }}</p>
             <div class="flex flex-wrap gap-x-6 gap-y-2">
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">USD wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)$usd->balance,2) }}</p></div>
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">INR wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">₹{{ number_format((float)$inr->balance,2) }}</p></div>
+                @if ($selGroup === 'inr')
+                    <div><p class="text-xs text-gray-500 dark:text-gray-400">INR wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">₹{{ number_format((float)$inr->balance,2) }}</p></div>
+                @else
+                    <div><p class="text-xs text-gray-500 dark:text-gray-400">USD wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)$usd->balance,2) }}</p></div>
+                @endif
                 <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ $selected->symbol ?? '' }} P&L</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').$sym(abs($upnl),$cs) }}</p></div>
             </div>
         </div>
