@@ -14,15 +14,16 @@
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
-        {{-- Spot account summary — single USD balance (Binance/Bybit style) --}}
+        {{-- Spot account summary (single base) --}}
         <div class="gcard rounded-2xl p-4 mb-3 mx-1 bg-white dark:bg-white/[0.04]">
             <div class="flex items-center justify-between mb-2">
-                <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account · USD</p>
+                <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account</p>
                 <a href="{{ route('transfer.create') }}" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Transfer</a>
             </div>
             <div class="flex flex-wrap gap-x-6 gap-y-2">
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">USD wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)$account->balance,2) }}</p></div>
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">P&L</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').'$'.number_format(abs($upnl),2) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Total Spot Deposit</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)($spotDeposited ?? 0),2) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Total PNL</p><p class="text-lg font-extrabold {{ ($spotTotalPnl ?? 0)<0?'text-red-500':'text-emerald-500' }}">{{ (($spotTotalPnl ?? 0)<0?'-':'+').'$'.number_format(abs($spotTotalPnl ?? 0),2) }}</p></div>
+                <div><p class="text-xs text-gray-500 dark:text-gray-400">Floating PnL</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').'$'.number_format(abs($upnl),2) }}</p></div>
             </div>
         </div>
 

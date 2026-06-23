@@ -168,14 +168,14 @@
     </div>
     <div class="grid grid-cols-2 gap-3 mb-6">
         <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Spot wallet <span class="text-[10px]">USD</span></p>
-            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
-            <p class="text-[11px] {{ ($spotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($spotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($spotPnl ?? 0), 2) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Spot Deposit</p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotDeposited ?? 0, 2) }}</p>
+            <p class="text-[11px] text-gray-400">capital in · BSE + NYSE</p>
         </a>
         <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Est. spot value <span class="text-[10px]">USD</span></p>
-            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotEquity ?? 0, 2) }}</p>
-            <p class="text-[11px] text-gray-400">wallet + holdings</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Spot PNL</p>
+            <p class="text-lg font-extrabold mt-0.5 {{ ($spotTotalPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ (($spotTotalPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($spotTotalPnl ?? 0), 2) }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Total spot floating PnL {{ (($spotFloating ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($spotFloating ?? 0), 2) }}</p>
         </a>
     </div>
     <a href="{{ route('transfer.create') }}" class="block mb-6 gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Transfer between Mutual Fund &amp; Spot</a>

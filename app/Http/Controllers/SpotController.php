@@ -31,12 +31,21 @@ class SpotController extends Controller
         $holdingsCost = $holdings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price);
         $unrealized = round($holdingsValue - $holdingsCost, 2);
         $equity = round((float) $account->balance + $holdingsValue, 2);
+
+        // Total spot deposit (capital in, net of withdrawals; BSE + NYSE in USD) and total P&L.
+        $spotDeposited = round(
+            \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
+                ->get(['amount', 'currency'])->sum(fn ($d) => $this->svc->toUsd((float) $d->amount, $d->currency))
+            - \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
+                ->get(['amount', 'currency'])->sum(fn ($w) => $this->svc->toUsd((float) $w->amount, $w->currency)), 2);
+        $spotTotalPnl = round($equity - $spotDeposited, 2);
+
         $orders = SpotOrder::with('instrument')->where('user_id', $user->id)
             ->whereIn('status', ['open', 'partial'])->latest('id')->get();
         $trades = SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
             ->latest('id')->limit(20)->get();
 
-        return view('client.spot.index', compact('instruments', 'selected', 'cur', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity'));
+        return view('client.spot.index', compact('instruments', 'selected', 'cur', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity', 'spotDeposited', 'spotTotalPnl'));
     }
 
     /** Live quote (price + change) for one instrument. */

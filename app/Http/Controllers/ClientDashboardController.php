@@ -101,13 +101,24 @@ class ClientDashboardController extends Controller
         $announcement = \App\Models\Announcement::active()->latest()->first();
 
         // Single USD spot wallet (Binance/Bybit model) for the home overview.
+        $svc = app(\App\Services\SpotTradingService::class);
         $spotUsd = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'USD')->value('balance');
         $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $user->id)->where('qty', '>', 0)->get();
-        $spotPnl = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
+        $spotFloating = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
         $spotEquity = round($spotUsd + $spotHoldings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price)), 2);
 
-        // Combined portfolio P&L in USD (mutual fund + spot).
-        $totalPnlUsd = round($runningPnl + $spotPnl, 2);
+        // Total spot deposit (capital in, net of withdrawals — both BSE + NYSE, in USD).
+        $spotDeposited = round(
+            \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
+                ->get(['amount', 'currency'])->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency))
+            - \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
+                ->get(['amount', 'currency'])->sum(fn ($w) => $svc->toUsd((float) $w->amount, $w->currency)), 2);
+
+        // Total spot P&L (realized + floating) = current value − capital in.
+        $spotTotalPnl = round($spotEquity - $spotDeposited, 2);
+
+        // Combined portfolio P&L (mutual fund + total spot).
+        $totalPnlUsd = round($runningPnl + $spotTotalPnl, 2);
 
         // Live FX rates (1 USD → currency) for the Binance-style currency switcher.
         // One call returns ~160 currencies; we curate a wide list. Cached 6h.
@@ -141,7 +152,7 @@ class ClientDashboardController extends Controller
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
             'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
-            'spotUsd', 'spotPnl', 'spotEquity', 'totalPnlUsd', 'fxRates'
+            'spotUsd', 'spotDeposited', 'spotTotalPnl', 'spotFloating', 'spotEquity', 'totalPnlUsd', 'fxRates'
         ));
     }
 
