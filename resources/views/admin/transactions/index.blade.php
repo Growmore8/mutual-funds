@@ -2,8 +2,8 @@
     <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
         {{-- Tabs on top --}}
         <div class="p-4 pb-0 flex items-center gap-2">
-            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
-            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
+            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
+            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
         </div>
 
         {{-- Search + filter below the tabs --}}
@@ -89,10 +89,9 @@
 
         {{-- ===== Spot Trading tab ===== --}}
         <div x-show="tab==='spot'" x-cloak>
-            <div class="px-4 pt-4 flex items-center gap-2 text-sm">
-                <span class="text-gray-500">Filter:</span>
+            <div class="px-4 pt-4 flex flex-wrap items-center gap-1 text-sm">
                 @foreach (['all' => 'All', 'trade' => 'Trades', 'deposit' => 'Deposits', 'withdrawal' => 'Withdrawals'] as $k => $lbl)
-                    <button type="button" @click="spotKind='{{ $k }}'" :class="spotKind==='{{ $k }}' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'" class="px-3 py-1 rounded-full text-xs font-semibold">{{ $lbl }}</button>
+                    <button type="button" @click="spotKind='{{ $k }}'" :class="spotKind==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-md">{{ $lbl }}</button>
                 @endforeach
             </div>
             <div class="p-4">
