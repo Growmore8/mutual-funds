@@ -28,13 +28,13 @@ class TwelveDataClient
     /** Latest quote (price, change %, day high/low, volume). */
     public function quote(string $symbol, ?string $exchange = null): ?array
     {
-        return $this->get('/quote', $this->sym($symbol, $exchange), 10);
+        return $this->get('/quote', $this->sym($symbol, $exchange), 2);
     }
 
     /** Lightweight last price. */
     public function price(string $symbol, ?string $exchange = null): ?array
     {
-        return $this->get('/price', $this->sym($symbol, $exchange), 5);
+        return $this->get('/price', $this->sym($symbol, $exchange), 2);
     }
 
     /** OHLC candles for the in-house chart. */

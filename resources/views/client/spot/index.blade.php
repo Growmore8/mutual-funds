@@ -127,7 +127,7 @@
                         <div class="space-y-0.5 text-[11px] font-mono">
                             <template x-for="a in book.asks.slice().reverse()" :key="'a'+a.price"><div class="flex justify-between"><span class="text-red-500" x-text="a.price.toFixed(2)"></span><span class="text-gray-400" x-text="a.qty"></span></div></template>
                         </div>
-                        <div class="my-1 text-base font-extrabold" :class="change>=0?'text-emerald-500':'text-red-500'" x-text="fmt(book.last||price)"></div>
+                        <div class="my-1 text-base font-extrabold transition-colors duration-300" :class="dir>0?'text-emerald-500':(dir<0?'text-red-500':'text-gray-700 dark:text-gray-200')" x-text="fmt(price||book.last)"></div>
                         <div class="space-y-0.5 text-[11px] font-mono">
                             <template x-for="b in book.bids" :key="'b'+b.price"><div class="flex justify-between"><span class="text-emerald-500" x-text="b.price.toFixed(2)"></span><span class="text-gray-400" x-text="b.qty"></span></div></template>
                         </div>
@@ -160,30 +160,46 @@
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', ototal:'', oqty:'',
                 avail: {{ (float)$account->balance }}, holdingQty: {{ (float)($selHolding ?? 0) }},
                 busy:false, msg:'', ok:false, _t:null,
-                fmt(n){ return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); },
-                init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 6000); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); },
-                cost(){ let p=(this.otype==='limit')?(parseFloat(this.oprice)||0):this.price; return (parseFloat(this.oqty)||0)*p; },
+                candles: [], dir: 0,
+                dp(){ var p=Math.abs(this.price||0); return p>0 && p<10 ? 4 : 2; },
+                fmt(n){ var d=this.dp(); return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
+                init(){ if(!this.id) return; if(window.innerWidth>=1024){ this.showChart=true; } this.tick(); this._t=setInterval(()=>this.tick(), 2500); this.$nextTick(()=>{ if(this.showChart) this.loadCandles(); }); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
+                cost(){ return (parseFloat(this.oqty)||0) * this.price; },
                 setPct(p){
-                    if(this.side==='buy'){ let pr=(this.otype==='limit')?(parseFloat(this.oprice)||this.price):this.price; let maxq= pr>0 ? this.avail/pr : 0; this.oqty=(maxq*p/100).toFixed(6); }
+                    if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
                     else { this.oqty=(this.holdingQty*p/100).toFixed(6); }
                 },
                 async tick(){
                     try{
                         const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id)).json();
-                        if(q.price){ this.price=q.price; this.change=q.change; if(this.otype==='market') this.oprice=q.price; }
+                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change; this.oprice=q.price; }
                         const b=await (await fetch('{{ route('spot.book') }}?id='+this.id)).json(); this.book=b;
                     }catch(e){}
                 },
-                async loadCandles(){ try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.draw((d.values||[]).map(v=>v.close)); }catch(e){} },
-                draw(pts){
-                    const c=document.getElementById('spot-chart'); if(!c||!pts.length) return;
+                async loadCandles(){ try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.candles=d.values||[]; this.draw(); }catch(e){} },
+                draw(){
+                    const c=document.getElementById('spot-chart'); if(!c||!this.candles.length) return;
+                    const pts=this.candles.map(v=>+v.close), times=this.candles.map(v=>v.time);
                     const dpr=window.devicePixelRatio||1, W=c.clientWidth, H=c.clientHeight||220;
                     c.width=W*dpr; c.height=H*dpr; const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
-                    const min=Math.min(...pts), max=Math.max(...pts), pad=16;
-                    const px=i=>pad+i*(W-2*pad)/(pts.length-1), py=v=>H-pad-(v-min)/(max-min||1)*(H-2*pad);
-                    const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(16,185,129,.30)'); g.addColorStop(1,'rgba(16,185,129,0)');
-                    x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.lineTo(px(pts.length-1),H-pad); x.lineTo(px(0),H-pad); x.closePath(); x.fillStyle=g; x.fill();
+                    const padL=52, padR=10, padT=10, padB=22;
+                    let min=Math.min(...pts), max=Math.max(...pts); if(min===max){ min-=1; max+=1; }
+                    const d=this.dp(), dark=document.documentElement.classList.contains('dark');
+                    const grid=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)', txt=dark?'#7d8aa0':'#94a3b8';
+                    const px=i=>padL+i*(W-padL-padR)/(Math.max(1,pts.length-1)), py=v=>padT+(max-v)/(max-min)*(H-padT-padB);
+                    x.font='10px sans-serif'; x.fillStyle=txt; x.strokeStyle=grid; x.lineWidth=1;
+                    // horizontal grid + price labels
+                    for(let r=0;r<=4;r++){ const v=max-(max-min)*r/4, y=py(v); x.beginPath(); x.moveTo(padL,y); x.lineTo(W-padR,y); x.stroke(); x.textAlign='right'; x.fillText(this.curSym+v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}), padL-6, y+3); }
+                    // x time labels (first/mid/last)
+                    x.textAlign='center';
+                    [0, Math.floor(pts.length/2), pts.length-1].forEach(i=>{ const t=(times[i]||'').slice(5,16); x.fillText(t, px(i), H-7); });
+                    // area + line
+                    const g=x.createLinearGradient(0,padT,0,H-padB); g.addColorStop(0,'rgba(16,185,129,.28)'); g.addColorStop(1,'rgba(16,185,129,0)');
+                    x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.lineTo(px(pts.length-1),H-padB); x.lineTo(px(0),H-padB); x.closePath(); x.fillStyle=g; x.fill();
                     x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.strokeStyle='#10b981'; x.lineWidth=2; x.stroke();
+                    // last price dashed marker
+                    const last=pts[pts.length-1], ly=py(last); x.setLineDash([4,4]); x.strokeStyle='rgba(16,185,129,.6)'; x.beginPath(); x.moveTo(padL,ly); x.lineTo(W-padR,ly); x.stroke(); x.setLineDash([]);
+                    x.fillStyle='#10b981'; x.beginPath(); x.arc(px(pts.length-1),ly,3,0,7); x.fill();
                 },
                 async submit(){
                     let qty = parseFloat(this.oqty)||0;
