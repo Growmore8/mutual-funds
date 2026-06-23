@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\FiltersClients;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
@@ -11,15 +12,19 @@ use Illuminate\Support\Facades\DB;
 
 class WithdrawalController extends Controller
 {
+    use FiltersClients;
+
     public function index(Request $request)
     {
+        $search = trim((string) $request->get('q'));
         $withdrawals = Withdrawal::with('user', 'fundAccount')
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($search !== '', fn ($q) => $q->whereHas('user', fn ($u) => $this->matchClient($u, $search)))
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.withdrawals.index', compact('withdrawals'));
+        return view('admin.withdrawals.index', compact('withdrawals', 'search'));
     }
 
     public function approve(Request $request, Withdrawal $withdrawal)

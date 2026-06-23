@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\FiltersClients;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\PoolAccount;
@@ -14,10 +15,14 @@ use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
+    use FiltersClients;
+
     public function index(Request $request)
     {
+        $search = trim((string) $request->get('q'));
         $deposits = Deposit::with(['user', 'poolAccount', 'accountType', 'fundAccount'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($search !== '', fn ($q) => $q->whereHas('user', fn ($u) => $this->matchClient($u, $search)))
             ->latest()
             ->paginate(25)
             ->withQueryString();
@@ -25,7 +30,7 @@ class DepositController extends Controller
         $clients = User::where('role', 'client')->orderBy('name')->get(['id', 'name', 'email', 'account_type_id']);
         $pools = PoolAccount::where('is_active', true)->get();
 
-        return view('admin.deposits.index', compact('deposits', 'clients', 'pools'));
+        return view('admin.deposits.index', compact('deposits', 'clients', 'pools', 'search'));
     }
 
     public function store(Request $request)

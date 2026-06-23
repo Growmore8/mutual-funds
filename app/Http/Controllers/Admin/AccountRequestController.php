@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\FiltersClients;
 use App\Http\Controllers\Controller;
 use App\Models\AccountRequest;
 use App\Services\Notifier;
@@ -9,15 +10,19 @@ use Illuminate\Http\Request;
 
 class AccountRequestController extends Controller
 {
+    use FiltersClients;
+
     public function index(Request $request)
     {
+        $search = trim((string) $request->get('q'));
         $requests = AccountRequest::with(['user', 'accountType'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($search !== '', fn ($q) => $q->whereHas('user', fn ($u) => $this->matchClient($u, $search)))
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.account-requests.index', compact('requests'));
+        return view('admin.account-requests.index', compact('requests', 'search'));
     }
 
     public function approve(Request $request, AccountRequest $accountRequest)

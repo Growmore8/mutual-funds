@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\FiltersClients;
 use App\Http\Controllers\Controller;
 use App\Models\KycDocument;
 use Illuminate\Http\Request;
@@ -9,12 +10,16 @@ use Illuminate\Support\Facades\Storage;
 
 class KycReviewController extends Controller
 {
+    use FiltersClients;
+
     public function index(Request $request)
     {
         $status = $request->get('status', 'submitted');
+        $search = trim((string) $request->get('q'));
 
         $documents = KycDocument::with('user')
             ->when(in_array($status, ['submitted', 'approved', 'rejected']), fn ($q) => $q->where('status', $status))
+            ->when($search !== '', fn ($q) => $q->whereHas('user', fn ($u) => $this->matchClient($u, $search)))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -26,7 +31,7 @@ class KycReviewController extends Controller
             'all' => KycDocument::count(),
         ];
 
-        return view('admin.kyc.index', compact('documents', 'status', 'counts'));
+        return view('admin.kyc.index', compact('documents', 'status', 'counts', 'search'));
     }
 
     public function file(KycDocument $document, string $side = 'front')

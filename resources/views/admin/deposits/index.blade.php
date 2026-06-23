@@ -1,10 +1,15 @@
 <x-admin-layout title="Requests · Deposits">
     @include('admin.partials.request-tabs')
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <p class="text-sm text-gray-500">Client deposit requests — review the slip, then approve or reject.</p>
+        <form method="GET" class="flex gap-2 text-sm">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <input name="q" value="{{ $search ?? '' }}" placeholder="Search name, email or GC ID…" class="min-w-[220px] border-gray-300 rounded-md">
+            <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-magnifying-glass"></i></button>
+            @if (!empty($search))<a href="{{ route('admin.deposits.index', array_filter(['status' => request('status')])) }}" class="px-4 py-2 border rounded-md text-gray-600">Clear</a>@endif
+        </form>
         <div class="flex gap-1 text-sm">
             @foreach (['' => 'All', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $key => $label)
-                <a href="{{ route('admin.deposits.index', array_filter(['status' => $key])) }}"
+                <a href="{{ route('admin.deposits.index', array_filter(['status' => $key, 'q' => $search ?? ''])) }}"
                    class="px-3 py-1.5 rounded-md {{ (string)request('status') === (string)$key ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50' }}">{{ $label }}</a>
             @endforeach
         </div>

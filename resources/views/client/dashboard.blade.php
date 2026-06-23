@@ -102,7 +102,7 @@
                 fmt(){ const v = this.conv(); return (v < 0 ? '-' : '+') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
              }">
             <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Portfolio P&L <span class="text-[10px]">all accounts</span>
+                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Portfolio P&L
                     <button type="button" @click="show=!show" class="text-gray-400 hover:text-emerald-400"><i class="fa-regular" :class="show?'fa-eye':'fa-eye-slash'"></i></button>
                 </p>
                 <p class="text-4xl font-bold mt-1 tracking-tight glow {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }}">

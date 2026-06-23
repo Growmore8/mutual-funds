@@ -8,14 +8,22 @@
         };
     @endphp
 
-    {{-- Status filter tabs --}}
-    <div class="flex flex-wrap gap-2 mb-4">
-        @foreach ($tabs as $key => $label)
-            <a href="{{ route('admin.kyc.index', ['status' => $key]) }}"
-               class="px-3 py-1.5 rounded-full text-sm {{ $status === $key ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
-                {{ $label }} <span class="opacity-70">({{ $counts[$key] ?? 0 }})</span>
-            </a>
-        @endforeach
+    {{-- Search + status filter --}}
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <form method="GET" class="flex gap-2 text-sm">
+            <input type="hidden" name="status" value="{{ $status }}">
+            <input name="q" value="{{ $search ?? '' }}" placeholder="Search name, email or GC ID…" class="min-w-[220px] border-gray-300 rounded-md">
+            <button class="px-4 py-2 bg-gray-800 text-white rounded-md"><i class="fa-solid fa-magnifying-glass"></i></button>
+            @if (!empty($search))<a href="{{ route('admin.kyc.index', ['status' => $status]) }}" class="px-4 py-2 border rounded-md text-gray-600">Clear</a>@endif
+        </form>
+        <div class="flex flex-wrap gap-1 text-sm">
+            @foreach ($tabs as $key => $label)
+                <a href="{{ route('admin.kyc.index', array_filter(['status' => $key, 'q' => $search ?? ''])) }}"
+                   class="px-3 py-1.5 rounded-md {{ $status === $key ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50' }}">
+                    {{ $label }} <span class="opacity-70">({{ $counts[$key] ?? 0 }})</span>
+                </a>
+            @endforeach
+        </div>
     </div>
 
     <div class="bg-white shadow rounded-xl overflow-x-auto">
