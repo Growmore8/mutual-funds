@@ -158,7 +158,7 @@
         function spot(){
             return {
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
-                curSym: '{{ $cs }}', interval: '1day', book: {asks:[], bids:[], last:0}, showChart: true,
+                curSym: '{{ $cs }}', interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true,
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', ototal:'', oqty:'',
                 avail: {{ (float)$account->balance }}, holdingQty: {{ (float)($selHolding ?? 0) }},
                 busy:false, msg:'', ok:false, _t:null,
