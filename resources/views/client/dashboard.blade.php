@@ -142,6 +142,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">BSE · India <span class="text-[10px]">INR</span></p>
             <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
             <p class="text-[11px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">≈ ${{ number_format(($usdInr ?? 0) > 0 ? ($spotInr ?? 0) / $usdInr : 0, 2) }} · 1$ = ₹{{ number_format($usdInr ?? 0, 2) }} (live)</p>
         </a>
     </div>
 

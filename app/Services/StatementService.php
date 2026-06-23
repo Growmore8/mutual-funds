@@ -89,13 +89,68 @@ class StatementService
     /** Render the statement PDF, or null if no PDF engine is installed. */
     public function pdf(array $data)
     {
-        $html = view('pdf.statement', $data)->render();
+        return $this->pdfFromView('pdf.statement', $data);
+    }
+
+    /** Render any statement view to a PDF (or null if no engine). */
+    public function pdfFromView(string $view, array $data)
+    {
+        $html = view($view, $data)->render();
 
         if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
             return \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper('a4');
         }
 
         return null;
+    }
+
+    /** Spot Trading section for a currency over a period (trades + deposits/withdrawals + realized). */
+    public function spotSection(User $client, Carbon $start, Carbon $end, string $currency): array
+    {
+        $cs = $currency === 'INR' ? '₹' : '$';
+        $instIds = \App\Models\SpotInstrument::where('currency', $currency)->pluck('id');
+
+        $allTrades = \App\Models\SpotTrade::with('instrument')->whereIn('instrument_id', $instIds)
+            ->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))
+            ->orderBy('id')->get();
+
+        // Walk all trades to compute realized within the period.
+        $pos = [];
+        $realized = 0.0;
+        $periodTrades = collect();
+        foreach ($allTrades as $t) {
+            $iid = $t->instrument_id;
+            $pos[$iid] ??= ['qty' => 0.0, 'avg' => 0.0];
+            $qty = (float) $t->qty;
+            $price = (float) $t->price;
+            $inPeriod = $t->created_at->betweenIncluded($start, $end);
+            if ($t->buyer_id === $client->id) {
+                $nq = $pos[$iid]['qty'] + $qty;
+                $pos[$iid]['avg'] = $nq > 0 ? (($pos[$iid]['qty'] * $pos[$iid]['avg']) + ($qty * $price)) / $nq : 0;
+                $pos[$iid]['qty'] = $nq;
+            } else {
+                if ($inPeriod) {
+                    $realized += ($price - $pos[$iid]['avg']) * $qty;
+                }
+                $pos[$iid]['qty'] = max(0, $pos[$iid]['qty'] - $qty);
+            }
+            if ($inPeriod) {
+                $periodTrades->push($t);
+            }
+        }
+
+        $deposits = (float) \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')->where('currency', $currency)
+            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->sum('amount');
+        $withdrawals = (float) \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')->where('currency', $currency)
+            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->sum('amount');
+        $balance = (float) \App\Models\SpotAccount::where('user_id', $client->id)->where('currency', $currency)->value('balance');
+
+        return [
+            'currency' => $currency, 'cs' => $cs,
+            'deposits' => $deposits, 'withdrawals' => $withdrawals,
+            'realized' => round($realized, 2), 'balance' => $balance,
+            'trades' => $periodTrades, 'clientId' => $client->id,
+        ];
     }
 
     public function filename(array $data): string

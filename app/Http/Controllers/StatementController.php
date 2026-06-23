@@ -16,6 +16,13 @@ class StatementController extends Controller
     {
         $user = $request->user();
         [$start, $end, $label] = $svc->period($request->get('period', 'month'), $request->get('from'), $request->get('to'));
+        $scope = $request->get('scope', 'fund');
+
+        // Spot / combined statements use the multi-section view.
+        if (in_array($scope, ['spot_usd', 'spot_inr', 'all'])) {
+            return $this->scopedStatement($request, $svc, $user, $start, $end, $label, $scope);
+        }
+
         $data = $svc->data($user, $start, $end, $label);
 
         if ($request->get('action') === 'email') {
@@ -43,6 +50,43 @@ class StatementController extends Controller
         }
 
         return view('pdf.statement', $data + ['print' => true]);
+    }
+
+    /** Spot / combined (all) statement. */
+    private function scopedStatement(Request $request, StatementService $svc, $user, $start, $end, $label, $scope)
+    {
+        $payload = [
+            'client' => $user, 'name' => $user->name, 'email' => $user->email, 'code' => $user->clientCode(),
+            'label' => $label, 'start' => $start, 'end' => $end, 'generatedAt' => now(), 'scope' => $scope,
+            'fund' => $scope === 'all' ? $svc->data($user, $start, $end, $label) : null,
+            'usd' => in_array($scope, ['spot_usd', 'all']) ? $svc->spotSection($user, $start, $end, 'USD') : null,
+            'inr' => in_array($scope, ['spot_inr', 'all']) ? $svc->spotSection($user, $start, $end, 'INR') : null,
+        ];
+
+        if ($request->get('action') === 'email') {
+            $pdf = $svc->pdfFromView('pdf.account-statement', $payload);
+            try {
+                Mail::to($user->email)->send(new StatementMail($payload, $pdf?->output(), 'emails.statement-generic', 'Your GrowthCapital statement · ' . $label));
+            } catch (\Throwable $e) {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => 'Could not send the statement right now.'], 500);
+                }
+
+                return back()->with('status', 'Could not send statement right now.');
+            }
+            if ($request->wantsJson()) {
+                return response()->json(['ok' => true, 'message' => 'Statement emailed to ' . $user->email . '.']);
+            }
+
+            return back()->with('status', 'Statement sent to ' . $user->email . '.');
+        }
+
+        $pdf = $svc->pdfFromView('pdf.account-statement', $payload);
+        if ($pdf) {
+            return $pdf->download('GrowthCapital-Statement-' . $user->clientCode() . '.pdf');
+        }
+
+        return view('pdf.account-statement', $payload + ['print' => true]);
     }
 
     /** Deposit / withdrawal / profit transaction history. */
