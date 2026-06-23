@@ -19,18 +19,18 @@ class SpotTradingService
 {
     private const EPS = 0.0000001;
 
-    /** Credit / debit a client's spot wallet (used by funding + admin). */
-    public function adjustBalance(int $userId, float $delta): SpotAccount
+    /** Credit / debit a client's spot wallet for a given currency (used by funding + admin). */
+    public function adjustBalance(int $userId, float $delta, string $currency = 'USD'): SpotAccount
     {
-        $acc = SpotAccount::firstOrCreate(['user_id' => $userId], ['balance' => 0]);
+        $acc = SpotAccount::firstOrCreate(['user_id' => $userId, 'currency' => $currency], ['balance' => 0]);
         $acc->increment('balance', $delta);
 
         return $acc->fresh();
     }
 
-    public function account(int $userId): SpotAccount
+    public function account(int $userId, string $currency = 'USD'): SpotAccount
     {
-        return SpotAccount::firstOrCreate(['user_id' => $userId], ['balance' => 0]);
+        return SpotAccount::firstOrCreate(['user_id' => $userId, 'currency' => $currency], ['balance' => 0]);
     }
 
     /** Place a client order and match it immediately. */
@@ -43,8 +43,10 @@ class SpotTradingService
             throw new RuntimeException('Limit orders need a price.');
         }
 
-        return DB::transaction(function () use ($userId, $instrument, $side, $type, $price, $qty) {
-            $acc = SpotAccount::lockForUpdate()->firstOrCreate(['user_id' => $userId], ['balance' => 0]);
+        $cur = $instrument->currency ?: 'USD';
+
+        return DB::transaction(function () use ($userId, $instrument, $side, $type, $price, $qty, $cur) {
+            $acc = SpotAccount::lockForUpdate()->firstOrCreate(['user_id' => $userId, 'currency' => $cur], ['balance' => 0]);
 
             if ($side === 'buy') {
                 $estPrice = $type === 'limit' ? $price : ($this->bestAsk($instrument->id) ?? (float) $instrument->last_price ?? 0);
@@ -121,9 +123,9 @@ class SpotTradingService
 
             $fill = min($remaining, $maker->remaining());
 
-            // Cap a market BUY by the taker's remaining balance.
+            // Cap a market BUY by the taker's remaining balance (in the instrument's currency).
             if ($taker->side === 'buy') {
-                $bal = (float) SpotAccount::where('user_id', $taker->user_id)->value('balance');
+                $bal = (float) SpotAccount::where('user_id', $taker->user_id)->where('currency', $instrument->currency ?: 'USD')->value('balance');
                 $affordable = $mp > 0 ? $bal / $mp : 0;
                 $fill = min($fill, $affordable);
             }
@@ -162,10 +164,11 @@ class SpotTradingService
         }
 
         $cash = $qty * $price;
+        $cur = $instrument->currency ?: 'USD';
 
         // Buyer (skip if house maker).
         if ($buy->user_id) {
-            SpotAccount::where('user_id', $buy->user_id)->decrement('balance', $cash);
+            SpotAccount::where('user_id', $buy->user_id)->where('currency', $cur)->decrement('balance', $cash);
             $h = SpotHolding::firstOrCreate(['user_id' => $buy->user_id, 'instrument_id' => $instrument->id], ['qty' => 0, 'avg_price' => 0]);
             $newQty = (float) $h->qty + $qty;
             $h->avg_price = $newQty > 0 ? (((float) $h->qty * (float) $h->avg_price) + $cash) / $newQty : 0;
@@ -175,7 +178,7 @@ class SpotTradingService
 
         // Seller (skip if house maker).
         if ($sell->user_id) {
-            SpotAccount::where('user_id', $sell->user_id)->increment('balance', $cash);
+            SpotAccount::where('user_id', $sell->user_id)->where('currency', $cur)->increment('balance', $cash);
             $h = SpotHolding::firstOrCreate(['user_id' => $sell->user_id, 'instrument_id' => $instrument->id], ['qty' => 0, 'avg_price' => 0]);
             $h->qty = max(0, (float) $h->qty - $qty);
             if ($h->qty <= self::EPS) {

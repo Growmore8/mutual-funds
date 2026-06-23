@@ -14,9 +14,10 @@ class WithdrawalController extends Controller
     {
         $user = $request->user();
         $purpose = $request->get('for') === 'spot' ? 'spot' : 'fund';
+        $currency = $purpose === 'spot' && strtoupper($request->get('cur', 'USD')) === 'INR' ? 'INR' : 'USD';
 
         if ($purpose === 'spot') {
-            $available = (float) app(SpotTradingService::class)->account($user->id)->balance;
+            $available = (float) app(SpotTradingService::class)->account($user->id, $currency)->balance;
             $withdrawals = Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest()->limit(10)->get();
         } else {
             $account = $user->currentAccount();
@@ -29,6 +30,7 @@ class WithdrawalController extends Controller
             'payoutMethods' => $user->withdrawalMethods,
             'withdrawals' => $withdrawals,
             'purpose' => $purpose,
+            'currency' => $currency,
         ]);
     }
 
@@ -40,13 +42,15 @@ class WithdrawalController extends Controller
             'amount' => ['required', 'numeric', 'min:1'],
             'withdrawal_method_id' => ['required', 'exists:withdrawal_methods,id'],
             'purpose' => ['nullable', 'in:fund,spot'],
+            'currency' => ['nullable', 'in:USD,INR'],
         ]);
 
         $purpose = $data['purpose'] ?? 'fund';
+        $currency = $purpose === 'spot' && ($data['currency'] ?? 'USD') === 'INR' ? 'INR' : 'USD';
         $account = $user->currentAccount();
 
         $available = $purpose === 'spot'
-            ? (float) app(SpotTradingService::class)->account($user->id)->balance
+            ? (float) app(SpotTradingService::class)->account($user->id, $currency)->balance
             : ($account ? $account->availableToWithdraw() : 0.0);
 
         $method = WithdrawalMethod::where('id', $data['withdrawal_method_id'])->where('user_id', $user->id)->first();
@@ -64,7 +68,7 @@ class WithdrawalController extends Controller
             'user_id' => $user->id,
             'fund_account_id' => $purpose === 'spot' ? null : $account?->id,
             'amount' => $data['amount'],
-            'currency' => 'USD',
+            'currency' => $currency,
             'method' => $method->title(),
             'withdrawal_method_id' => $method->id,
             'payout_details' => $method->summary(),

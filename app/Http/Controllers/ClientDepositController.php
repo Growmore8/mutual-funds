@@ -13,12 +13,14 @@ class ClientDepositController extends Controller
     {
         $user = $request->user()->load('accountType');
         $purpose = $request->get('for') === 'spot' ? 'spot' : 'fund';
+        $currency = $purpose === 'spot' && strtoupper($request->get('cur', 'USD')) === 'INR' ? 'INR' : 'USD';
 
         return view('client.deposit.create', [
             'user' => $user,
             'methods' => PaymentMethod::orderBy('sort_order')->get(),
             'recent' => $user->deposits()->latest()->limit(8)->get(),
             'purpose' => $purpose,
+            'currency' => $currency,
         ]);
     }
 
@@ -32,9 +34,11 @@ class ClientDepositController extends Controller
             'slip' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'note' => ['nullable', 'string', 'max:1000'],
             'purpose' => ['nullable', 'in:fund,spot'],
+            'currency' => ['nullable', 'in:USD,INR'],
         ]);
 
         $purpose = $data['purpose'] ?? 'fund';
+        $currency = $purpose === 'spot' && ($data['currency'] ?? 'USD') === 'INR' ? 'INR' : 'USD';
         $slip = $request->file('slip')->store('deposits', 'local');
 
         $account = $user->currentAccount();
@@ -46,7 +50,7 @@ class ClientDepositController extends Controller
             'pool_account_id' => $purpose === 'spot' ? null : ($account?->pool_account_id ?? $user->pool_account_id),
             'account_type_id' => $purpose === 'spot' ? null : ($account?->account_type_id ?? $user->account_type_id),
             'amount' => $data['amount'],
-            'currency' => 'USD',
+            'currency' => $currency,
             'method' => $data['method'],
             'proof_path' => $slip,
             'note' => $data['note'] ?? null,

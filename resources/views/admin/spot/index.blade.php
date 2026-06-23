@@ -17,16 +17,17 @@
         <div class="bg-white shadow rounded-xl p-5">
             <h3 class="font-semibold text-gray-900 mb-3">Client trading accounts</h3>
             <table class="min-w-full text-sm">
-                <thead class="text-gray-500 text-left"><tr><th class="py-2">Client</th><th class="text-right">Balance</th><th class="text-right">Manage</th></tr></thead>
+                <thead class="text-gray-500 text-left"><tr><th class="py-2">Client</th><th>Currency</th><th class="text-right">Balance</th><th class="text-right">Manage</th></tr></thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($accounts as $a)
                         <tr>
                             <td class="py-2">{{ $a->user->name ?? '—' }} <span class="text-gray-400 text-xs font-mono">{{ $a->user?->clientCode() }}</span></td>
-                            <td class="py-2 text-right font-medium">{{ $money($a->balance) }}</td>
+                            <td class="py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ $a->currency==='INR' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $a->currency }}</span></td>
+                            <td class="py-2 text-right font-medium">{{ $a->currency==='INR' ? '₹' : '$' }}{{ number_format((float)$a->balance,2) }}</td>
                             <td class="py-2 text-right"><a href="{{ route('admin.spot.client', $a->user_id) }}" class="text-emerald-600 hover:underline">Manage</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="py-6 text-center text-gray-400">No spot accounts yet.</td></tr>
+                        <tr><td colspan="4" class="py-6 text-center text-gray-400">No spot accounts yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

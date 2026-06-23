@@ -78,6 +78,30 @@
         </div>
     </div>
 
+    {{-- Your accounts overview: Mutual Fund + Spot (USD/INR) — separate products --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <a href="{{ route('client.dashboard') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] border border-emerald-200 dark:border-emerald-500/20">
+            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-1">{{ $money($investment) }}</p>
+            <p class="text-[11px] text-gray-400">Capital · USD</p>
+        </a>
+        <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04]">
+            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot · US/Global</p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-1">${{ number_format($spotUsd ?? 0, 2) }}</p>
+            <p class="text-[11px] text-gray-400">USD wallet</p>
+        </a>
+        <a href="{{ route('spot.index', ['symbol' => 'RELIANCE']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04]">
+            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> Spot · India</p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-1">₹{{ number_format($spotInr ?? 0, 2) }}</p>
+            <p class="text-[11px] text-gray-400">INR wallet</p>
+        </a>
+        <a href="{{ route('client.profit') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04]">
+            <p class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid fa-chart-line text-emerald-500 mr-1"></i> Fund P&L</p>
+            <p class="text-lg font-extrabold {{ $runningPnl < 0 ? 'text-red-500' : 'text-emerald-500' }} mt-1">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
+            <p class="text-[11px] text-gray-400">Mutual fund</p>
+        </a>
+    </div>
+
     {{-- Balance + performance chart (exchange-style hero) --}}
     @php
         $hcoords = [];

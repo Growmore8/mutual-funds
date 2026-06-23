@@ -13,7 +13,7 @@
     @endphp
 
     <div class="max-w-2xl mx-auto"
-         x-data="{ sel: null, copied: false, purpose: '{{ $purpose ?? 'fund' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
+         x-data="{ sel: null, copied: false, purpose: '{{ $purpose ?? 'fund' }}', currency: '{{ $currency ?? 'USD' }}', methods: {{ Illuminate\Support\Js::from($methodsJson) }},
                    copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
@@ -21,13 +21,16 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds</h2>
             <p class="text-sm text-gray-500 mb-3">Choose where to deposit, pick a method, send the funds, then upload your slip.</p>
 
-            {{-- Deposit destination: Mutual Fund or Spot Trading --}}
-            <div class="grid grid-cols-2 gap-2 mb-5">
-                <button type="button" @click="purpose='fund'" :class="purpose==='fund' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500'" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold">
-                    <i class="fa-solid fa-layer-group"></i> Mutual Fund
+            {{-- Deposit destination --}}
+            <div class="grid grid-cols-3 gap-2 mb-5 text-center">
+                <button type="button" @click="purpose='fund';currency='USD'" :class="purpose==='fund' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
+                    <i class="fa-solid fa-layer-group"></i><br>Mutual Fund<br><span class="text-[10px] opacity-70">USD</span>
                 </button>
-                <button type="button" @click="purpose='spot'" :class="purpose==='spot' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500'" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold">
-                    <i class="fa-solid fa-arrow-trend-up"></i> Spot Trading
+                <button type="button" @click="purpose='spot';currency='USD'" :class="purpose==='spot'&&currency==='USD' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
+                    <i class="fa-solid fa-arrow-trend-up"></i><br>Spot · US/Global<br><span class="text-[10px] opacity-70">USD</span>
+                </button>
+                <button type="button" @click="purpose='spot';currency='INR'" :class="purpose==='spot'&&currency==='INR' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-500'" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight">
+                    <i class="fa-solid fa-arrow-trend-up"></i><br>Spot · India<br><span class="text-[10px] opacity-70">INR</span>
                 </button>
             </div>
 
@@ -112,6 +115,7 @@
                     @csrf
                     <input type="hidden" name="method" :value="sel?.label">
                     <input type="hidden" name="purpose" :value="purpose">
+                    <input type="hidden" name="currency" :value="currency">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><label class="block text-gray-700 mb-1">Amount (USD)</label><input type="number" step="0.01" min="1" name="amount" required class="w-full border-gray-300 rounded-md" placeholder="0.00"></div>
                         <div><label class="block text-gray-700 mb-1">Slip (image or PDF)</label><input type="file" name="slip" accept=".jpg,.jpeg,.png,.pdf" required class="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700"></div>

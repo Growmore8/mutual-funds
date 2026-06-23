@@ -22,4 +22,9 @@ class SpotInstrument extends Model
     {
         return $this->symbol;
     }
+
+    public function currencySymbol(): string
+    {
+        return ($this->currency ?: 'USD') === 'INR' ? '₹' : '$';
+    }
 }

@@ -12,18 +12,21 @@
         <div class="bg-white shadow rounded-xl p-6">
             <h3 class="font-semibold text-gray-900">{{ $client->name }} <span class="text-xs font-mono text-gray-400">{{ $client->clientCode() }}</span></h3>
             <p class="text-xs text-gray-400 mb-3">{{ $client->email }}</p>
-            <p class="text-sm text-gray-500">Spot Trading balance</p>
-            <p class="text-3xl font-bold text-gray-900 mb-4">{{ $money($account->balance) }}</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div><p class="text-xs text-gray-500">USD wallet</p><p class="text-2xl font-bold text-gray-900">${{ number_format((float)$usd->balance,2) }}</p></div>
+                <div><p class="text-xs text-gray-500">INR wallet</p><p class="text-2xl font-bold text-gray-900">₹{{ number_format((float)$inr->balance,2) }}</p></div>
+            </div>
 
             <form method="POST" action="{{ route('admin.spot.adjust', $client) }}" class="space-y-2 text-sm border-t border-gray-100 pt-4">
                 @csrf
                 <label class="block text-gray-700">Adjust balance</label>
-                <div class="flex gap-2">
-                    <select name="direction" class="border-gray-300 rounded-md"><option value="credit">Credit (+)</option><option value="debit">Debit (−)</option></select>
-                    <input type="number" step="0.01" name="amount" placeholder="0.00" class="flex-1 border-gray-300 rounded-md" required>
+                <div class="grid grid-cols-3 gap-2">
+                    <select name="currency" class="border-gray-300 rounded-md"><option value="USD">USD</option><option value="INR">INR</option></select>
+                    <select name="direction" class="border-gray-300 rounded-md"><option value="credit">Credit +</option><option value="debit">Debit −</option></select>
+                    <input type="number" step="0.01" name="amount" placeholder="0.00" class="border-gray-300 rounded-md" required>
                 </div>
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-md w-full">Apply</button>
-                <p class="text-[11px] text-gray-400">Use this to fund/correct the trading wallet. Client deposits marked “Spot” also credit here automatically on approval.</p>
+                <p class="text-[11px] text-gray-400">Fund/correct each currency wallet. Client deposits marked “Spot” credit here automatically on approval.</p>
             </form>
         </div>
 

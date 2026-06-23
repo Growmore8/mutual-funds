@@ -80,10 +80,15 @@ class ClientDashboardController extends Controller
         $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');
         $announcement = \App\Models\Announcement::active()->latest()->first();
 
+        // Spot wallets (separate products, separate currencies) for the home overview.
+        $spotUsd = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'USD')->value('balance');
+        $spotInr = (float) \App\Models\SpotAccount::where('user_id', $user->id)->where('currency', 'INR')->value('balance');
+
         return view('client.dashboard', compact(
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement'
+            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
+            'spotUsd', 'spotInr'
         ));
     }
 

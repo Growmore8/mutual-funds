@@ -76,11 +76,12 @@ class DepositController extends Controller
 
         // Spot deposits credit the trading wallet (separate from the mutual-fund pool).
         if ($deposit->purpose === 'spot') {
-            app(\App\Services\SpotTradingService::class)->adjustBalance($deposit->user_id, (float) $deposit->amount);
-            $amt = '$' . number_format((float) $deposit->amount, 2);
-            \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Spot deposit approved', $amt . ' added to your Spot Trading balance.', route('spot.index'));
+            $curr = $deposit->currency ?: 'USD';
+            app(\App\Services\SpotTradingService::class)->adjustBalance($deposit->user_id, (float) $deposit->amount, $curr);
+            $amt = ($curr === 'INR' ? '₹' : '$') . number_format((float) $deposit->amount, 2);
+            \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Spot deposit approved', $amt . ' added to your Spot ' . $curr . ' wallet.', route('spot.index'));
 
-            return back()->with('status', 'Spot deposit approved and trading balance credited.');
+            return back()->with('status', 'Spot deposit approved (' . $curr . ') and trading balance credited.');
         }
 
         $this->creditCapital($deposit);

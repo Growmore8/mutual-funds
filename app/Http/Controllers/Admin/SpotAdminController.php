@@ -35,12 +35,13 @@ class SpotAdminController extends Controller
     {
         abort_unless($client->role === 'client', 404);
 
-        $account = $this->svc->account($client->id);
+        $usd = $this->svc->account($client->id, 'USD');
+        $inr = $this->svc->account($client->id, 'INR');
         $holdings = SpotHolding::with('instrument')->where('user_id', $client->id)->where('qty', '>', 0)->get();
         $orders = SpotOrder::with('instrument')->where('user_id', $client->id)->whereIn('status', ['open', 'partial'])->latest('id')->get();
         $trades = SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))->latest('id')->limit(40)->get();
 
-        return view('admin.spot.client', compact('client', 'account', 'holdings', 'orders', 'trades'));
+        return view('admin.spot.client', compact('client', 'usd', 'inr', 'holdings', 'orders', 'trades'));
     }
 
     public function adjust(Request $request, User $client)
@@ -48,13 +49,15 @@ class SpotAdminController extends Controller
         $data = $request->validate([
             'amount' => ['required', 'numeric'],
             'direction' => ['required', 'in:credit,debit'],
+            'currency' => ['required', 'in:USD,INR'],
         ]);
 
         $delta = $data['direction'] === 'credit' ? abs($data['amount']) : -abs($data['amount']);
-        $this->svc->adjustBalance($client->id, $delta);
+        $this->svc->adjustBalance($client->id, $delta, $data['currency']);
 
+        $sym = $data['currency'] === 'INR' ? '₹' : '$';
         \App\Models\AppNotification::notify($client->id, 'deposit', 'Spot balance updated',
-            ($delta < 0 ? '-' : '+') . '$' . number_format(abs($delta), 2) . ' on your Spot Trading balance.', route('spot.index'));
+            ($delta < 0 ? '-' : '+') . $sym . number_format(abs($delta), 2) . ' on your Spot ' . $data['currency'] . ' wallet.', route('spot.index'));
 
         return back()->with('status', 'Spot balance updated.');
     }
