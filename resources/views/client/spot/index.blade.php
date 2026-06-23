@@ -4,15 +4,19 @@
         $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
-        $marketGroups = ['usd' => 'NYSE · US/Global/Crypto', 'inr' => 'BSE · India'];
+        $marketGroups = ['usd' => 'NYSE · US/Global + Crypto', 'inr' => 'BSE · India'];
         $grp = fn ($m) => $m === 'india' ? 'inr' : 'usd';
         $selGroup = $grp($selected->market ?? 'india');
+        // Within the NYSE (USD) group, split stocks vs crypto into sub-categories.
+        $subGroups = fn ($list) => $selGroup === 'usd'
+            ? ['US Stocks' => $list->where('market', '!=', 'crypto'), 'Crypto' => $list->where('market', 'crypto')]
+            : ['' => $list];
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
         {{-- Spot account summary — active market's wallet only (NYSE → USD, BSE → INR) --}}
         <div class="gcard rounded-2xl p-4 mb-3 mx-1 bg-white dark:bg-white/[0.04]">
-            <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold mb-2"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account · {{ $selGroup==='inr' ? 'BSE' : 'NYSE' }}</p>
+            <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold mb-2"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account · {{ $marketGroups[$selGroup] ?? 'NYSE' }}</p>
             <div class="flex flex-wrap gap-x-6 gap-y-2">
                 @if ($selGroup === 'inr')
                     <div><p class="text-xs text-gray-500 dark:text-gray-400">INR wallet</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">₹{{ number_format((float)$inr->balance,2) }}</p></div>
@@ -27,9 +31,9 @@
             <div class="mb-3 mx-1 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300 text-sm rounded-lg p-3">{{ session('status') }}</div>
         @endif
 
-        {{-- Market tabs: NYSE (US/Global/Crypto) | BSE (India) --}}
+        {{-- Market tabs: NYSE (US/Global + Crypto) | BSE (India) --}}
         <div class="flex gap-2 mx-1 mb-3">
-            <a href="{{ route('spot.index', ['market' => 'global']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NYSE <span class="font-normal text-[11px]">US/Global/Crypto · $</span></a>
+            <a href="{{ route('spot.index', ['market' => 'global']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></a>
             <a href="{{ route('spot.index', ['market' => 'india']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">BSE <span class="font-normal text-[11px]">India · ₹</span></a>
         </div>
 
@@ -38,15 +42,21 @@
 
             {{-- Markets — desktop sidebar (current group only) --}}
             <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
-                <p class="text-xs font-semibold text-gray-500 mb-2">{{ $selGroup==='inr' ? 'BSE · India' : 'NYSE · US/Global/Crypto' }}</p>
+                <p class="text-xs font-semibold text-gray-500 mb-2">{{ $marketGroups[$selGroup] ?? '' }}</p>
                 <div class="max-h-[560px] overflow-y-auto">
-                    @foreach ($instruments as $m)
-                        @if ($grp($m->market) === $selGroup)
-                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
-                               class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
-                                <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
-                                <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
-                            </a>
+                    @php $active = $instruments->filter(fn ($m) => $grp($m->market) === $selGroup); @endphp
+                    @foreach ($subGroups($active) as $subLabel => $list)
+                        @if ($list->count())
+                            @if ($subLabel)
+                                <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-2 mb-1 px-2.5">{{ $subLabel }}</p>
+                            @endif
+                            @foreach ($list as $m)
+                                <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
+                                   class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
+                                    <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
+                                    <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                                </a>
+                            @endforeach
                         @endif
                     @endforeach
                 </div>
@@ -65,12 +75,18 @@
                         {{-- mobile symbol picker (current group only) --}}
                         <div x-show="pick" @click.outside="pick=false" x-cloak class="lg:hidden absolute z-30 mt-1 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-2">
                             <div class="max-h-64 overflow-y-auto">
-                                @foreach ($instruments as $m)
-                                    @if ($grp($m->market) === $selGroup)
-                                        <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
-                                            <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
-                                            <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
-                                        </a>
+                                @php $activeM = $instruments->filter(fn ($m) => $grp($m->market) === $selGroup); @endphp
+                                @foreach ($subGroups($activeM) as $subLabel => $list)
+                                    @if ($list->count())
+                                        @if ($subLabel)
+                                            <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 mb-1 px-3">{{ $subLabel }}</p>
+                                        @endif
+                                        @foreach ($list as $m)
+                                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
+                                                <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
+                                                <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                                            </a>
+                                        @endforeach
                                     @endif
                                 @endforeach
                             </div>

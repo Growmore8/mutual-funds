@@ -12,7 +12,7 @@ use App\Models\SpotOrder;
  */
 class SpotLiquiditySeeder
 {
-    public function __construct(private TwelveDataClient $td) {}
+    public function __construct(private TwelveDataClient $td, private SpotTradingService $engine) {}
 
     private float $spread = 0.0008;   // 0.08% per level
 
@@ -41,6 +41,9 @@ class SpotLiquiditySeeder
         }
 
         $ins->update(['last_price' => $price]);
+
+        // Auto-execute resting limit orders the live price has reached (fallback when nobody's watching).
+        $this->engine->triggerLimitOrders($ins, $price);
 
         // Clear previous maker quotes (leave real client orders alone).
         SpotOrder::where('instrument_id', $ins->id)->where('is_maker', true)

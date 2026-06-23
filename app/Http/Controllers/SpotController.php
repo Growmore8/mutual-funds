@@ -51,6 +51,11 @@ class SpotController extends Controller
         $q = $this->td->quote($ins->symbol, $ins->exchange);
         $price = (float) ($p['price'] ?? $q['close'] ?? $ins->last_price ?? 0);
 
+        // Auto-execute any resting limit orders the live price has now reached.
+        if ($price > 0) {
+            $this->svc->triggerLimitOrders($ins, $price);
+        }
+
         return response()->json([
             'price' => $price,
             'change' => (float) ($q['percent_change'] ?? 0),

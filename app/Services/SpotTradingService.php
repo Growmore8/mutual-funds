@@ -200,6 +200,80 @@ class SpotTradingService
         $instrument->update(['last_price' => $price]);
     }
 
+    /**
+     * Trigger resting limit orders against the live market price.
+     * Buy limit fills when the live price falls to/below its price; sell limit when it rises to/above.
+     * Fills execute at the live price against the house. Returns the number of orders touched.
+     */
+    public function triggerLimitOrders(SpotInstrument $instrument, float $livePrice): int
+    {
+        if ($livePrice <= 0) {
+            return 0;
+        }
+        $cur = $instrument->currency ?: 'USD';
+        $touched = 0;
+
+        DB::transaction(function () use ($instrument, $livePrice, $cur, &$touched) {
+            // Buy limits priced at/above the live price are "in the money".
+            $buys = SpotOrder::where('instrument_id', $instrument->id)->where('side', 'buy')->where('type', 'limit')
+                ->whereIn('status', ['open', 'partial'])->whereNotNull('user_id')
+                ->where('price', '>=', $livePrice - self::EPS)
+                ->lockForUpdate()->orderBy('price', 'desc')->orderBy('id')->get();
+            foreach ($buys as $o) {
+                $touched += $this->fillAgainstHouse($o, $instrument, $livePrice, $cur) ? 1 : 0;
+            }
+
+            // Sell limits priced at/below the live price are "in the money".
+            $sells = SpotOrder::where('instrument_id', $instrument->id)->where('side', 'sell')->where('type', 'limit')
+                ->whereIn('status', ['open', 'partial'])->whereNotNull('user_id')
+                ->where('price', '<=', $livePrice + self::EPS)
+                ->lockForUpdate()->orderBy('price', 'asc')->orderBy('id')->get();
+            foreach ($sells as $o) {
+                $touched += $this->fillAgainstHouse($o, $instrument, $livePrice, $cur) ? 1 : 0;
+            }
+        });
+
+        return $touched;
+    }
+
+    /** Fill a resting limit order's remaining qty at $price against the house. */
+    private function fillAgainstHouse(SpotOrder $order, SpotInstrument $instrument, float $price, string $cur): bool
+    {
+        $fill = $order->remaining();
+        if ($fill <= self::EPS) {
+            return false;
+        }
+
+        if ($order->side === 'buy') {
+            $bal = (float) SpotAccount::where('user_id', $order->user_id)->where('currency', $cur)->value('balance');
+            $fill = min($fill, $price > 0 ? $bal / $price : 0);
+            if ($fill <= self::EPS) {
+                return false; // can't afford — leave it resting
+            }
+        } else {
+            $h = SpotHolding::where('user_id', $order->user_id)->where('instrument_id', $instrument->id)->first();
+            $fill = min($fill, $h ? (float) $h->qty : 0);
+            if ($fill <= self::EPS) {
+                $order->update(['status' => 'cancelled']); // nothing left to sell
+                return false;
+            }
+        }
+
+        $house = SpotOrder::create([
+            'user_id' => null, 'instrument_id' => $instrument->id,
+            'side' => $order->side === 'buy' ? 'sell' : 'buy', 'type' => 'limit',
+            'price' => $price, 'qty' => $fill, 'filled_qty' => 0, 'status' => 'open', 'is_maker' => true,
+        ]);
+
+        $this->settle($order, $house, $fill, $price, $instrument);
+
+        $order->refresh();
+        $order->update(['status' => ((float) $order->filled_qty + self::EPS >= (float) $order->qty) ? 'filled' : 'partial']);
+        $house->update(['status' => 'filled']);
+
+        return true;
+    }
+
     public function bestAsk(int $instrumentId): ?float
     {
         return SpotOrder::where('instrument_id', $instrumentId)->where('side', 'sell')
