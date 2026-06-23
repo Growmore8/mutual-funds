@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GrowthCapital · Spot Trading (Mockup)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  body{background:radial-gradient(1100px 520px at 50% -12%,rgba(16,185,129,.10),transparent 60%),#070b16;color:#e5e7eb}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+  .pill{background:rgba(255,255,255,.06)}
+  .pos{color:#34d399}.neg{color:#f87171}
+  .tabbtn.active{background:#10b981;color:#04231a;font-weight:700}
+  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Top switch -->
+<div class="sticky top-0 z-30 backdrop-blur bg-[#070b16]/80 border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-2 font-extrabold text-lg">Growth<span class="text-emerald-400">Capital</span> <span class="text-xs font-normal text-gray-400 ml-1">· Spot Trading <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px]">MOCKUP</span></span></div>
+    <div class="flex gap-1 pill rounded-xl p-1 text-sm">
+      <button onclick="show('client')" id="tab-client" class="tabbtn active px-4 py-1.5 rounded-lg">Client App</button>
+      <button onclick="show('admin')" id="tab-admin" class="tabbtn px-4 py-1.5 rounded-lg">Admin Panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ CLIENT ============================ -->
+<div id="view-client" class="max-w-7xl mx-auto px-4 py-5">
+
+  <!-- balance bar -->
+  <div class="card rounded-2xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="text-xs text-gray-400">Virtual Trading Balance <span class="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[10px]">PAPER</span></p>
+      <p class="text-3xl font-extrabold mt-0.5">$10,482.55 <span class="text-sm font-medium text-gray-400">USD</span></p>
+      <p class="text-xs mt-0.5">Today's P&L <span class="pos font-semibold">+$182.55 (1.77%)</span></p>
+    </div>
+    <div class="flex gap-2">
+      <button class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"><i class="fa-solid fa-arrow-down mr-1"></i> Add funds</button>
+      <button class="px-4 py-2 rounded-xl border border-white/15 text-sm font-semibold"><i class="fa-solid fa-arrow-up mr-1"></i> Withdraw</button>
+    </div>
+  </div>
+  <p class="text-[11px] text-gray-500 -mt-2 mb-4"><i class="fa-solid fa-circle-info"></i> Add funds / Withdraw reuse your <b>existing deposit &amp; withdrawal</b> flow — once an admin approves, the amount is credited as virtual trading balance.</p>
+
+  <div class="grid lg:grid-cols-[300px_1fr_300px] gap-4">
+
+    <!-- watchlist -->
+    <div class="card rounded-2xl p-3 order-2 lg:order-1">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold text-sm">Markets</h3>
+        <div class="pill rounded-lg text-[11px] flex">
+          <button class="px-2 py-1 rounded-lg bg-emerald-600 text-[#04231a] font-bold">India</button>
+          <button class="px-2 py-1 rounded-lg text-gray-300">Global</button>
+        </div>
+      </div>
+      <div class="relative mb-2"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"></i><input placeholder="Search RELIANCE, AAPL, BTC…" class="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs outline-none"></div>
+      <div id="watchlist" class="space-y-1 max-h-[460px] overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- chart -->
+    <div class="card rounded-2xl p-4 order-1 lg:order-2">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p class="font-bold text-lg" id="sym-name">RELIANCE <span class="text-xs font-normal text-gray-400">NSE · Reliance Industries</span></p>
+          <p class="text-2xl font-extrabold" id="sym-price">₹2,945.20 <span class="text-sm pos" id="sym-chg">+1.24%</span></p>
+        </div>
+        <div class="flex gap-1 text-xs pill rounded-lg p-1">
+          <button class="px-2 py-1 rounded">1D</button><button class="px-2 py-1 rounded bg-white/10">1W</button><button class="px-2 py-1 rounded">1M</button><button class="px-2 py-1 rounded">1Y</button>
+        </div>
+      </div>
+      <div id="chart" class="mt-3 rounded-lg overflow-hidden" style="height:340px"></div>
+      <p class="text-[11px] text-gray-500 mt-2"><i class="fa-solid fa-bolt text-emerald-400"></i> Live prices &amp; candles via <b>Twelve Data</b> API. India shown first; Global available.</p>
+    </div>
+
+    <!-- order ticket -->
+    <div class="order-3 space-y-4">
+      <div class="card rounded-2xl p-4">
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button class="py-2 rounded-lg bg-emerald-600 text-white font-bold text-sm">BUY</button>
+          <button class="py-2 rounded-lg bg-white/5 text-gray-300 font-bold text-sm">SELL</button>
+        </div>
+        <label class="text-xs text-gray-400">Order type</label>
+        <select class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm mb-2 mt-1"><option>Market</option><option>Limit</option></select>
+        <label class="text-xs text-gray-400">Quantity</label>
+        <input value="5" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm mb-2 mt-1">
+        <div class="flex justify-between text-xs text-gray-400 mb-1"><span>Est. cost</span><span class="text-gray-200 font-semibold">₹14,726.00</span></div>
+        <div class="flex justify-between text-xs text-gray-400 mb-3"><span>Available</span><span class="text-gray-200">$10,482.55</span></div>
+        <button class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm">Buy RELIANCE</button>
+        <p class="text-[10px] text-gray-500 mt-2 text-center">Paper trade · virtual balance · no real order placed</p>
+      </div>
+
+      <div class="card rounded-2xl p-4">
+        <h3 class="font-semibold text-sm mb-2">Open Positions</h3>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between"><div><p class="font-semibold">TCS <span class="text-gray-500">×3</span></p><p class="text-gray-500">avg ₹3,820</p></div><div class="text-right"><p>₹3,902</p><p class="pos">+₹246 (2.1%)</p></div></div>
+          <div class="flex items-center justify-between"><div><p class="font-semibold">AAPL <span class="text-gray-500">×10</span></p><p class="text-gray-500">avg $214.5</p></div><div class="text-right"><p>$209.1</p><p class="neg">-$54 (2.5%)</p></div></div>
+          <div class="flex items-center justify-between"><div><p class="font-semibold">BTC/USD <span class="text-gray-500">×0.05</span></p><p class="text-gray-500">avg $61,200</p></div><div class="text-right"><p>$63,540</p><p class="pos">+$117 (3.8%)</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- order history -->
+  <div class="card rounded-2xl p-4 mt-4">
+    <h3 class="font-semibold text-sm mb-3">Order History</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-xs">
+        <thead class="text-gray-500 text-left"><tr><th class="py-2">Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody class="divide-y divide-white/5">
+          <tr><td class="py-2 text-gray-400">10:42</td><td>RELIANCE</td><td class="pos">BUY</td><td>5</td><td>₹2,945</td><td>₹14,726</td><td><span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">Filled</span></td></tr>
+          <tr><td class="py-2 text-gray-400">09:55</td><td>AAPL</td><td class="pos">BUY</td><td>10</td><td>$214.5</td><td>$2,145</td><td><span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">Filled</span></td></tr>
+          <tr><td class="py-2 text-gray-400">Yest</td><td>INFY</td><td class="neg">SELL</td><td>8</td><td>₹1,610</td><td>₹12,880</td><td><span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">Filled</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ ADMIN ============================ -->
+<div id="view-admin" class="max-w-7xl mx-auto px-4 py-5 hidden">
+
+  <div class="grid sm:grid-cols-4 gap-3 mb-4">
+    <div class="card rounded-2xl p-4"><p class="text-xs text-gray-400">Active traders</p><p class="text-2xl font-extrabold mt-1">128</p></div>
+    <div class="card rounded-2xl p-4"><p class="text-xs text-gray-400">Virtual balance issued</p><p class="text-2xl font-extrabold mt-1">$1.42M</p></div>
+    <div class="card rounded-2xl p-4"><p class="text-xs text-gray-400">Trades today</p><p class="text-2xl font-extrabold mt-1">3,907</p></div>
+    <div class="card rounded-2xl p-4"><p class="text-xs text-gray-400">Spot trading</p><p class="text-lg font-bold mt-1 text-emerald-400"><i class="fa-solid fa-toggle-on"></i> Enabled</p></div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-4">
+    <!-- settings -->
+    <div class="card rounded-2xl p-5">
+      <h3 class="font-semibold mb-3">Feature settings</h3>
+      <label class="text-xs text-gray-400">Twelve Data API key</label>
+      <input value="•••••••••••••••• (set)" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm mb-3 mt-1">
+      <label class="text-xs text-gray-400">Markets enabled</label>
+      <div class="flex gap-2 mt-1 mb-3 text-sm">
+        <span class="pill px-3 py-1.5 rounded-lg"><i class="fa-solid fa-check text-emerald-400 mr-1"></i> India (NSE/BSE)</span>
+        <span class="pill px-3 py-1.5 rounded-lg"><i class="fa-solid fa-check text-emerald-400 mr-1"></i> Global</span>
+      </div>
+      <label class="text-xs text-gray-400">Default starting virtual balance (new clients)</label>
+      <input value="$10,000" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm mb-3 mt-1">
+      <div class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-lg p-3">
+        <i class="fa-solid fa-circle-info"></i> Funding uses the <b>existing Deposit / Withdrawal</b> module. When you approve a client's deposit, choose <b>credit to: Trading balance</b> — it tops up their virtual wallet.
+      </div>
+      <button class="mt-3 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">Save settings</button>
+    </div>
+
+    <!-- instruments -->
+    <div class="card rounded-2xl p-5">
+      <h3 class="font-semibold mb-3">Instruments / Watchlist</h3>
+      <div class="flex gap-2 mb-3"><input placeholder="Add symbol e.g. RELIANCE:NSE" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm"><button class="px-3 rounded-lg bg-emerald-600 text-white text-sm">Add</button></div>
+      <table class="min-w-full text-xs">
+        <thead class="text-gray-500 text-left"><tr><th class="py-1.5">Symbol</th><th>Market</th><th>Enabled</th><th></th></tr></thead>
+        <tbody class="divide-y divide-white/5">
+          <tr><td class="py-1.5 font-medium">RELIANCE</td><td>NSE 🇮🇳</td><td><i class="fa-solid fa-toggle-on text-emerald-400"></i></td><td class="text-right text-gray-500">remove</td></tr>
+          <tr><td class="py-1.5 font-medium">TCS</td><td>NSE 🇮🇳</td><td><i class="fa-solid fa-toggle-on text-emerald-400"></i></td><td class="text-right text-gray-500">remove</td></tr>
+          <tr><td class="py-1.5 font-medium">AAPL</td><td>NASDAQ 🇺🇸</td><td><i class="fa-solid fa-toggle-on text-emerald-400"></i></td><td class="text-right text-gray-500">remove</td></tr>
+          <tr><td class="py-1.5 font-medium">BTC/USD</td><td>Crypto</td><td><i class="fa-solid fa-toggle-off text-gray-500"></i></td><td class="text-right text-gray-500">remove</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- clients -->
+  <div class="card rounded-2xl p-5 mt-4">
+    <h3 class="font-semibold mb-3">Client trading accounts</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-gray-500 text-left"><tr><th class="py-2">Client</th><th>Virtual balance</th><th>Open positions</th><th>P&amp;L</th><th class="text-right">Manage</th></tr></thead>
+        <tbody class="divide-y divide-white/5">
+          <tr><td class="py-2">vishal <span class="text-gray-500 text-xs font-mono">GC000011</span></td><td>$10,482.55</td><td>3</td><td class="pos">+$245.10</td><td class="text-right"><button class="text-emerald-400">Adjust balance · View trades</button></td></tr>
+          <tr><td class="py-2">kavin <span class="text-gray-500 text-xs font-mono">GC000010</span></td><td>$8,910.00</td><td>1</td><td class="neg">-$54.00</td><td class="text-right"><button class="text-emerald-400">Adjust balance · View trades</button></td></tr>
+          <tr><td class="py-2">Rishi <span class="text-gray-500 text-xs font-mono">GC000008</span></td><td>$10,000.00</td><td>0</td><td class="text-gray-400">$0.00</td><td class="text-right"><button class="text-emerald-400">Adjust balance · View trades</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="text-[11px] text-gray-500 mt-4"><i class="fa-solid fa-shield-halved"></i> Mockup only. v1 = data + paper trading (virtual money) via Twelve Data — no real orders, no broker, no SEBI exposure. Real execution would be a later phase needing a broker API + compliance.</p>
+</div>
+
+<script>
+  function show(v){
+    document.getElementById('view-client').classList.toggle('hidden', v!=='client');
+    document.getElementById('view-admin').classList.toggle('hidden', v!=='admin');
+    document.getElementById('tab-client').classList.toggle('active', v==='client');
+    document.getElementById('tab-admin').classList.toggle('active', v==='admin');
+  }
+
+  // Watchlist data (India first, then global)
+  const wl = [
+    ['RELIANCE','NSE','₹2,945.20','+1.24%',1],['TCS','NSE','₹3,902.00','+0.62%',1],['HDFC BANK','NSE','₹1,648.30','-0.38%',0],
+    ['INFY','NSE','₹1,610.05','+0.21%',1],['NIFTY 50','Index','24,310.10','+0.45%',1],['SBIN','NSE','₹842.70','-0.12%',0],
+    ['AAPL','NASDAQ','$209.10','-2.50%',0],['TSLA','NASDAQ','$248.40','+3.10%',1],['BTC/USD','Crypto','$63,540','+3.80%',1],
+    ['EUR/USD','Forex','1.0876','+0.05%',1],['GOLD','Comdty','$2,388','+0.40%',1],
+  ];
+  document.getElementById('watchlist').innerHTML = wl.map((r,i)=>`
+    <button class="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-white/5 ${i===0?'bg-white/5':''}">
+      <div class="text-left"><p class="text-sm font-medium">${r[0]}</p><p class="text-[10px] text-gray-500">${r[1]}</p></div>
+      <div class="text-right"><p class="text-sm">${r[2]}</p><p class="text-[11px] ${r[4]?'pos':'neg'}">${r[3]}</p></div>
+    </button>`).join('');
+
+  // Sample candlestick chart
+  const el = document.getElementById('chart');
+  const chart = LightweightCharts.createChart(el, {
+    layout:{background:{color:'transparent'},textColor:'#9aa6b8'},
+    grid:{vertLines:{color:'rgba(255,255,255,.05)'},horzLines:{color:'rgba(255,255,255,.05)'}},
+    rightPriceScale:{borderColor:'rgba(255,255,255,.1)'}, timeScale:{borderColor:'rgba(255,255,255,.1)'},
+    width: el.clientWidth, height: 340,
+  });
+  const s = chart.addCandlestickSeries({upColor:'#34d399',downColor:'#f87171',wickUpColor:'#34d399',wickDownColor:'#f87171',borderVisible:false});
+  let p=2880, data=[]; const start=Math.floor(Date.now()/1000)-60*86400;
+  for(let i=0;i<60;i++){ const o=p, c=o+(Math.random()-0.45)*40, h=Math.max(o,c)+Math.random()*18, l=Math.min(o,c)-Math.random()*18; data.push({time:start+i*86400,open:+o.toFixed(1),high:+h.toFixed(1),low:+l.toFixed(1),close:+c.toFixed(1)}); p=c; }
+  s.setData(data); chart.timeScale().fitContent();
+  window.addEventListener('resize',()=>chart.applyOptions({width:el.clientWidth}));
+</script>
+</body>
+</html>
