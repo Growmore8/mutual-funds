@@ -134,12 +134,12 @@
     </div>
     <div class="grid grid-cols-2 gap-3 mb-6">
         <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">US / Global <span class="text-[10px]">USD</span></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">NYSE · US/Global/Crypto <span class="text-[10px]">USD</span></p>
             <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
             <p class="text-[11px] {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
         </a>
         <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
-            <p class="text-xs text-gray-500 dark:text-gray-400">India <span class="text-[10px]">INR</span></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">BSE · India <span class="text-[10px]">INR</span></p>
             <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
             <p class="text-[11px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
         </a>

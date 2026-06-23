@@ -4,7 +4,9 @@
         $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
-        $marketTabs = ['india' => 'India (₹)', 'global' => 'US / Global ($)', 'crypto' => 'Crypto', 'commodity' => 'Commodity'];
+        $marketGroups = ['usd' => 'NYSE · US/Global/Crypto', 'inr' => 'BSE · India'];
+        $grp = fn ($m) => $m === 'india' ? 'inr' : 'usd';
+        $selGroup = $grp($selected->market ?? 'india');
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
@@ -26,15 +28,15 @@
         <div class="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-4 lg:items-start px-1">
 
             {{-- Markets — desktop sidebar --}}
-            <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]" x-data="{ flt:'{{ $selected->market ?? 'india' }}' }">
+            <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]" x-data="{ flt:'{{ $selGroup }}' }">
                 <div class="flex flex-wrap gap-1 mb-2">
-                    @foreach ($marketTabs as $k => $label)
+                    @foreach ($marketGroups as $k => $label)
                         <button type="button" @click="flt='{{ $k }}'" :class="flt==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="px-2 py-1 rounded text-[11px]">{{ $label }}</button>
                     @endforeach
                 </div>
                 <div class="max-h-[560px] overflow-y-auto">
                     @foreach ($instruments as $m)
-                        <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $m->market }}'"
+                        <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $grp($m->market) }}'"
                            class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
                             <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
                             <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
@@ -45,24 +47,24 @@
 
             {{-- Center: symbol header + chart --}}
             <div class="min-w-0">
-                <div class="flex items-center justify-between mb-3" x-data="{ pick:false, flt:'{{ $selected->market ?? 'india' }}' }">
+                <div class="flex items-center justify-between mb-3" x-data="{ pick:false, flt:'{{ $selGroup }}' }">
                     <div class="relative">
                         <button @click="pick=!pick" class="flex items-center gap-2">
                             <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $selected->symbol ?? '—' }}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded {{ $cs==='₹' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $selected->currency ?? 'USD' }}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded {{ $cs==='₹' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $selGroup==='inr' ? 'BSE' : 'NYSE' }}</span>
                             <i class="fa-solid fa-chevron-down text-xs text-gray-400 lg:hidden"></i>
                         </button>
                         <p class="text-sm font-semibold" :class="change>=0?'text-emerald-500':'text-red-500'"><span x-text="(change>=0?'+':'')+change.toFixed(2)+'%'"></span></p>
                         {{-- mobile market picker --}}
                         <div x-show="pick" @click.outside="pick=false" x-cloak class="lg:hidden absolute z-30 mt-1 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-2">
                             <div class="flex flex-wrap gap-1 mb-2">
-                                @foreach ($marketTabs as $k => $label)
+                                @foreach ($marketGroups as $k => $label)
                                     <button type="button" @click="flt='{{ $k }}'" :class="flt==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="px-2 py-1 rounded text-[11px]">{{ $label }}</button>
                                 @endforeach
                             </div>
                             <div class="max-h-64 overflow-y-auto">
                                 @foreach ($instruments as $m)
-                                    <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $m->market }}'" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
+                                    <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $grp($m->market) }}'" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
                                         <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
                                     </a>
