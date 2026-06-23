@@ -92,12 +92,13 @@
     @endphp
     <div class="mb-6 rounded-2xl p-6 bg-white dark:bg-white/[0.04] shadow-sm border border-transparent dark:border-white/[0.06] dark:backdrop-blur">
         <div class="flex items-start justify-between gap-4" x-data="{ show: true }">
+            @php $tp = $totalPnlUsd ?? 0; @endphp
             <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Balance
+                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">Total Portfolio P&L <span class="text-[10px]">all accounts</span>
                     <button type="button" @click="show=!show" class="text-gray-400 hover:text-emerald-400"><i class="fa-regular" :class="show?'fa-eye':'fa-eye-slash'"></i></button>
                 </p>
-                <p class="text-4xl font-bold text-gray-900 dark:text-white mt-1 tracking-tight glow">
-                    <span x-show="show">{{ ($runningPnl < 0 ? '-' : '') . $money(abs($runningPnl)) }}</span>
+                <p class="text-4xl font-bold mt-1 tracking-tight glow {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }}">
+                    <span x-show="show">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</span>
                     <span x-show="!show" style="display:none">••••••</span>
                     <span class="text-base font-medium text-gray-400">USD</span>
                 </p>
@@ -126,38 +127,26 @@
         <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Running P&amp;L movements</p>
     </div>
 
-    {{-- Compact 4-card overview (click opens each product) --}}
-    @php $tp = $totalPnlUsd ?? 0; @endphp
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <div class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
-            <p class="text-[11px] text-gray-500 dark:text-gray-400">Total P&L <span class="text-[9px]">USD</span></p>
-            <p class="text-base font-extrabold {{ $tp < 0 ? 'text-red-500' : 'text-emerald-500' }} mt-0.5">{{ ($tp < 0 ? '-' : '+') . $money(abs($tp)) }}</p>
-            <p class="text-[9px] text-gray-400">₹ @ {{ number_format($usdInr ?? 0, 1) }}</p>
-        </div>
-        <a href="{{ route('client.transactions') }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
-            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-layer-group text-emerald-500"></i> Mutual Fund</p>
-            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">{{ $money($investment) }}</p>
-            <p class="text-[10px] {{ $runningPnl < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ ($runningPnl < 0 ? '-' : '+') . $money(abs($runningPnl)) }}</p>
+    {{-- Spot Trading — separate section --}}
+    <div class="flex items-center justify-between mb-2 mt-2">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading</h3>
+        <a href="{{ route('spot.index') }}" class="text-xs text-emerald-500">Open →</a>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
+            <p class="text-xs text-gray-500 dark:text-gray-400">US / Global <span class="text-[10px]">USD</span></p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
+            <p class="text-[11px] {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
         </a>
-        <a href="{{ route('spot.index', ['market' => 'global']) }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
-            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-blue-500"></i> US Spot</p>
-            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotUsd ?? 0, 2) }}</p>
-            <p class="text-[10px] {{ ($usSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ (($usSpotPnl ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($usSpotPnl ?? 0), 2) }}</p>
-        </a>
-        <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] block">
-            <p class="text-[11px] text-gray-500 dark:text-gray-400"><i class="fa-solid fa-arrow-trend-up text-orange-500"></i> India Spot</p>
-            <p class="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
-            <p class="text-[10px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
+        <a href="{{ route('spot.index', ['market' => 'india']) }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
+            <p class="text-xs text-gray-500 dark:text-gray-400">India <span class="text-[10px]">INR</span></p>
+            <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">₹{{ number_format($spotInr ?? 0, 2) }}</p>
+            <p class="text-[11px] {{ ($inrSpotPnl ?? 0) < 0 ? 'text-red-500' : 'text-emerald-500' }}">P&L {{ (($inrSpotPnl ?? 0) < 0 ? '-' : '+') . '₹' . number_format(abs($inrSpotPnl ?? 0), 2) }}</p>
         </a>
     </div>
 
-    {{-- Slim withdraw chooser --}}
-    <div class="flex flex-wrap gap-2 mb-6 text-xs">
-        <span class="text-gray-400 self-center mr-1"><i class="fa-solid fa-money-bill-transfer"></i> Withdraw:</span>
-        <a href="{{ route('withdraw.create') }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-emerald-400">Mutual Fund</a>
-        <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'USD']) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-blue-400">US Spot</a>
-        <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-orange-400">India Spot</a>
-    </div>
+    {{-- Mutual Fund — separate section (details below) --}}
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</h3>
 
     @php
         $card = 'gcard bg-white dark:bg-white/[0.04] rounded-2xl shadow-sm dark:shadow-none border border-transparent dark:border-white/[0.06] dark:backdrop-blur';
