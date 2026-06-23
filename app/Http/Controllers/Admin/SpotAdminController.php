@@ -69,6 +69,48 @@ class SpotAdminController extends Controller
         return back()->with('status', 'Order cancelled.');
     }
 
+    /** Delete a spot trade and reverse its effect on balances + holdings (all areas). */
+    public function deleteTrade(SpotTrade $trade)
+    {
+        $cash = (float) $trade->qty * (float) $trade->price;
+        $cur = $trade->instrument->currency ?: 'USD';
+
+        // Buyer side (refund cash, remove the bought qty).
+        if ($trade->buyer_id) {
+            $this->svc->adjustBalance($trade->buyer_id, $cash, $cur);
+            $h = SpotHolding::where('user_id', $trade->buyer_id)->where('instrument_id', $trade->instrument_id)->first();
+            if ($h) {
+                $h->qty = max(0, (float) $h->qty - (float) $trade->qty);
+                if ($h->qty <= 0) {
+                    $h->avg_price = 0;
+                }
+                $h->save();
+            }
+        }
+        // Seller side (take cash back, restore the sold qty).
+        if ($trade->seller_id) {
+            $this->svc->adjustBalance($trade->seller_id, -$cash, $cur);
+            $h = SpotHolding::firstOrCreate(['user_id' => $trade->seller_id, 'instrument_id' => $trade->instrument_id], ['qty' => 0, 'avg_price' => 0]);
+            $h->qty = (float) $h->qty + (float) $trade->qty;
+            $h->save();
+        }
+
+        $trade->delete();
+
+        return back()->with('status', 'Trade deleted and balances/holdings reversed.');
+    }
+
+    /** Wipe a client's spot account everywhere: zero wallets, clear holdings/orders/trades. */
+    public function resetAccount(User $client)
+    {
+        \App\Models\SpotAccount::where('user_id', $client->id)->update(['balance' => 0]);
+        SpotHolding::where('user_id', $client->id)->delete();
+        SpotOrder::where('user_id', $client->id)->delete();
+        SpotTrade::where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))->delete();
+
+        return back()->with('status', 'Spot account reset — wallets zeroed and history cleared.');
+    }
+
     public function storeInstrument(Request $request)
     {
         $data = $request->validate([

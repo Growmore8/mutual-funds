@@ -81,6 +81,8 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::get('/spot/client/{client}', [\App\Http\Controllers\Admin\SpotAdminController::class, 'client'])->name('spot.client');
     Route::post('/spot/client/{client}/adjust', [\App\Http\Controllers\Admin\SpotAdminController::class, 'adjust'])->name('spot.adjust');
     Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\Admin\SpotAdminController::class, 'cancelOrder'])->name('spot.order.cancel');
+    Route::post('/spot/trade/{trade}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteTrade'])->name('spot.trade.delete');
+    Route::post('/spot/client/{client}/reset', [\App\Http\Controllers\Admin\SpotAdminController::class, 'resetAccount'])->name('spot.reset');
     Route::post('/spot/instruments', [\App\Http\Controllers\Admin\SpotAdminController::class, 'storeInstrument'])->name('spot.instruments.store');
     Route::post('/spot/instruments/{instrument}/toggle', [\App\Http\Controllers\Admin\SpotAdminController::class, 'toggleInstrument'])->name('spot.instruments.toggle');
 

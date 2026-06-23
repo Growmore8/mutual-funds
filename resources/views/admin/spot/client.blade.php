@@ -28,6 +28,11 @@
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-md w-full">Apply</button>
                 <p class="text-[11px] text-gray-400">Fund/correct each currency wallet. Client deposits marked “Spot” credit here automatically on approval.</p>
             </form>
+
+            <form method="POST" action="{{ route('admin.spot.reset', $client) }}" class="mt-3" onsubmit="return confirm('Reset this client\'s spot account? Wallets set to 0 and ALL spot holdings/orders/trades deleted. This cannot be undone.')">
+                @csrf
+                <button class="px-4 py-2 bg-red-600 text-white rounded-md w-full text-sm"><i class="fa-solid fa-trash mr-1"></i> Reset spot account</button>
+            </form>
         </div>
 
         <div class="lg:col-span-2 space-y-6">
@@ -67,12 +72,19 @@
             <div class="bg-white shadow rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Recent trades</h3>
                 <table class="min-w-full text-sm">
-                    <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Side</th><th>Symbol</th><th class="text-right">Qty</th><th class="text-right">Price</th></tr></thead>
+                    <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Side</th><th>Symbol</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Action</th></tr></thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse ($trades as $t)
                             @php $isBuy = $t->buyer_id === $client->id; @endphp
-                            <tr><td class="py-2 text-gray-400 text-xs">{{ $t->created_at->format('d M H:i') }}</td><td class="{{ $isBuy?'text-emerald-600':'text-red-600' }}">{{ $isBuy?'Buy':'Sell' }}</td><td>{{ $t->instrument->symbol }}</td><td class="text-right">{{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</td><td class="text-right">{{ number_format((float)$t->price,2) }}</td></tr>
-                        @empty <tr><td colspan="5" class="py-5 text-center text-gray-400">No trades.</td></tr> @endforelse
+                            <tr>
+                                <td class="py-2 text-gray-400 text-xs">{{ $t->created_at->format('d M H:i') }}</td>
+                                <td class="{{ $isBuy?'text-emerald-600':'text-red-600' }}">{{ $isBuy?'Buy':'Sell' }}</td>
+                                <td>{{ $t->instrument->symbol }}</td>
+                                <td class="text-right">{{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</td>
+                                <td class="text-right">{{ $t->instrument->currencySymbol() }}{{ number_format((float)$t->price,2) }}</td>
+                                <td class="text-right"><form method="POST" action="{{ route('admin.spot.trade.delete', $t) }}" onsubmit="return confirm('Delete this trade and reverse its balance/holding effect?')">@csrf<button class="text-red-600 hover:underline">delete</button></form></td>
+                            </tr>
+                        @empty <tr><td colspan="6" class="py-5 text-center text-gray-400">No trades.</td></tr> @endforelse
                     </tbody>
                 </table>
             </div>
