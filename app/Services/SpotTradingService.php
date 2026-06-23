@@ -27,13 +27,9 @@ class SpotTradingService
         }) ?: 84.0;
     }
 
-    /** 1 USD → given currency (live, cached 6h). Used for deposit/withdraw conversion. */
-    public function usdRate(string $currency): float
+    /** Full 1 USD → currency rate map (live, cached 6h). */
+    public function ratesMap(): array
     {
-        $c = strtoupper($currency);
-        if ($c === 'USD') {
-            return 1.0;
-        }
         $map = (array) \Illuminate\Support\Facades\Cache::remember('fx.rates.full', 21600, function () {
             try {
                 $res = \Illuminate\Support\Facades\Http::timeout(8)->get('https://open.er-api.com/v6/latest/USD');
@@ -46,6 +42,22 @@ class SpotTradingService
 
             return [];
         });
+        if (empty($map['INR'])) {
+            $map['INR'] = $this->usdInr();
+        }
+        $map['USD'] = 1.0;
+
+        return $map;
+    }
+
+    /** 1 USD → given currency (live, cached 6h). Used for deposit/withdraw conversion. */
+    public function usdRate(string $currency): float
+    {
+        $c = strtoupper($currency);
+        if ($c === 'USD') {
+            return 1.0;
+        }
+        $map = $this->ratesMap();
         if (! empty($map[$c]) && (float) $map[$c] > 0) {
             return (float) $map[$c];
         }

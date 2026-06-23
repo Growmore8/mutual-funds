@@ -71,14 +71,16 @@ class TransactionController extends Controller
         }
         $spotItems = $spotItems->sortByDesc('when')->take(80)->values();
 
-        // Account picker (searchable) for the "Add transaction" form.
+        // Account picker (searchable) for the "Add transaction" form — incl. client's local fiat.
         $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
             'id' => $a->id,
             'label' => ($a->user->name ?? 'Client') . ' · ' . $a->code() . ' · ' . $a->label,
             'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
+            'localCur' => $a->user?->localCurrency() ?? 'USD',
         ])->values();
+        $fxMap = app(\App\Services\SpotTradingService::class)->ratesMap();
 
-        return view('admin.transactions.index', compact('transactions', 'accounts', 'search', 'spotItems'));
+        return view('admin.transactions.index', compact('transactions', 'accounts', 'search', 'spotItems', 'fxMap'));
     }
 
     public function store(Request $request)
@@ -89,58 +91,64 @@ class TransactionController extends Controller
             'amount' => ['required', 'numeric'],
             'description' => ['nullable', 'string', 'max:255'],
             'destination' => ['nullable', 'in:fund,spot_usd,spot_inr'],
+            'entered_currency' => ['nullable', 'string', 'max:8'],
         ]);
 
         $account = FundAccount::findOrFail($data['fund_account_id']);
         $user = $account->user;
+        $spotSvc = app(\App\Services\SpotTradingService::class);
+
+        // Amount may be entered in the client's local fiat — convert to the USD base and
+        // auto-note the original fiat amount on the description.
+        $enteredCur = strtoupper($data['entered_currency'] ?? 'USD');
+        $raw = (float) $data['amount'];
+        $amtUsd = $enteredCur === 'USD' ? $raw : round($raw / max(0.0000001, $spotSvc->usdRate($enteredCur)), 2);
+        $desc = $data['description'] ?? null;
+        if ($enteredCur !== 'USD') {
+            $desc = trim('Paid ' . number_format(abs($raw), 2) . ' ' . $enteredCur . ($desc ? ' · ' . $desc : ''));
+        }
 
         // Book to a Spot wallet instead of the mutual-fund ledger when chosen.
-        $destination = $data['destination'] ?? 'fund';
+        $destination = ($data['destination'] ?? 'fund') === 'fund' ? 'fund' : 'spot';
         if ($destination !== 'fund') {
-            // Single USD base: if the admin enters an INR amount (BSE), convert to USD first.
-            $spotSvc = app(\App\Services\SpotTradingService::class);
-            $amt = (float) $data['amount'];
-            if ($destination === 'spot_inr') {
-                $amt = round($spotSvc->toUsd($amt, 'INR'), 2);
-            }
             $signed = match ($data['type']) {
-                'deposit' => abs($amt),
-                'withdrawal', 'fee' => -abs($amt),
-                default => $amt, // adjustment / reversal: respect entered sign (use − to debit)
+                'deposit' => abs($amtUsd),
+                'withdrawal', 'fee' => -abs($amtUsd),
+                default => $amtUsd, // adjustment / reversal: respect entered sign (use − to debit)
             };
             $spotSvc->adjustBalance($user->id, $signed, 'USD');
 
             // Record it so it shows in transactions (client + admin).
             if ($signed >= 0) {
                 Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved',
+                    'amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved',
                     'value_date' => now()->toDateString(), 'approved_at' => now()]);
             } else {
                 Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved', 'processed_at' => now()]);
+                    'amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved', 'processed_at' => now()]);
             }
 
             AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
-                ucfirst($data['type']) . ' · Spot USD',
+                ucfirst($data['type']) . ' · Spot',
                 ($signed < 0 ? '-' : '+') . '$' . number_format(abs($signed), 2) . ' on your Spot wallet.',
                 route('spot.index'));
 
-            return back()->with('status', ucfirst($data['type']) . ' booked to ' . $user->name . "'s Spot wallet (USD).");
+            return back()->with('status', ucfirst($data['type']) . ' booked to ' . $user->name . "'s Spot wallet ($" . number_format(abs($signed), 2) . ').');
         }
 
         // Balance runs per fund account.
         $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
-        $balanceAfter = round((float) ($last->balance_after ?? 0) + (float) $data['amount'], 2);
+        $balanceAfter = round((float) ($last->balance_after ?? 0) + $amtUsd, 2);
 
         $tx = Transaction::create([
             'user_id' => $user->id,
             'fund_account_id' => $account->id,
             'type' => $data['type'],
-            'amount' => $data['amount'],
+            'amount' => $amtUsd,
             'currency' => 'USD',
             'balance_after' => $balanceAfter,
             'status' => 'completed',
-            'description' => $data['description'] ?? null,
+            'description' => $desc,
         ]);
 
         // A deposit/withdrawal here also creates the matching record so it counts
@@ -151,7 +159,7 @@ class TransactionController extends Controller
                 'fund_account_id' => $account->id,
                 'pool_account_id' => $account->pool_account_id,
                 'account_type_id' => $account->account_type_id,
-                'amount' => abs((float) $data['amount']),
+                'amount' => abs($amtUsd),
                 'currency' => 'USD',
                 'status' => 'approved',
                 'value_date' => now()->toDateString(),
@@ -163,9 +171,9 @@ class TransactionController extends Controller
             $wd = Withdrawal::create([
                 'user_id' => $user->id,
                 'fund_account_id' => $account->id,
-                'amount' => abs((float) $data['amount']),
+                'amount' => abs($amtUsd),
                 'currency' => 'USD',
-                'method' => 'Admin adjustment',
+                'method' => $enteredCur !== 'USD' ? 'Admin · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : 'Admin adjustment',
                 'status' => 'approved',
                 'processed_at' => now(),
             ]);
@@ -176,7 +184,7 @@ class TransactionController extends Controller
             $user->id,
             in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
             ucfirst($data['type']) . ' recorded',
-            (($data['amount'] < 0 ? '-' : '+') . '$' . number_format(abs((float) $data['amount']), 2)) . ' · ' . $account->label,
+            (($amtUsd < 0 ? '-' : '+') . '$' . number_format(abs($amtUsd), 2)) . ' · ' . $account->label,
             route('client.transactions'),
         );
 

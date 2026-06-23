@@ -147,7 +147,12 @@
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
                     <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
-                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dest:'fund' }">
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'fund', ecur:'USD', amt:'', type:'deposit',
+                                    get localCur(){ return this.sel && this.sel.localCur ? this.sel.localCur : 'USD'; },
+                                    get rate(){ return this.ecur==='USD' ? 1 : (this.rates[this.ecur] || 1); },
+                                    get usd(){ const a=parseFloat(this.amt)||0; return this.ecur==='USD' ? a : (this.rate>0 ? a/this.rate : a); },
+                                    get isDebit(){ return this.type==='withdrawal' || this.type==='fee' || (parseFloat(this.amt)||0) < 0; },
+                                    pickAcc(a){ this.sel=a; this.q=''; this.open=false; this.ecur='USD'; } }">
                         @csrf
                         <div class="relative">
                             <label class="block text-gray-700 mb-1">Account (search by name / account ID)</label>
@@ -158,33 +163,49 @@
                             <div x-show="open" @click.outside="open=false" x-cloak
                                  class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
                                 <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
-                                    <button type="button" @click="sel=a; q=''; open=false"
+                                    <button type="button" @click="pickAcc(a)"
                                             class="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-100 dark:hover:bg-white/10" x-text="a.label"></button>
                                 </template>
                                 <div x-show="accs.filter(x => x.search.includes(q.toLowerCase())).length === 0" class="px-3 py-2 text-gray-400 text-sm">No match</div>
                             </div>
                             <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
+
+                        {{-- Area: Mutual Fund / Spot --}}
+                        <input type="hidden" name="destination" :value="dest">
                         <div>
-                            <label class="block text-gray-700 mb-1">Book to (currency follows the market)</label>
-                            <select name="destination" x-model="dest" class="w-full border-gray-300 rounded-md">
-                                <option value="fund">Mutual Fund (USD)</option>
-                                <option value="spot_usd">Spot wallet (USD)</option>
-                                <option value="spot_inr">Spot wallet — enter INR (auto-converts to USD)</option>
-                            </select>
-                            <p class="text-xs mt-1" :class="dest==='spot_inr' ? 'text-orange-600' : 'text-blue-600'">
-                                <span x-show="dest==='spot_inr'">Enter the amount in <span class="font-semibold">INR (₹)</span> — it converts to USD on the wallet.</span>
-                                <span x-show="dest!=='spot_inr'">Amount is in <span class="font-semibold">USD ($)</span>.</span>
-                            </p>
+                            <label class="block text-gray-700 mb-1">Account area</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" @click="dest='fund'" :class="dest==='fund' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'" class="py-2 rounded-lg font-semibold">Mutual Fund</button>
+                                <button type="button" @click="dest='spot_usd'" :class="dest==='spot_usd' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'" class="py-2 rounded-lg font-semibold">Spot</button>
+                            </div>
                         </div>
+
+                        {{-- Action --}}
                         <div>
-                            <label class="block text-gray-700 mb-1">Type</label>
-                            <select name="type" class="w-full border-gray-300 rounded-md">
+                            <label class="block text-gray-700 mb-1">Deposit / Withdrawal</label>
+                            <select name="type" x-model="type" class="w-full border-gray-300 rounded-md">
                                 @foreach (['deposit','withdrawal','reversal','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
                             </select>
                         </div>
-                        <div><label class="block text-gray-700 mb-1">Amount <span x-text="dest==='spot_inr' ? '(₹)' : '($)'"></span> <span class="text-gray-400">(use − for debit)</span></label><input type="number" step="0.01" name="amount" class="w-full border-gray-300 rounded-md" required></div>
-                        <div><label class="block text-gray-700 mb-1">Description</label><input name="description" class="w-full border-gray-300 rounded-md"></div>
+
+                        {{-- Amount + currency (USD or client's fiat) --}}
+                        <input type="hidden" name="entered_currency" :value="ecur">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-gray-700">Amount</label>
+                                <div class="inline-flex rounded-lg overflow-hidden border border-gray-200 text-[11px] font-semibold">
+                                    <button type="button" @click="ecur='USD'" :class="ecur==='USD' ? 'bg-gray-800 text-white' : 'text-gray-500'" class="px-2 py-1">USD</button>
+                                    <button type="button" x-show="localCur!=='USD'" @click="ecur=localCur" :class="ecur!=='USD' ? 'bg-gray-800 text-white' : 'text-gray-500'" class="px-2 py-1" x-text="localCur"></button>
+                                </div>
+                            </div>
+                            <input type="number" step="0.01" name="amount" x-model="amt" class="w-full border-gray-300 rounded-md" required :placeholder="(ecur==='USD'?'$':ecur+' ')+'0.00 (use − for debit)'">
+                            <p x-show="ecur!=='USD' && parseFloat(amt)" x-cloak class="mt-1 text-xs text-emerald-600">
+                                ≈ <span class="font-semibold" x-text="'$'+usd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
+                                will be <span x-text="isDebit ? 'debited' : 'credited'"></span> (at <span x-text="ecur+' '+rate.toLocaleString()"></span>/$)
+                            </p>
+                        </div>
+                        <div><label class="block text-gray-700 mb-1">Description (optional note)</label><input name="description" class="w-full border-gray-300 rounded-md" placeholder="Adds to the auto fiat note"></div>
                         <div class="flex gap-2 pt-2">
                             <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save</button>
                             <button type="button" @click="add=false" class="px-4 py-2 border rounded-md text-gray-600">Cancel</button>

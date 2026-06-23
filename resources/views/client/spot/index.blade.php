@@ -204,7 +204,9 @@
                 async tick(){
                     try{
                         const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
-                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change; this.oprice=q.price;
+                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change;
+                            // only track live price in MARKET mode; never overwrite a manual limit price
+                            if(this.otype!=='limit'){ this.oprice=q.price; }
                             // live chart: move the latest point with the price
                             if(this.showChart && this.candles.length){ this.candles[this.candles.length-1].close = q.price; this.draw(); } }
                         const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
