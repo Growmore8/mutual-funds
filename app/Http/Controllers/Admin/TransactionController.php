@@ -42,6 +42,11 @@ class TransactionController extends Controller
             ->paginate(30)
             ->withQueryString();
 
+        // Spot Trading transactions (trades) — shown below, with delete (reverses everywhere).
+        $spotTrades = \App\Models\SpotTrade::with('instrument')->latest('id')->limit(60)->get();
+        $spotUsers = User::whereIn('id', $spotTrades->flatMap(fn ($t) => [$t->buyer_id, $t->seller_id])->filter()->unique())
+            ->get(['id', 'name'])->keyBy('id');
+
         // Account picker (searchable) for the "Add transaction" form.
         $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
             'id' => $a->id,
@@ -49,7 +54,7 @@ class TransactionController extends Controller
             'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
         ])->values();
 
-        return view('admin.transactions.index', compact('transactions', 'accounts', 'search'));
+        return view('admin.transactions.index', compact('transactions', 'accounts', 'search', 'spotTrades', 'spotUsers'));
     }
 
     public function store(Request $request)

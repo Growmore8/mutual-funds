@@ -75,6 +75,35 @@
             </table>
             <div class="p-4">{{ $transactions->links() }}</div>
 
+            {{-- Spot Trading transactions --}}
+            <div class="p-4 border-t border-gray-100">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-3"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading transactions</h3>
+                <table class="min-w-full text-sm whitespace-nowrap">
+                    <thead class="bg-gray-50 text-gray-500 text-left">
+                        <tr><th class="px-3 py-2.5">Date</th><th class="px-3 py-2.5">Client</th><th class="px-3 py-2.5">Symbol</th><th class="px-3 py-2.5">Side</th><th class="px-3 py-2.5 text-right">Amount</th><th class="px-3 py-2.5 text-right">Action</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($spotTrades as $t)
+                            @php $cid = $t->buyer_id ?: $t->seller_id; $isBuy = (bool) $t->buyer_id; $cs = $t->instrument->currencySymbol(); @endphp
+                            <tr>
+                                <td class="px-3 py-3 text-gray-400 text-xs">{{ $t->created_at->format('d M Y') }}<br>{{ $t->created_at->format('h:i A') }}</td>
+                                <td class="px-3 py-3 font-medium text-gray-900">{{ $spotUsers[$cid]->name ?? '—' }}</td>
+                                <td class="px-3 py-3">{{ $t->instrument->symbol }} <span class="text-gray-400 text-xs">{{ $t->instrument->currency }}</span></td>
+                                <td class="px-3 py-3 {{ $isBuy ? 'text-emerald-600' : 'text-red-600' }}">{{ $isBuy ? 'Buy' : 'Sell' }} {{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</td>
+                                <td class="px-3 py-3 text-right font-semibold">{{ $cs }}{{ number_format((float)$t->qty * (float)$t->price, 2) }}<div class="text-[11px] text-gray-400">@ {{ $cs }}{{ number_format((float)$t->price,2) }}</div></td>
+                                <td class="px-3 py-3 text-right">
+                                    <form method="POST" action="{{ route('admin.spot.trade.delete', $t) }}" onsubmit="return confirm('Delete this spot trade and reverse its balance/holding effect?')">@csrf
+                                        <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 inline-grid"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No spot trades yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
             {{-- Edit modal --}}
             <div x-show="edit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/40" @click="edit=false"></div>
