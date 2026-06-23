@@ -239,8 +239,8 @@
             <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                 <i class="fa-solid fa-money-bill-transfer text-xl"></i><span class="text-sm font-medium">Withdraw</span>
             </a>
-            <a href="{{ route('client.transactions') }}" class="col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 text-gray-700 dark:bg-white/10 dark:text-gray-200">
-                <i class="fa-solid fa-arrow-right-arrow-left"></i><span class="text-sm font-medium">Transactions</span>
+            <a href="{{ route('client.profit') }}" class="col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 text-gray-700 dark:bg-white/10 dark:text-gray-200">
+                <i class="fa-solid fa-chart-pie"></i><span class="text-sm font-medium">Profit History</span>
             </a>
         </div>
     </div>
@@ -249,8 +249,8 @@
     @php
         $navLinks = [
             ['route' => 'client.dashboard',    'match' => 'client.dashboard',    'icon' => 'fa-house',                 'label' => 'Home'],
-            ['route' => 'client.profit',       'match' => 'client.profit',       'icon' => 'fa-chart-pie',             'label' => 'History'],
             ['route' => 'spot.index',          'match' => 'spot.*',              'icon' => 'fa-arrow-trend-up',        'label' => 'Spot'],
+            ['route' => 'client.transactions', 'match' => 'client.transactions', 'icon' => 'fa-arrow-right-arrow-left','label' => 'Transactions'],
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
         ];
     @endphp
