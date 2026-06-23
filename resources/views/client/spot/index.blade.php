@@ -24,30 +24,34 @@
             <div class="mb-3 mx-1 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300 text-sm rounded-lg p-3">{{ session('status') }}</div>
         @endif
 
+        {{-- Market tabs: NYSE (US/Global/Crypto) | BSE (India) --}}
+        <div class="flex gap-2 mx-1 mb-3">
+            <a href="{{ route('spot.index', ['market' => 'global']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NYSE <span class="font-normal text-[11px]">US/Global/Crypto · $</span></a>
+            <a href="{{ route('spot.index', ['market' => 'india']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">BSE <span class="font-normal text-[11px]">India · ₹</span></a>
+        </div>
+
         {{-- ============ Terminal grid (desktop) / stacked (mobile) ============ --}}
         <div class="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-4 lg:items-start px-1">
 
-            {{-- Markets — desktop sidebar --}}
-            <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]" x-data="{ flt:'{{ $selGroup }}' }">
-                <div class="flex flex-wrap gap-1 mb-2">
-                    @foreach ($marketGroups as $k => $label)
-                        <button type="button" @click="flt='{{ $k }}'" :class="flt==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="px-2 py-1 rounded text-[11px]">{{ $label }}</button>
-                    @endforeach
-                </div>
+            {{-- Markets — desktop sidebar (current group only) --}}
+            <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
+                <p class="text-xs font-semibold text-gray-500 mb-2">{{ $selGroup==='inr' ? 'BSE · India' : 'NYSE · US/Global/Crypto' }}</p>
                 <div class="max-h-[560px] overflow-y-auto">
                     @foreach ($instruments as $m)
-                        <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $grp($m->market) }}'"
-                           class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
-                            <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
-                            <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
-                        </a>
+                        @if ($grp($m->market) === $selGroup)
+                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
+                               class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
+                                <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
+                                <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                            </a>
+                        @endif
                     @endforeach
                 </div>
             </aside>
 
             {{-- Center: symbol header + chart --}}
             <div class="min-w-0">
-                <div class="flex items-center justify-between mb-3" x-data="{ pick:false, flt:'{{ $selGroup }}' }">
+                <div class="flex items-center justify-between mb-3" x-data="{ pick:false }">
                     <div class="relative">
                         <button @click="pick=!pick" class="flex items-center gap-2">
                             <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $selected->symbol ?? '—' }}</span>
@@ -55,19 +59,16 @@
                             <i class="fa-solid fa-chevron-down text-xs text-gray-400 lg:hidden"></i>
                         </button>
                         <p class="text-sm font-semibold" :class="change>=0?'text-emerald-500':'text-red-500'"><span x-text="(change>=0?'+':'')+change.toFixed(2)+'%'"></span></p>
-                        {{-- mobile market picker --}}
+                        {{-- mobile symbol picker (current group only) --}}
                         <div x-show="pick" @click.outside="pick=false" x-cloak class="lg:hidden absolute z-30 mt-1 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-2">
-                            <div class="flex flex-wrap gap-1 mb-2">
-                                @foreach ($marketGroups as $k => $label)
-                                    <button type="button" @click="flt='{{ $k }}'" :class="flt==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="px-2 py-1 rounded text-[11px]">{{ $label }}</button>
-                                @endforeach
-                            </div>
                             <div class="max-h-64 overflow-y-auto">
                                 @foreach ($instruments as $m)
-                                    <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" x-show="flt==='{{ $grp($m->market) }}'" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
-                                        <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
-                                    </a>
+                                    @if ($grp($m->market) === $selGroup)
+                                        <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
+                                            <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
+                                            <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                                        </a>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>
