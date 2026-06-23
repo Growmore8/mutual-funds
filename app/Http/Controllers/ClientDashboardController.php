@@ -73,9 +73,23 @@ class ClientDashboardController extends Controller
         // Keep the most recent ~80 movements for a dense, trading-style line.
         $chart = collect(array_slice($series, -80));
 
-        $recent = Transaction::where('fund_account_id', $aid)
+        // Recent activity = mutual-fund transactions + spot trades, merged.
+        $recent = collect();
+        Transaction::where('fund_account_id', $aid)
             ->whereIn('type', ['profit', 'deposit', 'withdrawal', 'referral'])
-            ->latest('id')->limit(8)->get();
+            ->latest('id')->limit(6)->get()->each(fn ($t) => $recent->push((object) [
+                'when' => $t->created_at, 'label' => $t->description ?? ucfirst($t->type), 'amount' => (float) $t->amount, 'cs' => '$',
+            ]));
+        \App\Models\SpotTrade::with('instrument')
+            ->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
+            ->latest('id')->limit(6)->get()->each(function ($t) use ($recent, $user) {
+                $isBuy = $t->buyer_id === $user->id;
+                $recent->push((object) ['when' => $t->created_at,
+                    'label' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol,
+                    'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price,
+                    'cs' => $t->instrument->currencySymbol()]);
+            });
+        $recent = $recent->sortByDesc('when')->take(8)->values();
 
         $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');
         $announcement = \App\Models\Announcement::active()->latest()->first();

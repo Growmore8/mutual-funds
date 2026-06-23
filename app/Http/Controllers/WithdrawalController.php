@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Deposit;
 use App\Models\Withdrawal;
 use App\Models\WithdrawalMethod;
 use App\Services\SpotTradingService;
@@ -10,6 +11,16 @@ use Illuminate\Validation\ValidationException;
 
 class WithdrawalController extends Controller
 {
+    /** Spot is profit-only: withdrawable = wallet balance minus net deposited capital (that currency). */
+    private function spotProfitAvailable(int $userId, string $currency): float
+    {
+        $balance = (float) app(SpotTradingService::class)->account($userId, $currency)->balance;
+        $deposited = (float) Deposit::where('user_id', $userId)->where('purpose', 'spot')->where('currency', $currency)->where('status', 'approved')->sum('amount');
+        $withdrawn = (float) Withdrawal::where('user_id', $userId)->where('purpose', 'spot')->where('currency', $currency)->where('status', 'approved')->sum('amount');
+
+        return max(0, round($balance - ($deposited - $withdrawn), 2));
+    }
+
     public function create(Request $request)
     {
         $user = $request->user();
@@ -17,7 +28,7 @@ class WithdrawalController extends Controller
         $currency = $purpose === 'spot' && strtoupper($request->get('cur', 'USD')) === 'INR' ? 'INR' : 'USD';
 
         if ($purpose === 'spot') {
-            $available = (float) app(SpotTradingService::class)->account($user->id, $currency)->balance;
+            $available = $this->spotProfitAvailable($user->id, $currency);
             $withdrawals = Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest()->limit(10)->get();
         } else {
             $account = $user->currentAccount();
@@ -50,7 +61,7 @@ class WithdrawalController extends Controller
         $account = $user->currentAccount();
 
         $available = $purpose === 'spot'
-            ? (float) app(SpotTradingService::class)->account($user->id, $currency)->balance
+            ? $this->spotProfitAvailable($user->id, $currency)
             : ($account ? $account->availableToWithdraw() : 0.0);
 
         $method = WithdrawalMethod::where('id', $data['withdrawal_method_id'])->where('user_id', $user->id)->first();

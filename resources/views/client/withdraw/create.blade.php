@@ -1,6 +1,7 @@
 <x-client-layout title="Withdraw">
     @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
+    <a href="{{ route('client.dashboard') }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Request form --}}
         <div class="lg:col-span-2 space-y-6">
@@ -21,10 +22,10 @@
                     <a href="{{ route('withdraw.create', ['for'=>'spot','cur'=>'INR']) }}" class="py-2.5 rounded-xl border text-xs font-semibold leading-tight {{ $isInr ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-500' }}"><i class="fa-solid fa-arrow-trend-up"></i><br>Spot · India<br><span class="text-[10px] opacity-70">INR</span></a>
                 </div>
 
-                <p class="text-sm text-gray-500 mb-5">{{ $isSpot ? 'Withdraw cash from your Spot ' . $cur . ' wallet.' : 'You can withdraw your accumulated profit. Your capital stays invested.' }} Requests are reviewed before payout.</p>
+                <p class="text-sm text-gray-500 mb-5">{{ $isSpot ? 'Withdraw your Spot ' . $cur . ' profit. Your deposited capital stays available for trading.' : 'You can withdraw your accumulated profit. Your capital stays invested.' }} Requests are reviewed before payout.</p>
 
                 <div class="rounded-xl {{ $isSpot ? 'bg-blue-50' : 'bg-emerald-50' }} p-4 mb-5">
-                    <p class="text-xs text-gray-500">{{ $isSpot ? 'Spot '.$cur.' balance available' : 'Available to withdraw' }}</p>
+                    <p class="text-xs text-gray-500">{{ $isSpot ? 'Spot '.$cur.' profit available' : 'Available to withdraw' }}</p>
                     <p class="text-2xl font-bold {{ $isSpot ? 'text-blue-600' : 'text-emerald-600' }}">{{ $csym }}{{ number_format((float)$available,2) }}</p>
                 </div>
 

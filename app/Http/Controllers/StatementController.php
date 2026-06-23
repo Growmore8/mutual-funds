@@ -58,7 +58,28 @@ class StatementController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('client.transactions', compact('transactions', 'type'));
+        // Spot Trading activity = trades + spot deposits/withdrawals (separate ledger).
+        $user = $request->user();
+        $spot = collect();
+        \App\Models\SpotTrade::with('instrument')
+            ->where(fn ($q) => $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
+            ->latest('id')->limit(60)->get()->each(function ($t) use ($spot, $user) {
+                $isBuy = $t->buyer_id === $user->id;
+                $spot->push((object) ['when' => $t->created_at, 'kind' => $isBuy ? 'buy' : 'sell',
+                    'label' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol . ' ×' . rtrim(rtrim((string) $t->qty, '0'), '.'),
+                    'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price, 'cs' => $t->instrument->currencySymbol(), 'status' => 'Filled']);
+            });
+        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($d) use ($spot) {
+            $spot->push((object) ['when' => $d->created_at, 'kind' => 'deposit', 'label' => 'Spot deposit (' . $d->currency . ')',
+                'amount' => (float) $d->amount, 'cs' => $d->currency === 'INR' ? '₹' : '$', 'status' => ucfirst($d->status)]);
+        });
+        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($w) use ($spot) {
+            $spot->push((object) ['when' => $w->created_at, 'kind' => 'withdrawal', 'label' => 'Spot withdrawal (' . $w->currency . ')',
+                'amount' => -1 * (float) $w->amount, 'cs' => $w->currency === 'INR' ? '₹' : '$', 'status' => ucfirst($w->status)]);
+        });
+        $spotActivity = $spot->sortByDesc('when')->values();
+
+        return view('client.transactions', compact('transactions', 'type', 'spotActivity'));
     }
 
     /** Full profit history — every profit/loss distribution event, with period filter. */
