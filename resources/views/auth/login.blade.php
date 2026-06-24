@@ -26,7 +26,7 @@
 
 {{-- MOBILE: full-bleed faded brand photo behind the form --}}
 @if($hero)
-<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.28) 0%,rgba(7,11,22,.50) 45%,rgba(7,11,22,.90) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 30%;background-repeat:no-repeat"></div>
+<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.25) 0%,rgba(7,11,22,.50) 38%,rgba(7,11,22,.86) 66%,rgba(7,11,22,.97) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 30%;background-repeat:no-repeat"></div>
 @endif
 
 <div class="relative z-10 flex items-center justify-center lg:p-8 {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh">
