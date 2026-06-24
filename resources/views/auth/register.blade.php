@@ -18,9 +18,8 @@
     </style>
 </head>
 <body class="h-full bg-[#070b16] text-gray-200">
-<div class="min-h-full flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}"
-     @if($hero) style="background-image:linear-gradient(to bottom,rgba(7,11,22,.40) 0%,rgba(7,11,22,.80) 34%,#070b16 70%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center top;background-repeat:no-repeat" @endif>
-    <div class="w-full max-w-sm mx-auto px-6 pb-8 pt-32 lg:pt-10 relative z-10">
+<div class="flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh;@if($hero) background-image:linear-gradient(to bottom,rgba(7,11,22,.40) 0%,rgba(7,11,22,.82) 34%,#070b16 72%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 28%;background-repeat:no-repeat;@endif">
+    <div class="w-full max-w-sm mx-auto px-6 pt-32 lg:pt-10 relative z-10" style="padding-bottom:max(2rem,env(safe-area-inset-bottom))">
             <div class="flex items-center gap-2 mb-6">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
                 <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>
