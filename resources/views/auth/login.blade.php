@@ -19,15 +19,15 @@
 <body class="h-full bg-[#070b16] text-gray-200">
 {{-- Full-bleed faded background (hero image fades into dark) --}}
 <div class="min-h-full flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}"
-     @if($hero) style="background-image:linear-gradient(to bottom,rgba(7,11,22,.30),rgba(7,11,22,.62) 45%,#070b16 92%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center top;background-attachment:fixed" @endif>
-    <div class="w-full max-w-sm mx-auto px-6 pb-10 pt-28 lg:pt-12 relative z-10">
+     @if($hero) style="background-image:linear-gradient(to bottom,rgba(7,11,22,.35) 0%,rgba(7,11,22,.74) 40%,rgba(7,11,22,.95) 64%,#070b16 86%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center top;background-repeat:no-repeat" @endif>
+    <div class="w-full max-w-sm mx-auto px-6 pb-8 pt-44 lg:pt-12 relative z-10">
             <div class="flex items-center gap-2 mb-8">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
                 <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>
             </div>
 
-            <h1 class="text-3xl font-extrabold text-white leading-tight">Login to<br>your account</h1>
-            <p class="text-sm text-gray-400 mt-2 mb-6">Enter your login information</p>
+            <h1 class="text-3xl font-extrabold text-white leading-tight drop-shadow">Login to<br>your account</h1>
+            <p class="text-sm text-gray-300 mt-2 mb-6">Enter your login information</p>
 
             @if (session('status'))
                 <div class="mb-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm rounded-lg p-3">{{ session('status') }}</div>

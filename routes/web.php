@@ -38,18 +38,30 @@ Route::get('/apple-splash', function (\Illuminate\Http\Request $r) {
     abort_unless(function_exists('imagecreatetruecolor'), 404);
 
     $img = imagecreatetruecolor($w, $h);
-    imagefill($img, 0, 0, imagecolorallocate($img, 0x07, 0x0b, 0x16)); // #070b16
 
+    // Vertical gradient #0a1f1b -> #070b16 to match the in-app splash.
+    $top = [0x0a, 0x1f, 0x1b];
+    $bot = [0x07, 0x0b, 0x16];
+    for ($y = 0; $y < $h; $y++) {
+        $t = $y / max(1, $h);
+        $c = imagecolorallocate($img,
+            (int) ($top[0] + ($bot[0] - $top[0]) * $t),
+            (int) ($top[1] + ($bot[1] - $top[1]) * $t),
+            (int) ($top[2] + ($bot[2] - $top[2]) * $t));
+        imageline($img, 0, $y, $w, $y, $c);
+    }
+
+    // Small centered logo (same size/position as the in-app splash logo box).
     $logoPath = public_path('logo.png');
     if (function_exists('imagecreatefrompng') && is_file($logoPath) && ($logo = @imagecreatefrompng($logoPath))) {
         $lw = imagesx($logo);
         $lh = imagesy($logo);
-        $target = (int) ($w * 0.34);
+        $target = (int) ($w * 0.16);
         $scale = $target / $lw;
         $nw = (int) ($lw * $scale);
         $nh = (int) ($lh * $scale);
         $dx = (int) (($w - $nw) / 2);
-        $dy = (int) (($h - $nh) / 2);
+        $dy = (int) ($h * 0.44 - $nh / 2);
         imagealphablending($img, true);
         imagecopyresampled($img, $logo, $dx, $dy, 0, 0, $nw, $nh, $lw, $lh);
         imagedestroy($logo);

@@ -36,7 +36,7 @@
     @foreach ($iosDevices as [$dw, $dh, $ratio])
         <link rel="apple-touch-startup-image"
               media="(device-width: {{ $dw }}px) and (device-height: {{ $dh }}px) and (-webkit-device-pixel-ratio: {{ $ratio }}) and (orientation: portrait)"
-              href="/apple-splash?w={{ $dw * $ratio }}&h={{ $dh * $ratio }}&v={{ $brandV }}">
+              href="/apple-splash?w={{ $dw * $ratio }}&h={{ $dh * $ratio }}&v={{ $brandV }}-2">
     @endforeach
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
