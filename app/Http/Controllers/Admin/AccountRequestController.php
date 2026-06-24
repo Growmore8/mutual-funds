@@ -59,6 +59,9 @@ class AccountRequestController extends Controller
             'View my accounts',
         );
 
+        \App\Models\AppNotification::notify($accountRequest->user_id, 'account', 'Account request approved',
+            'Your ' . ($accountRequest->accountType->name ?? 'new') . ' account is ready — fund it from your dashboard.', route('accounts.index'));
+
         return back()->with('status', 'Additional account approved.');
     }
 
@@ -83,6 +86,9 @@ class AccountRequestController extends Controller
                 $request->input('admin_note') ? 'Note from our team: ' . $request->input('admin_note') : 'If you have questions, please open a support ticket from your dashboard.',
             ],
         );
+
+        \App\Models\AppNotification::notify($accountRequest->user_id, 'account', 'Account request not approved',
+            ($request->input('admin_note') ?: 'Your account request was not approved at this time.'), route('client.dashboard'));
 
         return back()->with('status', 'Account request rejected.');
     }

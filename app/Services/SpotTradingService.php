@@ -338,8 +338,15 @@ class SpotTradingService
         $this->settle($order, $house, $fill, $price, $instrument);
 
         $order->refresh();
-        $order->update(['status' => ((float) $order->filled_qty + self::EPS >= (float) $order->qty) ? 'filled' : 'partial']);
+        $done = (float) $order->filled_qty + self::EPS >= (float) $order->qty;
+        $order->update(['status' => $done ? 'filled' : 'partial']);
         $house->update(['status' => 'filled']);
+
+        // Tell the client their resting limit order executed.
+        \App\Models\AppNotification::notify($order->user_id, 'trade',
+            'Limit order ' . ($done ? 'filled' : 'partially filled'),
+            ucfirst($order->side) . ' ' . $instrument->symbol . ' ×' . rtrim(rtrim((string) $fill, '0'), '.') . ' @ $' . number_format($price, 2),
+            route('spot.index', ['symbol' => $instrument->symbol]));
 
         return true;
     }

@@ -195,7 +195,7 @@ class TransactionController extends Controller
             $user->id,
             in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',
             ucfirst($data['type']) . ' recorded',
-            (($amtUsd < 0 ? '-' : '+') . '$' . number_format(abs($amtUsd), 2)) . ' · ' . $account->label,
+            (($signedUsd < 0 ? '-' : '+') . '$' . number_format(abs($signedUsd), 2)) . ' · ' . $account->label,
             route('client.transactions'),
         );
 
