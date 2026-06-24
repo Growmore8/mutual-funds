@@ -121,6 +121,7 @@
                 $head = '<p class="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">';
             @endphp
             <a href="{{ route('client.dashboard') }}" class="{{ $link(request()->routeIs('client.dashboard')) }}"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a>
+            <a href="{{ route('markets.index') }}" class="{{ $link(request()->routeIs('markets.*')) }}"><i class="fa-solid fa-chart-simple w-5 text-center"></i> Markets</a>
 
             {!! $head !!}Spot Trading</p>
             <a href="{{ route('spot.index') }}" class="{{ $link(request()->routeIs('spot.*')) }}"><i class="fa-solid fa-arrow-trend-up w-5 text-center"></i> Spot Trading</a>
@@ -249,6 +250,7 @@
     @php
         $navLinks = [
             ['route' => 'client.dashboard',    'match' => 'client.dashboard',    'icon' => 'fa-house',                 'label' => 'Home'],
+            ['route' => 'markets.index',       'match' => 'markets.*',            'icon' => 'fa-chart-simple',          'label' => 'Markets'],
             ['route' => 'spot.index',          'match' => 'spot.*',              'icon' => 'fa-arrow-trend-up',        'label' => 'Spot'],
             ['route' => 'client.transactions', 'match' => 'client.transactions', 'icon' => 'fa-arrow-right-arrow-left','label' => 'Transactions'],
             ['route' => 'profile.edit',        'match' => 'profile.edit',        'icon' => 'fa-user',                  'label' => 'Profile'],
@@ -264,16 +266,6 @@
                     <i class="fa-solid {{ $it['icon'] }} text-[19px]"></i>
                     <span class="text-[10px] font-medium leading-none">{{ $it['label'] }}</span>
                 </a>
-
-                @if ($i === 1)
-                    {{-- center action (+) --}}
-                    <button type="button" @click="sheet=!sheet" class="flex flex-col items-center gap-1 w-16 py-0.5">
-                        <span class="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center active:scale-95 transition">
-                            <i class="fa-solid fa-plus text-sm" :class="sheet ? 'rotate-45' : ''" style="transition:transform .2s"></i>
-                        </span>
-                        <span class="text-[10px] font-medium leading-none text-gray-400">Add</span>
-                    </button>
-                @endif
             @endforeach
         </div>
     </nav>

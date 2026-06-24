@@ -201,6 +201,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/support/{ticket}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])->name('support.reply');
 
         // Spot Trading (separate module — uses Twelve Data, not the mutual-fund pool)
+        Route::get('/markets', [\App\Http\Controllers\SpotController::class, 'markets'])->name('markets.index');
+        Route::get('/markets/quotes', [\App\Http\Controllers\SpotController::class, 'marketQuotes'])->name('markets.quotes');
         Route::get('/spot', [\App\Http\Controllers\SpotController::class, 'index'])->name('spot.index');
         Route::get('/spot/quote', [\App\Http\Controllers\SpotController::class, 'quote'])->name('spot.quote');
         Route::get('/spot/candles', [\App\Http\Controllers\SpotController::class, 'candles'])->name('spot.candles');

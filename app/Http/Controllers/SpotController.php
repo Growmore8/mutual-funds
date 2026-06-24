@@ -48,6 +48,34 @@ class SpotController extends Controller
         return view('client.spot.index', compact('instruments', 'selected', 'cur', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity', 'spotDeposited', 'spotTotalPnl'));
     }
 
+    /** Markets list page (all NYSE + BSE + Crypto instruments). */
+    public function markets()
+    {
+        $instruments = SpotInstrument::enabled()->orderBy('sort')->get();
+
+        return view('client.markets.index', compact('instruments'));
+    }
+
+    /** Batched live quotes for the markets list (shared cache, light on the API). */
+    public function marketQuotes()
+    {
+        $data = \Illuminate\Support\Facades\Cache::remember('markets.quotes.v1', 60, function () {
+            $out = [];
+            foreach (SpotInstrument::enabled()->get() as $ins) {
+                $q = $this->td->quote($ins->symbol, $ins->exchange);
+                $native = (float) ($q['close'] ?? $ins->last_price ?? 0);
+                $out[$ins->id] = [
+                    'price' => $native > 0 ? round($this->svc->toUsd($native, $ins->currency), 6) : (float) $ins->last_price,
+                    'change' => (float) ($q['percent_change'] ?? 0),
+                ];
+            }
+
+            return $out;
+        });
+
+        return response()->json($data)->header('Cache-Control', 'no-store');
+    }
+
     /** Live quote (price + change) for one instrument. */
     public function quote(Request $request)
     {
