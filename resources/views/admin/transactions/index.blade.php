@@ -182,12 +182,15 @@
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
                     <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
-                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'fund', ecur:'USD', amt:'', type:'deposit',
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'fund', fiat:false, amt:'', type:'deposit',
                                     get localCur(){ return this.sel && this.sel.localCur ? this.sel.localCur : 'USD'; },
+                                    get ecur(){ return (this.fiat && this.localCur!=='USD') ? this.localCur : 'USD'; },
+                                    get localSym(){ const m={INR:'₹',USD:'$',AED:'AED ',GBP:'£',EUR:'€',LKR:'Rs ',SGD:'S$',AUD:'A$',CAD:'C$',BDT:'৳',PKR:'₨',NPR:'₨',SAR:'SAR ',QAR:'QAR ',KWD:'KWD ',OMR:'OMR ',BHD:'BHD ',MYR:'RM',PHP:'₱',IDR:'Rp',JPY:'¥',ZAR:'R',NGN:'₦',KES:'KSh '}; return m[this.localCur] || (this.localCur+' '); },
+                                    get inSym(){ return this.ecur==='USD' ? '$' : this.localSym; },
                                     get rate(){ return this.ecur==='USD' ? 1 : (this.rates[this.ecur] || 1); },
                                     get usd(){ const a=parseFloat(this.amt)||0; return this.ecur==='USD' ? a : (this.rate>0 ? a/this.rate : a); },
                                     get isDebit(){ return this.type==='withdrawal' || this.type==='fee' || (parseFloat(this.amt)||0) < 0; },
-                                    pickAcc(a){ this.sel=a; this.q=''; this.open=false; this.ecur='USD'; } }">
+                                    pickAcc(a){ this.sel=a; this.q=''; this.open=false; this.fiat=false; } }">
                         @csrf
                         <div class="relative">
                             <label class="block text-gray-700 mb-1">Account (search by name / account ID)</label>
@@ -224,20 +227,19 @@
                             </select>
                         </div>
 
-                        {{-- Amount + currency (USD or client's fiat) --}}
+                        {{-- Amount — enter in USD, or toggle "By fiat" to use the client's registered-country currency --}}
                         <input type="hidden" name="entered_currency" :value="ecur">
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label class="block text-gray-700">Amount</label>
-                                <div class="inline-flex rounded-lg overflow-hidden border border-gray-200 text-[11px] font-semibold">
-                                    <button type="button" @click="ecur='USD'" :class="ecur==='USD' ? 'bg-gray-800 text-white' : 'text-gray-500'" class="px-2 py-1">USD</button>
-                                    <button type="button" x-show="localCur!=='USD'" @click="ecur=localCur" :class="ecur!=='USD' ? 'bg-gray-800 text-white' : 'text-gray-500'" class="px-2 py-1" x-text="localCur"></button>
-                                </div>
+                                <label class="block text-gray-700">Amount <span x-show="fiat" x-cloak class="text-gray-400" x-text="'('+localCur+')'"></span></label>
+                                <button type="button" x-show="localCur!=='USD'" @click="fiat=!fiat"
+                                        :class="fiat ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'"
+                                        class="text-[11px] px-2.5 py-1 rounded font-semibold"><i class="fa-solid fa-money-bill-wave mr-1"></i> By fiat</button>
                             </div>
-                            <input type="number" step="0.01" name="amount" x-model="amt" class="w-full border-gray-300 rounded-md" required :placeholder="(ecur==='USD'?'$':ecur+' ')+'0.00 (use − for debit)'">
-                            <p x-show="ecur!=='USD' && parseFloat(amt)" x-cloak class="mt-1 text-xs text-emerald-600">
+                            <input type="number" step="0.01" name="amount" x-model="amt" class="w-full border-gray-300 rounded-md" required :placeholder="inSym+'0.00 (use − for debit)'">
+                            <p x-show="fiat && localCur!=='USD' && parseFloat(amt)" x-cloak class="mt-1 text-xs text-emerald-600">
                                 ≈ <span class="font-semibold" x-text="'$'+usd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
-                                will be <span x-text="isDebit ? 'debited' : 'credited'"></span> (at <span x-text="ecur+' '+rate.toLocaleString()"></span>/$)
+                                will be <span x-text="isDebit ? 'debited' : 'credited'"></span> to the account — only this amount is saved (rate <span x-text="localSym+rate.toLocaleString()"></span>/$).
                             </p>
                         </div>
                         <div><label class="block text-gray-700 mb-1">Description (optional note)</label><input name="description" class="w-full border-gray-300 rounded-md" placeholder="Adds to the auto fiat note"></div>
