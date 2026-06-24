@@ -210,6 +210,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/spot/order', [\App\Http\Controllers\SpotController::class, 'order'])->middleware('notlocked')->name('spot.order');
         Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\SpotController::class, 'cancel'])->middleware('notlocked')->name('spot.cancel');
 
+        // P2P (managed merchants)
+        Route::get('/p2p', [\App\Http\Controllers\P2pController::class, 'index'])->name('p2p.index');
+        Route::post('/p2p/order', [\App\Http\Controllers\P2pController::class, 'order'])->middleware('notlocked')->name('p2p.order');
+
         // Within-account transfer: Mutual Fund <-> Spot (single USD base)
         Route::get('/transfer', [\App\Http\Controllers\TransferController::class, 'create'])->name('transfer.create');
         Route::post('/transfer', [\App\Http\Controllers\TransferController::class, 'store'])->middleware('notlocked')->name('transfer.store');

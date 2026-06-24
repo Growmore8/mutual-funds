@@ -175,13 +175,10 @@
             <span class="w-12 h-12 grid place-items-center rounded-full bg-violet-500/15 text-violet-500"><i class="fa-solid fa-right-left text-lg"></i></span>
             <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Transfer</span>
         </a>
-        <div class="flex flex-col items-center gap-1.5 py-1 opacity-60 cursor-not-allowed" title="Coming soon">
-            <span class="relative w-12 h-12 grid place-items-center rounded-full bg-gray-500/15 text-gray-400">
-                <i class="fa-solid fa-people-arrows text-lg"></i>
-                <span class="absolute -top-1 -right-1 text-[8px] bg-amber-500 text-white px-1 rounded">SOON</span>
-            </span>
-            <span class="text-xs text-gray-400 font-medium">P2P</span>
-        </div>
+        <a href="{{ route('p2p.index') }}" @click.prevent="$store.sheet.show('{{ route('p2p.index') }}','P2P')" class="flex flex-col items-center gap-1.5 py-1">
+            <span class="w-12 h-12 grid place-items-center rounded-full bg-amber-500/15 text-amber-500"><i class="fa-solid fa-people-arrows text-lg"></i></span>
+            <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">P2P</span>
+        </a>
     </div>
 
     {{-- Spot Trading — separate section --}}

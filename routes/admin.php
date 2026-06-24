@@ -94,6 +94,14 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::post('/spot/instruments', [\App\Http\Controllers\Admin\SpotAdminController::class, 'storeInstrument'])->name('spot.instruments.store');
     Route::post('/spot/instruments/{instrument}/toggle', [\App\Http\Controllers\Admin\SpotAdminController::class, 'toggleInstrument'])->name('spot.instruments.toggle');
 
+    // P2P merchants + orders
+    Route::get('/p2p', [\App\Http\Controllers\Admin\P2pController::class, 'index'])->name('p2p.index');
+    Route::post('/p2p', [\App\Http\Controllers\Admin\P2pController::class, 'store'])->name('p2p.store');
+    Route::post('/p2p/{merchant}/update', [\App\Http\Controllers\Admin\P2pController::class, 'update'])->name('p2p.update');
+    Route::post('/p2p/{merchant}/toggle', [\App\Http\Controllers\Admin\P2pController::class, 'toggle'])->name('p2p.toggle');
+    Route::delete('/p2p/{merchant}', [\App\Http\Controllers\Admin\P2pController::class, 'destroy'])->name('p2p.destroy');
+    Route::post('/p2p/order/{order}/status', [\App\Http\Controllers\Admin\P2pController::class, 'orderStatus'])->name('p2p.order.status');
+
     // KYC review
     Route::get('/kyc', [KycReviewController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/{document}/file/{side?}', [KycReviewController::class, 'file'])->name('kyc.file');

@@ -61,10 +61,19 @@
             {!! $link('admin.transactions.index', 'Transactions', 'fa-receipt') !!}
             {!! $link('admin.payment-methods.index', 'Payment Methods', 'fa-credit-card') !!}
 
-            {!! $heading('Fund') !!}
+            {!! $heading('Mutual Fund') !!}
             <a href="{{ route('admin.pool.index') }}" class="{{ $base }} {{ request()->routeIs('admin.pool.index') ? $active : $idle }}"><i class="fa-solid fa-layer-group w-5 text-center"></i><span>Pool</span></a>
             <a href="{{ route('admin.pool.pnl') }}" class="{{ $base }} {{ request()->routeIs('admin.pool.pnl') ? $active : $idle }}"><i class="fa-solid fa-chart-pie w-5 text-center"></i><span>PnL</span></a>
+
+            {!! $heading('Trading') !!}
             <a href="{{ route('admin.spot.index') }}" class="{{ $base }} {{ request()->routeIs('admin.spot.index') || request()->routeIs('admin.spot.instruments.*') ? $active : $idle }}"><i class="fa-solid fa-list-check w-5 text-center"></i><span>Spot Instruments</span></a>
+            @php $p2pCount = \App\Models\P2pOrder::where('status', 'pending')->count(); @endphp
+            <a href="{{ route('admin.p2p.index') }}" class="{{ $base }} {{ request()->routeIs('admin.p2p.*') ? $active : $idle }}">
+                <i class="fa-solid fa-people-arrows w-5 text-center"></i><span>P2P</span>
+                @if ($p2pCount > 0)<span class="ml-auto text-[11px] min-w-5 h-5 px-1.5 grid place-items-center rounded-full bg-red-500 text-white font-semibold">{{ $p2pCount }}</span>@endif
+            </a>
+
+            {!! $heading('Engagement') !!}
             <a href="{{ route('admin.messages.index') }}" class="{{ $base }} {{ request()->routeIs('admin.messages.*') ? $active : $idle }}"><i class="fa-solid fa-headset w-5 text-center"></i><span>Message Center</span></a>
             <a href="{{ route('admin.announcements.index') }}" class="{{ $base }} {{ request()->routeIs('admin.announcements.*') ? $active : $idle }}"><i class="fa-solid fa-bullhorn w-5 text-center"></i><span>Popups</span></a>
 
