@@ -69,6 +69,7 @@
             <a href="{{ route('admin.announcements.index') }}" class="{{ $base }} {{ request()->routeIs('admin.announcements.*') ? $active : $idle }}"><i class="fa-solid fa-bullhorn w-5 text-center"></i><span>Popups</span></a>
 
             {!! $heading('Settings') !!}
+            {!! $link('admin.settings.exchange', 'Exchange Rate', 'fa-indian-rupee-sign') !!}
             {!! $link('admin.settings.edit', 'Profile', 'fa-user') !!}
             {!! $link('admin.settings.security', 'Security', 'fa-shield-halved') !!}
             {!! $link('admin.settings.branding', 'Branding', 'fa-palette') !!}

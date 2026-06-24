@@ -12,21 +12,32 @@ class SettingsController extends Controller
 {
     public function edit(Request $request)
     {
-        $markup = (float) Setting::get('fx_inr_markup', 0);
-        $effective = app(\App\Services\SpotTradingService::class)->usdInr();
+        return view('admin.settings', ['admin' => $request->user()]);
+    }
 
-        return view('admin.settings', [
-            'admin' => $request->user(),
-            'fxMarkup' => $markup,
-            'fxEffective' => $effective,
-            'fxLive' => round($effective - $markup, 2),
+    /** Dedicated Exchange Rate settings page (markup % applies to all currencies). */
+    public function exchange()
+    {
+        $svc = app(\App\Services\SpotTradingService::class);
+        $pct = $svc->markupPct();
+        $liveInr = round($svc->usdInr() / (1 + $pct / 100), 4);
+
+        // A few sample currencies so the admin sees the markup applies everywhere.
+        $samples = collect(['INR', 'AED', 'GBP', 'EUR', 'LKR', 'SGD'])
+            ->mapWithKeys(fn ($c) => [$c => round($svc->usdRate($c), 4)]);
+
+        return view('admin.settings-exchange', [
+            'pct' => $pct,
+            'liveInr' => $liveInr,
+            'effInr' => $svc->usdInr(),
+            'samples' => $samples,
         ]);
     }
 
     public function updateFx(Request $request)
     {
-        $data = $request->validate(['fx_inr_markup' => ['required', 'numeric', 'min:-50', 'max:1000']]);
-        Setting::put('fx_inr_markup', (float) $data['fx_inr_markup']);
+        $data = $request->validate(['fx_markup_pct' => ['required', 'numeric', 'min:0', 'max:50']]);
+        Setting::put('fx_markup_pct', (float) $data['fx_markup_pct']);
         \Illuminate\Support\Facades\Cache::forget('fx.usdinr');
         \Illuminate\Support\Facades\Cache::forget('fx.rates.full');
 

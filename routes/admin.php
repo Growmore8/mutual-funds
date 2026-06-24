@@ -132,6 +132,7 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     // Admin settings (own profile + password)
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::get('/settings/security', [SettingsController::class, 'security'])->name('settings.security');
+    Route::get('/settings/exchange', [SettingsController::class, 'exchange'])->name('settings.exchange');
     Route::post('/settings/fx', [SettingsController::class, 'updateFx'])->name('settings.fx');
     Route::get('/settings/branding', [SettingsController::class, 'branding'])->name('settings.branding');
     Route::post('/settings/branding', [SettingsController::class, 'updateBranding'])->name('settings.branding.update');

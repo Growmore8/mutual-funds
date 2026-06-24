@@ -26,8 +26,13 @@ class SpotTradingService
             return (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
         }) ?: 84.0;
 
-        // Admin markup added on top of the live rate (e.g. live 95 + 2 = 97 used everywhere).
-        return round($base + (float) \App\Models\Setting::get('fx_inr_markup', 0), 4);
+        return round($base * (1 + $this->markupPct() / 100), 4);
+    }
+
+    /** Admin markup % applied on top of every live FX rate (all countries). */
+    public function markupPct(): float
+    {
+        return (float) \App\Models\Setting::get('fx_markup_pct', 0);
     }
 
     /** Full 1 USD → currency rate map (live, cached 6h). */
@@ -45,11 +50,16 @@ class SpotTradingService
 
             return [];
         });
-        // Always use our (live + admin markup) INR rate so the modal & server agree.
-        $map['INR'] = $this->usdInr();
-        $map['USD'] = 1.0;
+        // Apply the admin markup % to every currency so all countries get the same treatment.
+        $f = 1 + $this->markupPct() / 100;
+        $out = [];
+        foreach ($map as $code => $rate) {
+            $out[strtoupper($code)] = (float) $rate * $f;
+        }
+        $out['INR'] = $this->usdInr(); // INR uses the live USD/INR feed + markup
+        $out['USD'] = 1.0;
 
-        return $map;
+        return $out;
     }
 
     /** 1 USD → given currency (live, cached 6h). Used for deposit/withdraw conversion. */
