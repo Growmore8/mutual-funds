@@ -1,17 +1,16 @@
 <x-admin-layout title="Transactions">
-    <div class="bg-white shadow rounded-xl overflow-x-auto" x-data="{ edit:false, add:false, transfer:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
-        {{-- Tabs on top --}}
-        <div class="p-4 pb-0 flex items-center gap-2">
-            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1"></i> Mutual Fund</button>
-            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading</button>
+    <div x-data="{ edit:false, add:false, transfer:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
+        {{-- Tabs (same style as Requests) --}}
+        <div class="flex items-center gap-2 mb-5 overflow-x-auto">
+            <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-layer-group"></i> Mutual Fund</button>
+            <button type="button" @click="tab='spot'" :class="tab==='spot' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading</button>
         </div>
 
-        {{-- Search + filter below the tabs --}}
-        <div class="p-4 border-b flex flex-wrap items-center gap-2">
-            <form method="GET" class="flex flex-wrap gap-2 text-sm flex-1">
+        {{-- Search (left) + actions (right) --}}
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <form method="GET" class="flex gap-2 text-sm">
                 <input type="hidden" name="tab" :value="tab">
-                <input name="q" value="{{ $search }}" placeholder="Search by client name, email, ID or txn #…"
-                       class="flex-1 min-w-[200px] border-gray-300 rounded-md">
+                <input name="q" value="{{ $search }}" placeholder="Search name, email, ID or txn #…" class="min-w-[220px] border-gray-300 rounded-md">
                 <select name="type" class="border-gray-300 rounded-md" x-show="tab==='fund'">
                     <option value="">All types</option>
                     @foreach (['deposit','withdrawal','profit','fee','reversal','adjustment'] as $t)
@@ -23,12 +22,14 @@
                     <a href="{{ route('admin.transactions.index') }}" class="px-4 py-2 border rounded-md text-gray-600">Clear</a>
                 @endif
             </form>
-            <button type="button" @click="transfer=true" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm"><i class="fa-solid fa-right-left mr-1"></i> Transfer</button>
-            <button type="button" @click="add=true" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add transaction</button>
+            <div class="flex gap-2">
+                <button type="button" @click="transfer=true" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm"><i class="fa-solid fa-right-left mr-1"></i> Transfer</button>
+                <button type="button" @click="add=true" class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm"><i class="fa-solid fa-plus mr-1"></i> Add transaction</button>
+            </div>
         </div>
 
         {{-- ===== Mutual Fund tab ===== --}}
-        <div x-show="tab==='fund'">
+        <div x-show="tab==='fund'" class="bg-white shadow rounded-xl overflow-x-auto">
             <table class="min-w-full text-sm whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-500 text-left">
                     <tr>
@@ -89,7 +90,7 @@
         </div>
 
         {{-- ===== Spot Trading tab ===== --}}
-        <div x-show="tab==='spot'" x-cloak>
+        <div x-show="tab==='spot'" x-cloak class="bg-white shadow rounded-xl overflow-x-auto">
             <div class="px-4 pt-4 flex flex-wrap items-center gap-1 text-sm">
                 @foreach (['all' => 'All', 'trade' => 'Trades', 'deposit' => 'Deposits', 'withdrawal' => 'Withdrawals'] as $k => $lbl)
                     <button type="button" @click="spotKind='{{ $k }}'" :class="spotKind==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-md">{{ $lbl }}</button>
