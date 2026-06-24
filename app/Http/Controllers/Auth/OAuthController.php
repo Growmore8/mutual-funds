@@ -35,6 +35,8 @@ class OAuthController extends Controller
         try {
             $social = \Laravel\Socialite\Facades\Socialite::driver($provider)->user();
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OAuth ' . $provider . ' callback failed: ' . $e->getMessage(), ['query' => $request->query()]);
+
             return redirect()->route('login')->withErrors(['email' => 'Could not sign in with ' . ucfirst($provider) . '. Please try again.']);
         }
 
