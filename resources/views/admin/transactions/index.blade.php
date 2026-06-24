@@ -1,5 +1,5 @@
 <x-admin-layout title="Transactions">
-    <div x-data="{ edit:false, add:false, transfer:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''} }">
+    <div x-data="{ edit:false, add:false, transfer:false, spotEdit:false, tab:'{{ request('tab') === 'spot' ? 'spot' : 'fund' }}', spotKind:'all', f:{id:null,type:'profit',amount:0,description:''}, se:{url:'',kind:'Trade',amount:0,qty:0,price:0} }">
         {{-- Tabs (same style as Requests) --}}
         <div class="flex items-center gap-2 mb-5 overflow-x-auto">
             <button type="button" @click="tab='fund'" :class="tab==='fund' ? 'bg-emerald-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-layer-group"></i> Mutual Fund</button>
@@ -110,11 +110,14 @@
                                 <td class="px-3 py-3 text-gray-600">{{ $s->detail }}</td>
                                 <td class="px-3 py-3 text-right font-semibold {{ $s->credit ? 'text-emerald-600' : 'text-red-600' }}">{{ ($s->credit ? '+' : '-') . $s->cs . number_format(abs((float)$s->amount), 2) }}</td>
                                 <td class="px-3 py-3 text-right">
-                                    @if ($s->del)
-                                        <form method="POST" action="{{ $s->del }}" onsubmit="return confirm('Delete this spot trade and reverse its balance/holding effect?')">@csrf
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button" title="Edit"
+                                                @click="spotEdit=true; se={url:'{{ $s->edit }}', kind:'{{ $s->kind }}', amount:{{ (float) $s->amount }}, qty:{{ (float) ($s->qty ?? 0) }}, price:{{ (float) ($s->price ?? 0) }}}"
+                                                class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
+                                        <form method="POST" action="{{ $s->del }}" onsubmit="return confirm('Delete this {{ strtolower($s->kind) }} and reverse its balance/holding effect?')">@csrf
                                             <button title="Delete" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 inline-grid"><i class="fa-solid fa-trash"></i></button>
                                         </form>
-                                    @else <span class="text-gray-300">—</span> @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -124,6 +127,31 @@
                 </table>
             </div>
         </div>
+
+            {{-- Spot entry edit modal (trade qty/price OR deposit/withdrawal amount) --}}
+            <div x-show="spotEdit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/40" @click="spotEdit=false"></div>
+                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Edit <span x-text="se.kind"></span></h3>
+                    <form :action="se.url" method="POST" class="space-y-3 text-sm">
+                        @csrf
+                        <template x-if="se.kind==='Trade'">
+                            <div class="space-y-3">
+                                <div><label class="block text-gray-700 mb-1">Quantity</label><input type="number" step="any" min="0" name="qty" x-model="se.qty" class="w-full border-gray-300 rounded-md" required></div>
+                                <div><label class="block text-gray-700 mb-1">Price (USD)</label><input type="number" step="any" min="0" name="price" x-model="se.price" class="w-full border-gray-300 rounded-md" required></div>
+                                <p class="text-xs text-gray-400">Value ≈ $<span x-text="((parseFloat(se.qty)||0)*(parseFloat(se.price)||0)).toFixed(2)"></span></p>
+                            </div>
+                        </template>
+                        <template x-if="se.kind!=='Trade'">
+                            <div><label class="block text-gray-700 mb-1">Amount</label><input type="number" step="0.01" min="0" name="amount" x-model="se.amount" class="w-full border-gray-300 rounded-md" required></div>
+                        </template>
+                        <div class="flex gap-2 pt-2">
+                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save</button>
+                            <button type="button" @click="spotEdit=false" class="px-4 py-2 border rounded-md text-gray-600">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             {{-- Edit modal --}}
             <div x-show="edit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">

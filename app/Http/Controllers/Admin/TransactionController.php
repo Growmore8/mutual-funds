@@ -57,14 +57,18 @@ class TransactionController extends Controller
             $spotItems->push((object) ['when' => $t->created_at, 'client' => $names[$cid] ?? '—',
                 'detail' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol . ' ×' . rtrim(rtrim((string) $t->qty, '0'), '.'),
                 'cs' => $t->instrument->currencySymbol(), 'amount' => (float) $t->qty * (float) $t->price, 'credit' => ! $isBuy,
-                'kind' => 'Trade', 'del' => route('admin.spot.trade.delete', $t)]);
+                'kind' => 'Trade', 'id' => $t->id,
+                'del' => route('admin.spot.trade.delete', $t), 'edit' => route('admin.spot.trade.update', $t),
+                'qty' => (float) $t->qty, 'price' => (float) $t->price]);
         });
         $deps->each(fn ($d) => $spotItems->push((object) ['when' => $d->created_at, 'client' => $names[$d->user_id] ?? '—',
             'detail' => 'Deposit · ' . ($d->method ?: 'spot'), 'cs' => $d->currency === 'INR' ? '₹' : '$',
-            'amount' => (float) $d->amount, 'credit' => true, 'kind' => 'Deposit', 'del' => null]));
+            'amount' => (float) $d->amount, 'credit' => true, 'kind' => 'Deposit', 'id' => $d->id,
+            'del' => route('admin.spot.deposit.delete', $d), 'edit' => route('admin.spot.deposit.update', $d)]));
         $wds->each(fn ($w) => $spotItems->push((object) ['when' => $w->created_at, 'client' => $names[$w->user_id] ?? '—',
             'detail' => 'Withdrawal · ' . ($w->method ?: 'spot'), 'cs' => $w->currency === 'INR' ? '₹' : '$',
-            'amount' => (float) $w->amount, 'credit' => false, 'kind' => 'Withdrawal', 'del' => null]));
+            'amount' => (float) $w->amount, 'credit' => false, 'kind' => 'Withdrawal', 'id' => $w->id,
+            'del' => route('admin.spot.withdrawal.delete', $w), 'edit' => route('admin.spot.withdrawal.update', $w)]));
         if ($search !== '') {
             $needle = strtolower($search);
             $spotItems = $spotItems->filter(fn ($s) => str_contains(strtolower((string) $s->client), $needle));

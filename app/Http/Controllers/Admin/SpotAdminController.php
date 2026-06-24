@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\SpotAccount;
 use App\Models\SpotHolding;
 use App\Models\SpotInstrument;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
 use App\Models\User;
+use App\Models\Withdrawal;
 use App\Services\SpotTradingService;
 use Illuminate\Http\Request;
 
@@ -82,12 +84,19 @@ class SpotAdminController extends Controller
     /** Delete a spot trade and reverse its effect on balances + holdings (all areas). */
     public function deleteTrade(SpotTrade $trade)
     {
-        $cash = (float) $trade->qty * (float) $trade->price;
-        $cur = $trade->instrument->currency ?: 'USD';
+        $this->reverseTrade($trade);
+        $trade->delete();
 
-        // Buyer side (refund cash, remove the bought qty).
+        return back()->with('status', 'Trade deleted and balances/holdings reversed.');
+    }
+
+    /** Reverse a trade's effect on balances + holdings (single USD base). */
+    private function reverseTrade(SpotTrade $trade): void
+    {
+        $cash = (float) $trade->qty * (float) $trade->price; // prices stored in USD
+
         if ($trade->buyer_id) {
-            $this->svc->adjustBalance($trade->buyer_id, $cash, $cur);
+            $this->svc->adjustBalance($trade->buyer_id, $cash, 'USD');
             $h = SpotHolding::where('user_id', $trade->buyer_id)->where('instrument_id', $trade->instrument_id)->first();
             if ($h) {
                 $h->qty = max(0, (float) $h->qty - (float) $trade->qty);
@@ -97,17 +106,103 @@ class SpotAdminController extends Controller
                 $h->save();
             }
         }
-        // Seller side (take cash back, restore the sold qty).
         if ($trade->seller_id) {
-            $this->svc->adjustBalance($trade->seller_id, -$cash, $cur);
+            $this->svc->adjustBalance($trade->seller_id, -$cash, 'USD');
             $h = SpotHolding::firstOrCreate(['user_id' => $trade->seller_id, 'instrument_id' => $trade->instrument_id], ['qty' => 0, 'avg_price' => 0]);
             $h->qty = (float) $h->qty + (float) $trade->qty;
             $h->save();
         }
+    }
 
-        $trade->delete();
+    /** Apply a trade's effect on balances + holdings (single USD base). */
+    private function applyTrade(SpotTrade $trade): void
+    {
+        $cash = (float) $trade->qty * (float) $trade->price;
 
-        return back()->with('status', 'Trade deleted and balances/holdings reversed.');
+        if ($trade->buyer_id) {
+            $this->svc->adjustBalance($trade->buyer_id, -$cash, 'USD');
+            $h = SpotHolding::firstOrCreate(['user_id' => $trade->buyer_id, 'instrument_id' => $trade->instrument_id], ['qty' => 0, 'avg_price' => 0]);
+            $nq = (float) $h->qty + (float) $trade->qty;
+            $h->avg_price = $nq > 0 ? (((float) $h->qty * (float) $h->avg_price) + $cash) / $nq : 0;
+            $h->qty = $nq;
+            $h->save();
+        }
+        if ($trade->seller_id) {
+            $this->svc->adjustBalance($trade->seller_id, $cash, 'USD');
+            $h = SpotHolding::firstOrCreate(['user_id' => $trade->seller_id, 'instrument_id' => $trade->instrument_id], ['qty' => 0, 'avg_price' => 0]);
+            $h->qty = max(0, (float) $h->qty - (float) $trade->qty);
+            $h->save();
+        }
+    }
+
+    /** Edit a trade's qty &/or price: reverse the old effect, apply the new. */
+    public function updateTrade(Request $request, SpotTrade $trade)
+    {
+        $data = $request->validate([
+            'qty' => ['required', 'numeric', 'min:0.00000001'],
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $this->reverseTrade($trade);
+        $trade->qty = (float) $data['qty'];
+        $trade->price = (float) $data['price'];
+        $this->applyTrade($trade);
+        $trade->save();
+
+        return back()->with('status', 'Trade updated and balances/holdings recalculated.');
+    }
+
+    /** Delete a spot deposit/withdrawal and reverse its wallet effect. */
+    public function deleteDeposit(Deposit $deposit)
+    {
+        abort_unless($deposit->purpose === 'spot', 404);
+        if ($deposit->status === 'approved') {
+            $usd = $this->svc->toUsd((float) $deposit->amount, $deposit->currency ?: 'USD');
+            $this->svc->adjustBalance($deposit->user_id, -$usd, 'USD'); // remove the credited amount
+        }
+        $deposit->delete();
+
+        return back()->with('status', 'Spot deposit deleted and wallet reversed.');
+    }
+
+    public function updateDeposit(Request $request, Deposit $deposit)
+    {
+        abort_unless($deposit->purpose === 'spot', 404);
+        $data = $request->validate(['amount' => ['required', 'numeric', 'min:0']]);
+        if ($deposit->status === 'approved') {
+            $oldUsd = $this->svc->toUsd((float) $deposit->amount, $deposit->currency ?: 'USD');
+            $newUsd = $this->svc->toUsd((float) $data['amount'], $deposit->currency ?: 'USD');
+            $this->svc->adjustBalance($deposit->user_id, $newUsd - $oldUsd, 'USD');
+        }
+        $deposit->update(['amount' => (float) $data['amount']]);
+
+        return back()->with('status', 'Spot deposit updated.');
+    }
+
+    public function deleteWithdrawal(Withdrawal $withdrawal)
+    {
+        abort_unless($withdrawal->purpose === 'spot', 404);
+        if ($withdrawal->status === 'approved') {
+            $usd = $this->svc->toUsd((float) $withdrawal->amount, $withdrawal->currency ?: 'USD');
+            $this->svc->adjustBalance($withdrawal->user_id, $usd, 'USD'); // refund the debited amount
+        }
+        $withdrawal->delete();
+
+        return back()->with('status', 'Spot withdrawal deleted and wallet reversed.');
+    }
+
+    public function updateWithdrawal(Request $request, Withdrawal $withdrawal)
+    {
+        abort_unless($withdrawal->purpose === 'spot', 404);
+        $data = $request->validate(['amount' => ['required', 'numeric', 'min:0']]);
+        if ($withdrawal->status === 'approved') {
+            $oldUsd = $this->svc->toUsd((float) $withdrawal->amount, $withdrawal->currency ?: 'USD');
+            $newUsd = $this->svc->toUsd((float) $data['amount'], $withdrawal->currency ?: 'USD');
+            $this->svc->adjustBalance($withdrawal->user_id, -($newUsd - $oldUsd), 'USD'); // debit the difference
+        }
+        $withdrawal->update(['amount' => (float) $data['amount']]);
+
+        return back()->with('status', 'Spot withdrawal updated.');
     }
 
     /** Wipe a client's spot account everywhere: zero wallets, clear holdings/orders/trades. */

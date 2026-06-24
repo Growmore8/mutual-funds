@@ -85,6 +85,11 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::post('/spot/client/{client}/adjust', [\App\Http\Controllers\Admin\SpotAdminController::class, 'adjust'])->name('spot.adjust');
     Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\Admin\SpotAdminController::class, 'cancelOrder'])->name('spot.order.cancel');
     Route::post('/spot/trade/{trade}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteTrade'])->name('spot.trade.delete');
+    Route::post('/spot/trade/{trade}/update', [\App\Http\Controllers\Admin\SpotAdminController::class, 'updateTrade'])->name('spot.trade.update');
+    Route::post('/spot/deposit/{deposit}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteDeposit'])->name('spot.deposit.delete');
+    Route::post('/spot/deposit/{deposit}/update', [\App\Http\Controllers\Admin\SpotAdminController::class, 'updateDeposit'])->name('spot.deposit.update');
+    Route::post('/spot/withdrawal/{withdrawal}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteWithdrawal'])->name('spot.withdrawal.delete');
+    Route::post('/spot/withdrawal/{withdrawal}/update', [\App\Http\Controllers\Admin\SpotAdminController::class, 'updateWithdrawal'])->name('spot.withdrawal.update');
     Route::post('/spot/client/{client}/reset', [\App\Http\Controllers\Admin\SpotAdminController::class, 'resetAccount'])->name('spot.reset');
     Route::post('/spot/instruments', [\App\Http\Controllers\Admin\SpotAdminController::class, 'storeInstrument'])->name('spot.instruments.store');
     Route::post('/spot/instruments/{instrument}/toggle', [\App\Http\Controllers\Admin\SpotAdminController::class, 'toggleInstrument'])->name('spot.instruments.toggle');
