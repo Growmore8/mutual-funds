@@ -88,6 +88,12 @@ Route::post('/pin-login', [\App\Http\Controllers\Auth\PinLoginController::class,
 Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\OAuthController::class, 'redirect'])->name('oauth.redirect');
 Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\OAuthController::class, 'callback'])->name('oauth.callback');
 
+// Complete profile after social sign-up (collect phone/country/plan).
+Route::middleware('auth')->group(function () {
+    Route::get('/onboarding', [\App\Http\Controllers\Auth\OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/onboarding', [\App\Http\Controllers\Auth\OnboardingController::class, 'store'])->name('onboarding.store');
+});
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');

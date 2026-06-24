@@ -69,6 +69,11 @@ class OAuthController extends Controller
             $request->session()->put('admin_session_token', $token);
         }
 
+        // New / incomplete client → finish basic details before entering the app.
+        if (! OnboardingController::complete($user)) {
+            return redirect()->route('onboarding.show');
+        }
+
         return redirect()->route('dashboard');
     }
 }
