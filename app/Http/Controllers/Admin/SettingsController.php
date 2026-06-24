@@ -12,7 +12,25 @@ class SettingsController extends Controller
 {
     public function edit(Request $request)
     {
-        return view('admin.settings', ['admin' => $request->user()]);
+        $markup = (float) Setting::get('fx_inr_markup', 0);
+        $effective = app(\App\Services\SpotTradingService::class)->usdInr();
+
+        return view('admin.settings', [
+            'admin' => $request->user(),
+            'fxMarkup' => $markup,
+            'fxEffective' => $effective,
+            'fxLive' => round($effective - $markup, 2),
+        ]);
+    }
+
+    public function updateFx(Request $request)
+    {
+        $data = $request->validate(['fx_inr_markup' => ['required', 'numeric', 'min:-50', 'max:1000']]);
+        Setting::put('fx_inr_markup', (float) $data['fx_inr_markup']);
+        \Illuminate\Support\Facades\Cache::forget('fx.usdinr');
+        \Illuminate\Support\Facades\Cache::forget('fx.rates.full');
+
+        return back()->with('status', 'Exchange rate markup saved.');
     }
 
     public function branding()

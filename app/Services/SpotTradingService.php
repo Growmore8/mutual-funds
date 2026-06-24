@@ -22,9 +22,12 @@ class SpotTradingService
     /** Live USD/INR rate (cached 1h, fallback 84). */
     public function usdInr(): float
     {
-        return (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
+        $base = (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
             return (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
         }) ?: 84.0;
+
+        // Admin markup added on top of the live rate (e.g. live 95 + 2 = 97 used everywhere).
+        return round($base + (float) \App\Models\Setting::get('fx_inr_markup', 0), 4);
     }
 
     /** Full 1 USD → currency rate map (live, cached 6h). */
@@ -42,9 +45,8 @@ class SpotTradingService
 
             return [];
         });
-        if (empty($map['INR'])) {
-            $map['INR'] = $this->usdInr();
-        }
+        // Always use our (live + admin markup) INR rate so the modal & server agree.
+        $map['INR'] = $this->usdInr();
         $map['USD'] = 1.0;
 
         return $map;
