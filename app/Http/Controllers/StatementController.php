@@ -113,13 +113,18 @@ class StatementController extends Controller
                     'label' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol . ' ×' . rtrim(rtrim((string) $t->qty, '0'), '.'),
                     'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price, 'cs' => $t->instrument->currencySymbol(), 'status' => 'Filled']);
             });
-        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($d) use ($spot) {
-            $spot->push((object) ['when' => $d->created_at, 'kind' => 'deposit', 'label' => 'Spot deposit (' . $d->currency . ')',
-                'amount' => (float) $d->amount, 'cs' => $d->currency === 'INR' ? '₹' : '$', 'status' => ucfirst($d->status)]);
+        $svc = app(\App\Services\SpotTradingService::class);
+        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($d) use ($spot, $svc) {
+            $usd = $svc->toUsd((float) $d->amount, $d->currency ?: 'USD');
+            $note = ($d->currency && $d->currency !== 'USD') ? ' · ' . number_format((float) $d->amount, 2) . ' ' . $d->currency : '';
+            $spot->push((object) ['when' => $d->created_at, 'kind' => 'deposit', 'label' => 'Spot deposit' . $note,
+                'amount' => $usd, 'cs' => '$', 'status' => ucfirst($d->status)]);
         });
-        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($w) use ($spot) {
-            $spot->push((object) ['when' => $w->created_at, 'kind' => 'withdrawal', 'label' => 'Spot withdrawal (' . $w->currency . ')',
-                'amount' => -1 * (float) $w->amount, 'cs' => $w->currency === 'INR' ? '₹' : '$', 'status' => ucfirst($w->status)]);
+        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($w) use ($spot, $svc) {
+            $usd = $svc->toUsd((float) $w->amount, $w->currency ?: 'USD');
+            $note = ($w->currency && $w->currency !== 'USD') ? ' · ' . number_format((float) $w->amount, 2) . ' ' . $w->currency : '';
+            $spot->push((object) ['when' => $w->created_at, 'kind' => 'withdrawal', 'label' => 'Spot withdrawal' . $note,
+                'amount' => -1 * $usd, 'cs' => '$', 'status' => ucfirst($w->status)]);
         });
         $spotActivity = $spot->sortByDesc('when')->values();
 
