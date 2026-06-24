@@ -49,6 +49,18 @@ class SpotInstrument extends Model
         return $this->logo_url ?: null;
     }
 
+    /** Secondary logo source (tried if the primary 404s) — crypto icon CDN. */
+    public function logoFallback(): ?string
+    {
+        if ($this->market === 'crypto' || $this->type === 'crypto') {
+            $base = strtolower(explode('/', $this->symbol)[0]);
+
+            return "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@latest/128/color/{$base}.png";
+        }
+
+        return null;
+    }
+
     /** 1–2 letter monogram for the symbol badge. */
     public function monogram(): string
     {

@@ -38,7 +38,9 @@
                     <span class="relative w-9 h-9 shrink-0 rounded-full grid place-items-center text-white text-[11px] font-bold overflow-hidden" style="background:{{ $m->badgeColor() }}">
                         {{ $m->monogram() }}
                         @if ($m->logoUrl())
-                            <img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">
+                            <img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover"
+                                 data-fallback="{{ $m->logoFallback() }}"
+                                 onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}">
                         @endif
                     </span>
                     <div class="flex-1 min-w-0">
