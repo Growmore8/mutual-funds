@@ -271,17 +271,19 @@
                 @endif
             </div>
 
-            {{-- Recent transactions --}}
+            {{-- Recent transactions (Mutual Fund + Spot Trading) --}}
             <div class="bg-white shadow rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Recent transactions</h3>
                 <table class="min-w-full text-sm">
-                    <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead>
+                    <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Area</th><th>Detail</th><th class="text-right">Amount</th></tr></thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($client->transactions as $t)
-                            <tr><td class="py-2 text-gray-400">{{ $t->created_at->format('d M Y') }}</td>
-                                <td>{{ ucfirst($t->type) }}</td>
-                                <td class="{{ $t->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format((float)$t->amount,2) }}</td>
-                                <td>{{ number_format((float)$t->balance_after,2) }}</td></tr>
+                        @forelse ($activity as $a)
+                            <tr>
+                                <td class="py-2 text-gray-400 whitespace-nowrap">{{ $a->when->format('d M Y') }}</td>
+                                <td><span class="text-xs px-2 py-0.5 rounded-full {{ $a->area==='Spot' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-800' }}">{{ $a->area }}</span></td>
+                                <td class="text-gray-600">{{ $a->detail }}</td>
+                                <td class="text-right font-medium {{ $a->amount < 0 ? 'text-red-600' : 'text-green-600' }}">{{ ($a->amount < 0 ? '-' : '+') }}${{ number_format(abs((float)$a->amount),2) }}</td>
+                            </tr>
                         @empty
                             <tr><td colspan="4" class="py-6 text-center text-gray-400">No transactions yet.</td></tr>
                         @endforelse

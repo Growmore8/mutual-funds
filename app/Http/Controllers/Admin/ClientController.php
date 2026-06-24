@@ -83,6 +83,28 @@ class ClientController extends Controller
         // Unrealized spot P&L (all holdings, USD).
         $spotPnl = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
 
+        // Merged recent activity: mutual fund transactions + spot trades + spot deposits/withdrawals.
+        $activity = collect();
+        $client->transactions->each(fn ($t) => $activity->push((object) [
+            'when' => $t->created_at, 'area' => 'Mutual Fund',
+            'detail' => ucfirst($t->type) . ($t->description ? ' · ' . $t->description : ''),
+            'amount' => (float) $t->amount]));
+        $spotTrades->each(function ($t) use ($activity, $client) {
+            $isBuy = $t->buyer_id === $client->id;
+            $activity->push((object) ['when' => $t->created_at, 'area' => 'Spot',
+                'detail' => ($isBuy ? 'Buy ' : 'Sell ') . $t->instrument->symbol . ' ×' . rtrim(rtrim((string) $t->qty, '0'), '.'),
+                'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price]);
+        });
+        \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')->latest('id')->limit(15)->get()
+            ->each(fn ($d) => $activity->push((object) ['when' => $d->created_at, 'area' => 'Spot',
+                'detail' => 'Deposit' . ($d->currency && $d->currency !== 'USD' ? ' · ' . number_format((float) $d->amount, 2) . ' ' . $d->currency : ''),
+                'amount' => $svc->toUsd((float) $d->amount, $d->currency ?: 'USD')]));
+        \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')->latest('id')->limit(15)->get()
+            ->each(fn ($w) => $activity->push((object) ['when' => $w->created_at, 'area' => 'Spot',
+                'detail' => 'Withdrawal' . ($w->currency && $w->currency !== 'USD' ? ' · ' . number_format((float) $w->amount, 2) . ' ' . $w->currency : ''),
+                'amount' => -1 * $svc->toUsd((float) $w->amount, $w->currency ?: 'USD')]));
+        $activity = $activity->sortByDesc('when')->take(30)->values();
+
         return view('admin.clients.show', [
             'client' => $client,
             'accountTypes' => AccountType::orderBy('sort_order')->get(),
@@ -91,6 +113,7 @@ class ClientController extends Controller
             'spotHoldings' => $spotHoldings,
             'spotTrades' => $spotTrades,
             'spotPnl' => $spotPnl,
+            'activity' => $activity,
         ]);
     }
 
