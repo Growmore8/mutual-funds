@@ -18,7 +18,10 @@
 </head>
 <body class="h-full bg-[#070b16] text-gray-200">
 {{-- Full-bleed faded background (hero image fades into dark) --}}
-<div class="flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh;@if($hero) background-image:linear-gradient(to bottom,rgba(7,11,22,.32) 0%,rgba(7,11,22,.72) 42%,rgba(7,11,22,.96) 66%,#070b16 88%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 28%;background-repeat:no-repeat;@endif">
+@if($hero)
+<div class="fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.30) 0%,rgba(7,11,22,.68) 45%,rgba(7,11,22,.90) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 28%;background-repeat:no-repeat"></div>
+@endif
+<div class="relative flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh;z-index:1">
     <div class="w-full max-w-sm mx-auto px-6 pt-44 lg:pt-12 relative z-10" style="padding-bottom:max(2rem,env(safe-area-inset-bottom))">
             <div class="flex items-center gap-2 mb-8">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
