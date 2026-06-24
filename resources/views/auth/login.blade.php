@@ -26,7 +26,7 @@
 
 {{-- MOBILE: full-bleed faded brand photo behind the form --}}
 @if($hero)
-<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.30) 0%,rgba(7,11,22,.68) 45%,rgba(7,11,22,.90) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 28%;background-repeat:no-repeat"></div>
+<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.30) 0%,rgba(7,11,22,.68) 45%,rgba(7,11,22,.90) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% 26%;background-repeat:no-repeat"></div>
 @endif
 
 <div class="relative z-10 flex items-center justify-center lg:p-8 {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh">
@@ -120,7 +120,7 @@
 
         {{-- BRAND IMAGE COLUMN (desktop only) --}}
         <div class="hidden lg:block relative m-3 rounded-2xl overflow-hidden"
-             @if($hero) style="background-image:url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center" @else style="background:linear-gradient(150deg,#0b3b32,#0a1730)" @endif>
+             @if($hero) style="background-image:url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% center" @else style="background:linear-gradient(150deg,#0b3b32,#0a1730)" @endif>
             <div class="absolute inset-0" style="background:linear-gradient(to top,rgba(7,11,22,.45),rgba(7,11,22,0) 55%)"></div>
             <div class="absolute bottom-8 left-8 right-8 text-white">
                 <h2 class="text-2xl font-extrabold leading-tight">Invest together.<br>Earn together.</h2>
