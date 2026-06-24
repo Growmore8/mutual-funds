@@ -29,19 +29,24 @@ class SpotInstrument extends Model
         return '$';
     }
 
-    /** Real logo URL (Twelve Data, stored on the row); crypto CDN fallback; else monogram. */
+    /** Real logo URL via LogoKit (ticker/crypto); stored Twelve Data logo or monogram as fallback. */
     public function logoUrl(): ?string
     {
-        if (! empty($this->logo_url)) {
-            return $this->logo_url;
-        }
+        $key = config('services.logokit.key');
+
         if ($this->market === 'crypto' || $this->type === 'crypto') {
             $base = strtolower(explode('/', $this->symbol)[0]);
 
-            return "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@latest/128/color/{$base}.png";
+            return $key
+                ? "https://img.logokit.com/crypto/{$base}?token={$key}"
+                : "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@latest/128/color/{$base}.png";
         }
 
-        return null;
+        if ($key) {
+            return 'https://img.logokit.com/ticker/' . urlencode($this->symbol) . "?token={$key}";
+        }
+
+        return $this->logo_url ?: null;
     }
 
     /** 1–2 letter monogram for the symbol badge. */

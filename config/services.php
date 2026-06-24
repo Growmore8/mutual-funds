@@ -25,6 +25,11 @@ return [
         'spot_key' => env('TWELVEDATA_SPOT_KEY'),
     ],
 
+    // LogoKit (img.logokit.com) — real ticker & crypto logos. pk_ token is publishable.
+    'logokit' => [
+        'key' => env('LOGOKIT_KEY', 'pk_fr7d1bb0471266c3803821'),
+    ],
+
     'webpush' => [
         'public_key' => env('VAPID_PUBLIC_KEY'),
         'private_key' => env('VAPID_PRIVATE_KEY'),
