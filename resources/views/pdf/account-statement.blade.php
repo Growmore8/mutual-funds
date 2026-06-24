@@ -51,6 +51,25 @@
             <td><div class="card-l">Withdrawals (period)</div><div class="card-v">${{ number_format($fund['periodWithdrawal'],2) }}</div></td>
             <td><div class="card-l">Profit (period)</div><div class="card-v {{ $fund['periodProfit']<0?'neg':'pos' }}">{{ ($fund['periodProfit']<0?'-':'+') }}${{ number_format(abs($fund['periodProfit']),2) }}</div></td>
         </tr></table>
+
+        {{-- Mutual Fund history: profit/loss distribution + deposits/withdrawals per date --}}
+        @if (!empty($fund['transactions']) && count($fund['transactions']))
+            <table class="tbl" style="margin-top:8px">
+                <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead>
+                <tbody>
+                    @foreach ($fund['transactions'] as $t)
+                        <tr>
+                            <td>{{ $t->created_at->format('d M Y H:i') }}</td>
+                            <td>{{ ucfirst($t->type) }}</td>
+                            <td class="{{ (float)$t->amount<0?'neg':'pos' }}">{{ ((float)$t->amount<0?'-':'+') }}${{ number_format(abs((float)$t->amount),2) }}</td>
+                            <td>${{ number_format((float)$t->balance_after,2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p class="sub">No mutual-fund transactions in this period.</p>
+        @endif
     @endif
 
     {{-- Spot section (single USD base) --}}
@@ -65,22 +84,25 @@
                 <td><div class="card-l">Realized P&L (period)</div><div class="card-v {{ $s['realized']<0?'neg':'pos' }}">{{ ($s['realized']<0?'-':'+') }}{{ $s['cs'] }}{{ number_format(abs($s['realized']),2) }}</div></td>
             </tr></table>
             @if ($s['trades']->count())
-                <table class="tbl" style="margin-top:8px">
-                    <thead><tr><th>Date</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Value</th></tr></thead>
+                <p class="sub" style="margin:8px 0 2px;font-weight:bold;color:#0a1730">Trade history</p>
+                <table class="tbl">
+                    <thead><tr><th>Date</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Value</th><th>Realized P&L</th></tr></thead>
                     <tbody>
                         @foreach ($s['trades'] as $t)
-                            @php $isBuy = $t->buyer_id === $s['clientId']; @endphp
                             <tr>
-                                <td>{{ $t->created_at->format('d M Y H:i') }}</td>
-                                <td>{{ $t->instrument->symbol }}</td>
-                                <td class="{{ $isBuy?'pos':'neg' }}">{{ $isBuy?'Buy':'Sell' }}</td>
+                                <td>{{ $t->when->format('d M Y H:i') }}</td>
+                                <td>{{ $t->symbol }}</td>
+                                <td class="{{ $t->side==='Buy'?'pos':'neg' }}">{{ $t->side }}</td>
                                 <td>{{ rtrim(rtrim((string)$t->qty,'0'),'.') }}</td>
                                 <td>{{ $s['cs'] }}{{ number_format((float)$t->price,2) }}</td>
-                                <td>{{ $s['cs'] }}{{ number_format((float)$t->qty*(float)$t->price,2) }}</td>
+                                <td>{{ $s['cs'] }}{{ number_format((float)$t->value,2) }}</td>
+                                <td class="{{ $t->realized===null ? '' : ($t->realized<0?'neg':'pos') }}">{{ $t->realized===null ? '—' : (($t->realized<0?'-':'+').$s['cs'].number_format(abs($t->realized),2)) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+            @else
+                <p class="sub">No spot trades in this period.</p>
             @endif
         @endif
     @endforeach

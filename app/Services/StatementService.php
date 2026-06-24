@@ -114,7 +114,7 @@ class StatementService
             ->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))
             ->orderBy('id')->get();
 
-        // Walk all trades to compute realized within the period.
+        // Walk all trades to compute realized within the period + per-trade rows.
         $pos = [];
         $realized = 0.0;
         $periodTrades = collect();
@@ -123,19 +123,26 @@ class StatementService
             $pos[$iid] ??= ['qty' => 0.0, 'avg' => 0.0];
             $qty = (float) $t->qty;
             $price = (float) $t->price;
+            $isBuy = $t->buyer_id === $client->id;
             $inPeriod = $t->created_at->betweenIncluded($start, $end);
-            if ($t->buyer_id === $client->id) {
+            $rowRealized = null;
+            if ($isBuy) {
                 $nq = $pos[$iid]['qty'] + $qty;
                 $pos[$iid]['avg'] = $nq > 0 ? (($pos[$iid]['qty'] * $pos[$iid]['avg']) + ($qty * $price)) / $nq : 0;
                 $pos[$iid]['qty'] = $nq;
             } else {
+                $rowRealized = round(($price - $pos[$iid]['avg']) * $qty, 2);
                 if ($inPeriod) {
                     $realized += ($price - $pos[$iid]['avg']) * $qty;
                 }
                 $pos[$iid]['qty'] = max(0, $pos[$iid]['qty'] - $qty);
             }
             if ($inPeriod) {
-                $periodTrades->push($t);
+                $periodTrades->push((object) [
+                    'when' => $t->created_at, 'symbol' => $t->instrument->symbol,
+                    'side' => $isBuy ? 'Buy' : 'Sell', 'qty' => $qty, 'price' => $price,
+                    'value' => $qty * $price, 'realized' => $rowRealized,
+                ]);
             }
         }
 
