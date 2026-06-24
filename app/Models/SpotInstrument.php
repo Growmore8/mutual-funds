@@ -29,13 +29,16 @@ class SpotInstrument extends Model
         return '$';
     }
 
-    /** Logo URL for crypto (free CDN); stocks fall back to a monogram badge. */
+    /** Real logo URL (Twelve Data, stored on the row); crypto CDN fallback; else monogram. */
     public function logoUrl(): ?string
     {
+        if (! empty($this->logo_url)) {
+            return $this->logo_url;
+        }
         if ($this->market === 'crypto' || $this->type === 'crypto') {
             $base = strtolower(explode('/', $this->symbol)[0]);
 
-            return "https://assets.coincap.io/assets/icons/{$base}@2x.png";
+            return "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@latest/128/color/{$base}.png";
         }
 
         return null;

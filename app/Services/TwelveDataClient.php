@@ -58,6 +58,14 @@ class TwelveDataClient
         return $this->get('/exchanges', [], 86400);
     }
 
+    /** Real logo URL for a symbol (company / crypto). Cached a week. */
+    public function logo(string $symbol, ?string $exchange = null): ?string
+    {
+        $data = $this->get('/logo', $this->sym($symbol, $exchange), 604800);
+
+        return $data['url'] ?? $data['logo_base'] ?? null;
+    }
+
     private function sym(string $symbol, ?string $exchange): array
     {
         $p = ['symbol' => $symbol];

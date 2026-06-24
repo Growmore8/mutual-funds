@@ -45,6 +45,13 @@ class SpotLiquiditySeeder
 
         $ins->update(['last_price' => $price]);
 
+        // Backfill the real logo once (Twelve Data /logo), then it's cached on the row.
+        if (empty($ins->logo_url)) {
+            if ($url = $this->td->logo($ins->symbol, $ins->exchange)) {
+                $ins->update(['logo_url' => $url]);
+            }
+        }
+
         // Auto-execute resting limit orders the live price has reached (fallback when nobody's watching).
         $this->engine->triggerLimitOrders($ins, $price);
 
