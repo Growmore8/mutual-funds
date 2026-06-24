@@ -115,14 +115,17 @@ class TransactionController extends Controller
             $desc = trim('Paid ' . number_format(abs($raw), 2) . ' ' . $enteredCur . ($desc ? ' · ' . $desc : ''));
         }
 
+        // Sign by type: deposit/fee credit (+), withdrawal/reversal debit (−), adjustment as entered.
+        $signedUsd = match ($data['type']) {
+            'deposit', 'fee', 'profit' => abs($amtUsd),
+            'withdrawal', 'reversal' => -abs($amtUsd),
+            default => $amtUsd, // adjustment: − to debit, + to credit
+        };
+
         // Book to a Spot wallet instead of the mutual-fund ledger when chosen.
         $destination = ($data['destination'] ?? 'fund') === 'fund' ? 'fund' : 'spot';
         if ($destination !== 'fund') {
-            $signed = match ($data['type']) {
-                'deposit' => abs($amtUsd),
-                'withdrawal', 'fee' => -abs($amtUsd),
-                default => $amtUsd, // adjustment / reversal: respect entered sign (use − to debit)
-            };
+            $signed = $signedUsd;
             $spotSvc->adjustBalance($user->id, $signed, 'USD');
 
             // Record it so it shows in transactions (client + admin).
@@ -145,13 +148,13 @@ class TransactionController extends Controller
 
         // Balance runs per fund account.
         $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
-        $balanceAfter = round((float) ($last->balance_after ?? 0) + $amtUsd, 2);
+        $balanceAfter = round((float) ($last->balance_after ?? 0) + $signedUsd, 2);
 
         $tx = Transaction::create([
             'user_id' => $user->id,
             'fund_account_id' => $account->id,
             'type' => $data['type'],
-            'amount' => $amtUsd,
+            'amount' => $signedUsd,
             'currency' => 'USD',
             'balance_after' => $balanceAfter,
             'status' => 'completed',

@@ -22,16 +22,25 @@
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
-        {{-- Spot account summary (single base) --}}
-        <div class="gcard rounded-2xl p-4 mb-3 mx-1 bg-white dark:bg-white/[0.04]">
-            <div class="flex items-center justify-between mb-2">
-                <p class="text-[11px] uppercase tracking-wider text-blue-500 dark:text-blue-300 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading Account</p>
-                <a href="{{ route('transfer.create') }}" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Transfer</a>
+        {{-- Spot account summary (single USD base) --}}
+        <div class="gcard rounded-2xl mb-3 mx-1 overflow-hidden bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06]">
+            <div class="px-4 py-2.5 flex items-center justify-between bg-gradient-to-r from-blue-500/10 to-emerald-500/10">
+                <p class="text-[11px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-300"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Spot Trading Account</p>
+                <a href="{{ route('transfer.create') }}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-full transition"><i class="fa-solid fa-right-left"></i> Transfer</a>
             </div>
-            <div class="flex flex-wrap gap-x-6 gap-y-2">
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">Total Spot Deposit</p><p class="text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)($spotDeposited ?? 0),2) }}</p></div>
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">Total PNL</p><p class="text-lg font-extrabold {{ ($spotTotalPnl ?? 0)<0?'text-red-500':'text-emerald-500' }}">{{ (($spotTotalPnl ?? 0)<0?'-':'+').'$'.number_format(abs($spotTotalPnl ?? 0),2) }}</p></div>
-                <div><p class="text-xs text-gray-500 dark:text-gray-400">Floating PnL</p><p class="text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').'$'.number_format(abs($upnl),2) }}</p></div>
+            <div class="grid grid-cols-3 divide-x divide-gray-100 dark:divide-white/[0.08] py-3">
+                <div class="px-3 text-center">
+                    <p class="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">Spot Deposit</p>
+                    <p class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white">${{ number_format((float)($spotDeposited ?? 0),2) }}</p>
+                </div>
+                <div class="px-3 text-center">
+                    <p class="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">Total P&L</p>
+                    <p class="text-base sm:text-lg font-extrabold {{ ($spotTotalPnl ?? 0)<0?'text-red-500':'text-emerald-500' }}">{{ (($spotTotalPnl ?? 0)<0?'-':'+').'$'.number_format(abs($spotTotalPnl ?? 0),2) }}</p>
+                </div>
+                <div class="px-3 text-center">
+                    <p class="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">Floating P&L</p>
+                    <p class="text-base sm:text-lg font-extrabold {{ $upnl<0?'text-red-500':'text-emerald-500' }}">{{ ($upnl<0?'-':'+').'$'.number_format(abs($upnl),2) }}</p>
+                </div>
             </div>
         </div>
 

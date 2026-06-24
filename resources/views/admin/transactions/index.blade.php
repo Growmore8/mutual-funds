@@ -189,7 +189,7 @@
                                     get inSym(){ return this.ecur==='USD' ? '$' : this.localSym; },
                                     get rate(){ return this.ecur==='USD' ? 1 : (this.rates[this.ecur] || 1); },
                                     get usd(){ const a=parseFloat(this.amt)||0; return this.ecur==='USD' ? a : (this.rate>0 ? a/this.rate : a); },
-                                    get isDebit(){ return this.type==='withdrawal' || this.type==='fee' || (parseFloat(this.amt)||0) < 0; },
+                                    get isDebit(){ return this.type==='withdrawal' || this.type==='reversal' || (this.type==='adjustment' && (parseFloat(this.amt)||0) < 0); },
                                     pickAcc(a){ this.sel=a; this.q=''; this.open=false; this.fiat=false; } }">
                         @csrf
                         <div class="relative">
@@ -223,7 +223,7 @@
                         <div>
                             <label class="block text-gray-700 mb-1">Deposit / Withdrawal</label>
                             <select name="type" x-model="type" class="w-full border-gray-300 rounded-md">
-                                @foreach (['deposit','withdrawal','reversal','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
+                                @foreach (['deposit','withdrawal','reversal','fee','adjustment'] as $t)<option value="{{ $t }}">{{ ucfirst($t) }}</option>@endforeach
                             </select>
                         </div>
 
@@ -236,7 +236,8 @@
                                         :class="fiat ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'"
                                         class="text-[11px] px-2.5 py-1 rounded font-semibold"><i class="fa-solid fa-money-bill-wave mr-1"></i> By fiat</button>
                             </div>
-                            <input type="number" step="0.01" name="amount" x-model="amt" class="w-full border-gray-300 rounded-md" required :placeholder="inSym+'0.00 (use − for debit)'">
+                            <input type="number" step="0.01" name="amount" x-model="amt" class="w-full border-gray-300 rounded-md" required :placeholder="inSym+'0.00'">
+                            <p x-show="type==='adjustment'" x-cloak class="mt-1 text-[11px] text-gray-400">Adjustment: enter a negative amount to debit.</p>
                             <p x-show="fiat && localCur!=='USD' && parseFloat(amt)" x-cloak class="mt-1 text-xs text-emerald-600">
                                 ≈ <span class="font-semibold" x-text="'$'+usd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span>
                                 will be <span x-text="isDebit ? 'debited' : 'credited'"></span> to the account — only this amount is saved (rate <span x-text="localSym+rate.toLocaleString()"></span>/$).
