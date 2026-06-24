@@ -165,13 +165,15 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
     /** Capital = Principal = Balance = total approved deposits. */
     public function totalDeposited(): float
     {
-        return (float) $this->deposits()->where('status', 'approved')->sum('amount');
+        return (float) $this->deposits()->where('status', 'approved')
+            ->where(fn ($q) => $q->where('purpose', 'fund')->orWhereNull('purpose'))->sum('amount');
     }
 
     /** Running PnL = profit/loss + referral commission − profit already paid out (can be negative). */
     public function runningPnl(): float
     {
-        $paidOut = (float) $this->withdrawals()->where('status', 'approved')->sum('amount');
+        $paidOut = (float) $this->withdrawals()->where('status', 'approved')
+            ->where(fn ($q) => $q->where('purpose', 'fund')->orWhereNull('purpose'))->sum('amount');
 
         return round($this->totalProfit() + $this->referralEarned() - $paidOut, 2);
     }
@@ -264,7 +266,8 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
      */
     public function availableToWithdraw(): float
     {
-        $locked = (float) $this->withdrawals()->whereIn('status', ['pending', 'approved'])->sum('amount');
+        $locked = (float) $this->withdrawals()->whereIn('status', ['pending', 'approved'])
+            ->where(fn ($q) => $q->where('purpose', 'fund')->orWhereNull('purpose'))->sum('amount');
 
         return round(max(0, $this->totalProfit() + $this->referralEarned() - $locked), 2);
     }
