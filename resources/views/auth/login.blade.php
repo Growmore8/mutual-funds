@@ -26,7 +26,7 @@
 
 {{-- MOBILE: full-bleed faded brand photo behind the form --}}
 @if($hero)
-<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.30) 0%,rgba(7,11,22,.68) 45%,rgba(7,11,22,.90) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% 26%;background-repeat:no-repeat"></div>
+<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.22) 0%,rgba(7,11,22,.40) 45%,rgba(7,11,22,.86) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center 26%;background-repeat:no-repeat"></div>
 @endif
 
 <div class="relative z-10 flex items-center justify-center lg:p-8 {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh">
@@ -34,14 +34,14 @@
 
         {{-- FORM COLUMN --}}
         <div class="flex flex-col justify-end lg:justify-center min-h-screen lg:min-h-0 lg:py-14">
-            <div class="w-full max-w-sm mx-auto px-6 lg:px-10 pt-44 lg:pt-0 relative z-10" style="padding-bottom:max(2rem,env(safe-area-inset-bottom))">
-                <div class="flex items-center gap-2 mb-8">
+            <div class="w-full max-w-sm mx-auto px-6 lg:px-10 pt-40 lg:pt-0 relative z-10 text-center lg:text-left" style="padding-bottom:max(2.25rem,env(safe-area-inset-bottom))">
+                <div class="flex items-center justify-center lg:justify-start gap-2 mb-5 lg:mb-8">
                     <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
-                    <span class="text-xl font-extrabold tracking-wide text-white lg:text-[#0a1730]">{{ $appName }}</span>
+                    <span class="text-2xl lg:text-xl font-extrabold tracking-wide text-white lg:text-[#0a1730]">{{ $appName }}</span>
                 </div>
 
-                <h1 class="text-3xl font-extrabold text-white lg:text-[#0a1730] leading-tight drop-shadow lg:drop-shadow-none">Welcome Back!</h1>
-                <p class="text-sm text-gray-300 lg:text-gray-500 mt-2 mb-6">Please log in to your account</p>
+                <h1 class="text-3xl font-extrabold text-white lg:text-[#0a1730] leading-tight drop-shadow lg:drop-shadow-none">Login to your account</h1>
+                <p class="text-sm text-gray-200 lg:text-gray-500 mt-2 mb-6 drop-shadow lg:drop-shadow-none">Enter your login information</p>
 
                 @if (session('status'))
                     <div class="mb-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 lg:text-emerald-700 lg:bg-emerald-50 lg:border-emerald-200 text-sm rounded-lg p-3">{{ session('status') }}</div>
