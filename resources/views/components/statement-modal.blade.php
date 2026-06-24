@@ -2,7 +2,7 @@
 {{-- Statement: choose account -> period -> download / email. --}}
 <div x-data="{
         open:false, step:1, scope:'fund', period:'month', from:'', to:'', sending:false, msg:'', ok:false,
-        scopeLabel(){ return {fund:'Mutual Fund', spot_usd:'Spot · NYSE (US/Global/Crypto)', spot_inr:'Spot · BSE (India)', all:'All accounts'}[this.scope]; },
+        scopeLabel(){ return {fund:'Mutual Fund', spot_usd:'Spot · NYSE (US/Global/Crypto)', spot_inr:'Spot · NSE (India)', all:'All accounts'}[this.scope]; },
         pick(s){ this.scope=s; this.step=2; },
         url(action){
             let p = new URLSearchParams({scope:this.scope, period:this.period, action});
@@ -32,7 +32,7 @@
                     <div class="space-y-2">
                         <button @click="pick('fund')" class="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-emerald-400"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</button>
                         <button @click="pick('spot_usd')" class="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-blue-400"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> NYSE · US/Global/Crypto</button>
-                        <button @click="pick('spot_inr')" class="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-orange-400"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> BSE · India</button>
+                        <button @click="pick('spot_inr')" class="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-orange-400"><i class="fa-solid fa-arrow-trend-up text-orange-500 mr-1"></i> NSE · India</button>
                         <button @click="pick('all')" class="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-emerald-400"><i class="fa-solid fa-layer-group mr-1"></i> All accounts</button>
                     </div>
                 </div>

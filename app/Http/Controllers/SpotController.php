@@ -32,7 +32,7 @@ class SpotController extends Controller
         $unrealized = round($holdingsValue - $holdingsCost, 2);
         $equity = round((float) $account->balance + $holdingsValue, 2);
 
-        // Total spot deposit (capital in, net of withdrawals; BSE + NYSE in USD) and total P&L.
+        // Total spot deposit (capital in, net of withdrawals; NSE + NYSE in USD) and total P&L.
         $spotDeposited = round(
             \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
                 ->get(['amount', 'currency'])->sum(fn ($d) => $this->svc->toUsd((float) $d->amount, $d->currency))
@@ -48,7 +48,7 @@ class SpotController extends Controller
         return view('client.spot.index', compact('instruments', 'selected', 'cur', 'account', 'holdings', 'orders', 'trades', 'holdingsValue', 'unrealized', 'equity', 'spotDeposited', 'spotTotalPnl'));
     }
 
-    /** Markets list page (all NYSE + BSE + Crypto instruments). */
+    /** Markets list page (all NYSE + NSE + Crypto instruments). */
     public function markets()
     {
         $instruments = SpotInstrument::enabled()->orderBy('sort')->get();

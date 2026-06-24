@@ -4,7 +4,7 @@
         $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
-        $marketGroups = ['usd' => 'NYSE · US/Global + Crypto', 'inr' => 'BSE · India'];
+        $marketGroups = ['usd' => 'NYSE · US/Global + Crypto', 'inr' => 'NSE · India'];
         $grp = fn ($m) => $m === 'india' ? 'inr' : 'usd';
         $selGroup = $grp($selected->market ?? 'india');
         // Within the NYSE (USD) group, split stocks vs crypto into sub-categories.
@@ -31,10 +31,10 @@
             <div class="mb-3 mx-1 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300 text-sm rounded-lg p-3">{{ session('status') }}</div>
         @endif
 
-        {{-- Market tabs: NYSE (US/Global + Crypto) | BSE (India) --}}
+        {{-- Market tabs: NYSE (US/Global + Crypto) | NSE (India) --}}
         <div class="flex gap-2 mx-1 mb-3">
             <a href="{{ route('spot.index', ['market' => 'global']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></a>
-            <a href="{{ route('spot.index', ['market' => 'india']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">BSE <span class="font-normal text-[11px]">India · $</span></a>
+            <a href="{{ route('spot.index', ['market' => 'india']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NSE <span class="font-normal text-[11px]">India · $</span></a>
         </div>
 
         {{-- ============ Terminal grid (desktop) / stacked (mobile) ============ --}}
@@ -68,7 +68,7 @@
                     <div class="relative">
                         <button @click="pick=!pick" class="flex items-center gap-2">
                             <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $selected->symbol ?? '—' }}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded {{ $cs==='₹' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $selGroup==='inr' ? 'BSE' : 'NYSE' }}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded {{ $cs==='₹' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $selGroup==='inr' ? 'NSE' : 'NYSE' }}</span>
                             <i class="fa-solid fa-chevron-down text-xs text-gray-400 lg:hidden"></i>
                         </button>
                         <p class="text-sm font-semibold" :class="change>=0?'text-emerald-500':'text-red-500'"><span x-text="(change>=0?'+':'')+change.toFixed(2)+'%'"></span></p>

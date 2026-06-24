@@ -193,7 +193,7 @@
         <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
             <p class="text-xs text-gray-500 dark:text-gray-400">Total Spot Deposit</p>
             <p class="text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">${{ number_format($spotDeposited ?? 0, 2) }}</p>
-            <p class="text-[11px] text-gray-400">capital in · BSE + NYSE</p>
+            <p class="text-[11px] text-gray-400">capital in · NSE + NYSE</p>
         </a>
         <a href="{{ route('spot.index') }}" class="gcard rounded-2xl p-4 bg-white dark:bg-white/[0.04] block">
             <p class="text-xs text-gray-500 dark:text-gray-400">Total Spot PNL</p>

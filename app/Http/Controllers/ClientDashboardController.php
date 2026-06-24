@@ -107,7 +107,7 @@ class ClientDashboardController extends Controller
         $spotFloating = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
         $spotEquity = round($spotUsd + $spotHoldings->sum(fn ($h) => (float) $h->qty * (float) ($h->instrument->last_price ?: $h->avg_price)), 2);
 
-        // Total spot deposit (capital in, net of withdrawals — both BSE + NYSE, in USD).
+        // Total spot deposit (capital in, net of withdrawals — both NSE + NYSE, in USD).
         $spotDeposited = round(
             \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
                 ->get(['amount', 'currency'])->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency))

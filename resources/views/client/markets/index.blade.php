@@ -1,6 +1,6 @@
 <x-client-layout title="Markets">
     @php
-        $grp = fn ($m) => $m === 'india' ? 'BSE' : ($m === 'crypto' ? 'Crypto' : 'NYSE');
+        $grp = fn ($m) => $m === 'india' ? 'NSE' : ($m === 'crypto' ? 'Crypto' : 'NYSE');
         $initQuotes = $instruments->mapWithKeys(fn ($m) => [$m->id => ['price' => (float) $m->last_price, 'change' => 0]]);
     @endphp
     <div class="-mx-1" x-data="markets()" x-init="init()">
@@ -16,7 +16,7 @@
 
         {{-- Group tabs --}}
         <div class="flex gap-2 px-1 mb-3 text-sm overflow-x-auto">
-            @foreach (['All' => 'All', 'NYSE' => 'NYSE', 'Crypto' => 'Crypto', 'BSE' => 'BSE'] as $k => $label)
+            @foreach (['All' => 'All', 'NYSE' => 'NYSE', 'Crypto' => 'Crypto', 'NSE' => 'NSE'] as $k => $label)
                 <button type="button" @click="grp='{{ $k }}'" :class="grp==='{{ $k }}' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">{{ $label }}</button>
             @endforeach
         </div>
