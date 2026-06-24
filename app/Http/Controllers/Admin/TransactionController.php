@@ -75,12 +75,15 @@ class TransactionController extends Controller
         }
         $spotItems = $spotItems->sortByDesc('when')->take(80)->values();
 
-        // Account picker (searchable) for the "Add transaction" form — incl. client's local fiat.
+        // Account picker (searchable) for the "Add transaction" form — incl. client's local fiat + balances.
+        $spotBal = \App\Models\SpotAccount::where('currency', 'USD')->pluck('balance', 'user_id');
         $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
             'id' => $a->id,
             'label' => ($a->user->name ?? 'Client') . ' · ' . $a->code() . ' · ' . $a->label,
             'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
             'localCur' => $a->user?->localCurrency() ?? 'USD',
+            'mfProfit' => round((float) $a->availableToWithdraw(), 2),  // movable MF profit
+            'spot' => round((float) ($spotBal[$a->user_id] ?? 0), 2),    // spot USD balance
         ])->values();
         $fxMap = app(\App\Services\SpotTradingService::class)->ratesMap();
 
