@@ -161,6 +161,29 @@
         <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Running P&amp;L movements</p>
     </div>
 
+    {{-- Quick actions --}}
+    <div class="grid grid-cols-4 gap-2 mb-6 text-center">
+        <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+            <span class="w-12 h-12 grid place-items-center rounded-full bg-emerald-500/15 text-emerald-500"><i class="fa-solid fa-arrow-down text-lg"></i></span>
+            <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Deposit</span>
+        </a>
+        <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+            <span class="w-12 h-12 grid place-items-center rounded-full bg-blue-500/15 text-blue-500"><i class="fa-solid fa-arrow-up text-lg"></i></span>
+            <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Withdraw</span>
+        </a>
+        <a href="{{ route('transfer.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+            <span class="w-12 h-12 grid place-items-center rounded-full bg-violet-500/15 text-violet-500"><i class="fa-solid fa-right-left text-lg"></i></span>
+            <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Transfer</span>
+        </a>
+        <div class="flex flex-col items-center gap-1.5 py-1 opacity-60 cursor-not-allowed" title="Coming soon">
+            <span class="relative w-12 h-12 grid place-items-center rounded-full bg-gray-500/15 text-gray-400">
+                <i class="fa-solid fa-people-arrows text-lg"></i>
+                <span class="absolute -top-1 -right-1 text-[8px] bg-amber-500 text-white px-1 rounded">SOON</span>
+            </span>
+            <span class="text-xs text-gray-400 font-medium">P2P</span>
+        </div>
+    </div>
+
     {{-- Spot Trading — separate section --}}
     <div class="flex items-center justify-between mb-2 mt-2">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading</h3>
@@ -178,7 +201,6 @@
             <p class="text-[10px] text-gray-400 mt-0.5">Total spot floating PnL {{ (($spotFloating ?? 0) < 0 ? '-' : '+') . '$' . number_format(abs($spotFloating ?? 0), 2) }}</p>
         </a>
     </div>
-    <a href="{{ route('transfer.create') }}" class="block mb-6 gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04] text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Transfer between Mutual Fund &amp; Spot</a>
 
     {{-- Mutual Fund — separate section (details below) --}}
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund</h3>
