@@ -1,6 +1,14 @@
 <x-client-layout title="Spot Trading">
     @php
-        $cs = $selected?->currencySymbol() ?? '$';
+        $usdInr = app(\App\Services\SpotTradingService::class)->usdInr();
+        $isInrMkt = $selected && $selected->market === 'india';
+        $cs = $isInrMkt ? '₹' : '$';            // display currency for the selected instrument
+        $dispRate = $isInrMkt ? $usdInr : 1;    // USD price × this = display price
+        $rowPx = function ($m) use ($usdInr) {  // per-row price for the markets lists
+            $p = (float) $m->last_price;
+            if (! $p) return '—';
+            return $m->market === 'india' ? '₹' . number_format($p * $usdInr, 2) : '$' . number_format($p, 2);
+        };
         $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
@@ -54,7 +62,7 @@
                                 <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
                                    class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
                                     <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
-                                    <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                                    <span class="text-gray-400">{{ $rowPx($m) }}</span>
                                 </a>
                             @endforeach
                         @endif
@@ -84,7 +92,7 @@
                                         @foreach ($list as $m)
                                             <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
                                                 <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
-                                                <span class="text-gray-400">{{ $m->currencySymbol() }}{{ $m->last_price ? number_format((float)$m->last_price,2) : '—' }}</span>
+                                                <span class="text-gray-400">{{ $rowPx($m) }}</span>
                                             </a>
                                         @endforeach
                                     @endif
@@ -127,7 +135,7 @@
                         {{-- Market / Limit --}}
                         <div class="grid grid-cols-2 rounded-lg overflow-hidden mb-2 text-xs font-semibold border border-gray-200 dark:border-white/10">
                             <button type="button" @click="otype='market'" :class="otype==='market' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Market</button>
-                            <button type="button" @click="otype='limit'; if(!oprice||oprice==0) oprice=price.toFixed(dp())" :class="otype==='limit' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Limit</button>
+                            <button type="button" @click="otype='limit'; if(!oprice||oprice==0) oprice=(price*dispRate).toFixed(dp())" :class="otype==='limit' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Limit</button>
                         </div>
                         <div x-show="otype==='market'" class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs mb-2 text-gray-400 text-center"><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Fills at current market price</div>
                         <div x-show="otype==='limit'" x-cloak class="mb-2">
@@ -139,12 +147,12 @@
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
                         </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span x-text="side==='buy' ? 'Order cost' : 'You receive'"></span>
-                            <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="fmt(cost())"></span>
+                            <span x-text="side==='buy' ? 'Order cost (USD)' : 'You receive (USD)'"></span>
+                            <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="cf(cost())"></span>
                         </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
                             <span>Available</span>
-                            <span x-show="side==='buy'" class="text-gray-700 dark:text-gray-300">{{ $sym($account->balance, $cs) }}</span>
+                            <span x-show="side==='buy'" class="text-gray-700 dark:text-gray-300">${{ number_format((float)$account->balance,2) }}</span>
                             <span x-show="side==='sell'" class="text-gray-700 dark:text-gray-300">{{ rtrim(rtrim((string)($selHolding ?? 0),'0'),'.') ?: '0' }} {{ $selected->symbol ?? '' }}</span>
                         </div>
                         <button @click="submit()" :disabled="busy" :class="side==='buy' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'" class="w-full py-3 rounded-full text-white font-bold text-sm disabled:opacity-60">
@@ -157,11 +165,11 @@
                     <div class="lg:gcard lg:rounded-2xl lg:p-4 lg:bg-white lg:dark:bg-white/[0.04]">
                         <div class="flex justify-between text-[10px] text-gray-400 mb-1"><span>Price ({{ $cs }})</span><span>Qty</span></div>
                         <div class="space-y-0.5 text-[11px] font-mono">
-                            <template x-for="a in book.asks.slice().reverse()" :key="'a'+a.price"><div class="flex justify-between"><span class="text-red-500" x-text="a.price.toFixed(2)"></span><span class="text-gray-400" x-text="a.qty"></span></div></template>
+                            <template x-for="a in book.asks.slice().reverse()" :key="'a'+a.price"><div class="flex justify-between"><span class="text-red-500" x-text="pn(a.price)"></span><span class="text-gray-400" x-text="a.qty"></span></div></template>
                         </div>
-                        <div class="my-1 text-base font-extrabold transition-colors duration-300" :class="dir>0?'text-emerald-500':(dir<0?'text-red-500':'text-gray-700 dark:text-gray-200')" x-text="fmt(price||book.last)"></div>
+                        <div class="my-1 text-base font-extrabold transition-colors duration-300" :class="dir>0?'text-emerald-500':(dir<0?'text-red-500':'text-gray-700 dark:text-gray-200')" x-text="pf(price||book.last)"></div>
                         <div class="space-y-0.5 text-[11px] font-mono">
-                            <template x-for="b in book.bids" :key="'b'+b.price"><div class="flex justify-between"><span class="text-emerald-500" x-text="b.price.toFixed(2)"></span><span class="text-gray-400" x-text="b.qty"></span></div></template>
+                            <template x-for="b in book.bids" :key="'b'+b.price"><div class="flex justify-between"><span class="text-emerald-500" x-text="pn(b.price)"></span><span class="text-gray-400" x-text="b.qty"></span></div></template>
                         </div>
                     </div>
                 </div>
@@ -188,15 +196,20 @@
         function spot(){
             return {
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
-                curSym: '{{ $cs }}', interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true,
-                side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', ototal:'', oqty:'',
+                curSym: '{{ $cs }}', dispRate: {{ (float)$dispRate }}, interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true,
+                side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) * $dispRate }}', ototal:'', oqty:'',
                 avail: {{ (float)$account->balance }}, holdingQty: {{ (float)($selHolding ?? 0) }},
                 busy:false, msg:'', ok:false, _t:null,
                 candles: [], dir: 0,
-                dp(){ var p=Math.abs(this.price||0); return p>0 && p<10 ? 4 : 2; },
-                fmt(n){ var d=this.dp(); return this.curSym + (n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
+                dp(){ var p=Math.abs((this.price||0)*this.dispRate); return p>0 && p<10 ? 4 : 2; },
+                // price display in the instrument currency (₹ for NSE, $ otherwise)
+                pn(usd){ var d=this.dp(); return ((usd||0)*this.dispRate).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
+                pf(usd){ return this.curSym + this.pn(usd); },
+                // cost / wallet are always USD (single base)
+                cf(usd){ return '$' + (usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); },
                 init(){ if(!this.id) return; this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
-                cost(){ const px = this.otype==='limit' ? (parseFloat(this.oprice)||0) : this.price; return (parseFloat(this.oqty)||0) * px; },
+                // limit price field is in display currency → convert to USD for cost/settlement
+                cost(){ const pxUsd = this.otype==='limit' ? ((parseFloat(this.oprice)||0)/this.dispRate) : this.price; return (parseFloat(this.oqty)||0) * pxUsd; },
                 setPct(p){
                     if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
                     else { this.oqty=(this.holdingQty*p/100).toFixed(6); }
@@ -205,8 +218,8 @@
                     try{
                         const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
                         if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change;
-                            // only track live price in MARKET mode; never overwrite a manual limit price
-                            if(this.otype!=='limit'){ this.oprice=q.price; }
+                            // only track live price in MARKET mode; never overwrite a manual limit price (display currency)
+                            if(this.otype!=='limit'){ this.oprice=(q.price*this.dispRate); }
                             // live chart: move the latest point with the price
                             if(this.showChart && this.candles.length){ this.candles[this.candles.length-1].close = q.price; this.draw(); } }
                         const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
@@ -226,7 +239,7 @@
                     const px=i=>padL+i*(W-padL-padR)/(Math.max(1,pts.length-1)), py=v=>padT+(max-v)/(max-min)*(H-padT-padB);
                     x.font='10px sans-serif'; x.fillStyle=txt; x.strokeStyle=grid; x.lineWidth=1;
                     // horizontal grid + price labels
-                    for(let r=0;r<=4;r++){ const v=max-(max-min)*r/4, y=py(v); x.beginPath(); x.moveTo(padL,y); x.lineTo(W-padR,y); x.stroke(); x.textAlign='right'; x.fillText(this.curSym+v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}), padL-6, y+3); }
+                    for(let r=0;r<=4;r++){ const v=max-(max-min)*r/4, y=py(v); x.beginPath(); x.moveTo(padL,y); x.lineTo(W-padR,y); x.stroke(); x.textAlign='right'; x.fillText(this.curSym+(v*this.dispRate).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}), padL-6, y+3); }
                     // x time labels (first/mid/last)
                     x.textAlign='center';
                     [0, Math.floor(pts.length/2), pts.length-1].forEach(i=>{ const t=(times[i]||'').slice(5,16); x.fillText(t, px(i), H-7); });
@@ -244,7 +257,7 @@
                     this.busy=true; this.msg='';
                     try{
                         const res=await fetch('{{ route('spot.order') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
-                            body:JSON.stringify({instrument_id:this.id,side:this.side,type:this.otype,price:this.otype==='limit'?this.oprice:null,qty:qty})});
+                            body:JSON.stringify({instrument_id:this.id,side:this.side,type:this.otype,price:this.otype==='limit'?((parseFloat(this.oprice)||0)/this.dispRate):null,qty:qty})});
                         const d=await res.json(); this.ok=res.ok&&d.ok; this.msg=d.message||'Done';
                         if(this.ok) setTimeout(()=>location.reload(), 900);
                     }catch(e){ this.ok=false; this.msg='Could not place order.'; }

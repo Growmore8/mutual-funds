@@ -1,7 +1,9 @@
 <x-client-layout title="Markets">
     @php
         $grp = fn ($m) => $m === 'india' ? 'NSE' : ($m === 'crypto' ? 'Crypto' : 'NYSE');
+        $usdInr = app(\App\Services\SpotTradingService::class)->usdInr();
         $initQuotes = $instruments->mapWithKeys(fn ($m) => [$m->id => ['price' => (float) $m->last_price, 'change' => 0]]);
+        $inrIds = $instruments->where('market', 'india')->pluck('id')->values();
     @endphp
     <div class="-mx-1" x-data="markets()" x-init="init()">
         <h1 class="text-xl font-extrabold text-gray-900 dark:text-white px-1 mb-3">Markets</h1>
@@ -48,7 +50,7 @@
                         <p class="text-[11px] text-gray-400 truncate">{{ $m->name }}</p>
                     </div>
                     <div class="w-28 text-right">
-                        <p class="font-semibold text-gray-900 dark:text-white text-sm" x-text="fmt({{ $m->id }})">${{ number_format((float)$m->last_price, 2) }}</p>
+                        <p class="font-semibold text-gray-900 dark:text-white text-sm" x-text="fmt({{ $m->id }})">{{ $m->market==='india' ? '₹'.number_format((float)$m->last_price*$usdInr,2) : '$'.number_format((float)$m->last_price,2) }}</p>
                     </div>
                     <div class="w-20 text-right">
                         <span class="inline-block px-2 py-1 rounded-md text-xs font-semibold text-white"
@@ -63,12 +65,12 @@
     <script>
         function markets(){
             return {
-                q: '', grp: 'All', quotes: {{ Illuminate\Support\Js::from($initQuotes) }},
+                q: '', grp: 'All', rate: {{ (float) $usdInr }}, inrIds: {{ Illuminate\Support\Js::from($inrIds) }}, quotes: {{ Illuminate\Support\Js::from($initQuotes) }},
                 init(){ this.tick(); this._t = setInterval(()=>this.tick(), 15000); },
                 async tick(){
                     try { this.quotes = await (await fetch('{{ route('markets.quotes') }}', {cache:'no-store'})).json(); } catch(e){}
                 },
-                fmt(id){ const x = this.quotes[id]; if(!x) return null; const p = x.price; return '$' + p.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits: p<10?4:2}); },
+                fmt(id){ const x = this.quotes[id]; if(!x) return null; const inr = this.inrIds.includes(id); const p = inr ? x.price*this.rate : x.price; return (inr?'₹':'$') + p.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits: p<10?4:2}); },
                 chg(id){ return this.quotes[id] ? this.quotes[id].change : 0; },
                 chgTxt(id){ const c = this.chg(id); return (c>=0?'+':'') + c.toFixed(2) + '%'; },
             };
