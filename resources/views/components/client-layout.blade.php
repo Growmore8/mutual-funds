@@ -76,24 +76,32 @@
         #gc-splash{display:none}
         html.gc-splash #gc-splash{display:flex}
         html.gc-splash{overflow:hidden}
+        @keyframes gcLogoIn{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.05);opacity:1}100%{transform:scale(1)}}
+        @keyframes gcGlow{0%,100%{box-shadow:0 0 40px rgba(16,185,129,.25)}50%{box-shadow:0 0 70px rgba(16,185,129,.55)}}
+        @keyframes gcBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+        @keyframes gcFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+        .gc-logo-box{animation:gcLogoIn .6s cubic-bezier(.2,.8,.2,1) both, gcGlow 2.2s ease-in-out 0.6s infinite}
+        .gc-splash-fade{animation:gcFade .6s ease .25s both}
+        .gc-bar-track{width:180px;height:4px;border-radius:9999px;background:rgba(255,255,255,.08);overflow:hidden}
+        .gc-bar-track > i{display:block;width:40%;height:100%;border-radius:9999px;background:linear-gradient(90deg,transparent,#10b981,#34d399);animation:gcBar 1.1s ease-in-out infinite}
     </style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
 
 {{-- Loading screen (painted before the app; covers nav so there's no glitch) --}}
 @unless ($embed)
-<div id="gc-splash" class="fixed inset-0 z-[200] items-center justify-center" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16">
+<div id="gc-splash" class="fixed inset-0 z-[200] flex-col items-center justify-center" style="background:radial-gradient(1000px 600px at 50% 18%,rgba(16,185,129,.16),transparent 60%),linear-gradient(165deg,#0a1f1b 0%,#070b16 55%)">
     <div class="text-center px-8">
-        <img src="/logo.png?v={{ $brandV }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
-        <p class="mt-5 text-3xl font-extrabold text-white tracking-wide">{!! preg_replace('/(capital)/i', '<span class="text-emerald-400">$1</span>', e($appName)) !!}</p>
-        <p class="text-[11px] tracking-[0.35em] uppercase text-gray-400 mt-1.5">Mutual Fund</p>
-        <p class="text-sm text-emerald-300/90 mt-2">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
-        <div class="flex items-center justify-center gap-2 mt-7">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0ms"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:150ms"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:300ms"></span>
+        <div class="gc-logo-box mx-auto w-24 h-24 rounded-[26px] grid place-items-center bg-white/[0.06] ring-1 ring-emerald-400/30">
+            <img src="/logo.png?v={{ $brandV }}" alt="" class="w-14 h-14" onerror="this.style.display='none'">
+        </div>
+        <div class="gc-splash-fade">
+            <p class="mt-6 text-3xl font-extrabold text-white tracking-wide">{!! preg_replace('/(capital)/i', '<span class="text-emerald-400">$1</span>', e($appName)) !!}</p>
+            <p class="text-[11px] tracking-[0.4em] uppercase text-gray-400 mt-2">Mutual Fund</p>
         </div>
     </div>
+    <div class="gc-bar-track mt-9"><i></i></div>
+    <p class="absolute bottom-8 text-[11px] text-gray-500 tracking-wide">{{ \App\Models\Setting::get('app_slogan', 'Invest together · Earn together') }}</p>
 </div>
 <script>
     (function () {

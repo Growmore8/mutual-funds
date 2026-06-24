@@ -11,14 +11,11 @@ class P2pController extends Controller
 {
     public function index(Request $request)
     {
-        $side = $request->get('side') === 'sell' ? 'sell' : 'buy';
-        $merchants = P2pMerchant::active()->where('side', $side)
-            ->orderBy('sort')->orderBy('id')->get();
+        $all = P2pMerchant::active()->orderBy('sort')->orderBy('id')->get();
+        $buyMerchants = $all->where('side', 'buy')->values();
+        $sellMerchants = $all->where('side', 'sell')->values();
 
-        $orders = P2pOrder::with('merchant')->where('user_id', $request->user()->id)
-            ->latest('id')->limit(10)->get();
-
-        return view('client.p2p.index', compact('side', 'merchants', 'orders'));
+        return view('client.p2p.index', compact('buyMerchants', 'sellMerchants'));
     }
 
     public function order(Request $request)

@@ -17,17 +17,10 @@
     </style>
 </head>
 <body class="h-full bg-[#070b16] text-gray-200">
-<div class="min-h-full lg:grid lg:grid-cols-2">
-
-    {{-- Form side --}}
-    <div class="relative lg:auth-hero lg:flex lg:items-center lg:justify-center lg:px-6 lg:py-12">
-        @if($hero)
-            <div class="lg:hidden relative">
-                <img src="{{ $hero }}?v={{ $brandV }}" alt="" class="w-full block" style="-webkit-user-drag:none">
-                <div class="absolute inset-x-0 bottom-0 top-1/4" style="background:linear-gradient(to bottom,rgba(7,11,22,0),#070b16 85%,#070b16 100%)"></div>
-            </div>
-        @endif
-        <div class="w-full max-w-sm mx-auto px-6 pb-12 relative z-10 {{ $hero ? '-mt-24 lg:mt-0 lg:px-0' : 'pt-10 lg:pt-0 lg:px-0' }}">
+{{-- Full-bleed faded background (hero image fades into dark) --}}
+<div class="min-h-full flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}"
+     @if($hero) style="background-image:linear-gradient(to bottom,rgba(7,11,22,.30),rgba(7,11,22,.62) 45%,#070b16 92%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center top;background-attachment:fixed" @endif>
+    <div class="w-full max-w-sm mx-auto px-6 pb-10 pt-28 lg:pt-12 relative z-10">
             <div class="flex items-center gap-2 mb-8">
                 <img src="/logo.png?v={{ $brandV }}" class="w-9 h-9" onerror="this.style.display='none'">
                 <span class="text-xl font-extrabold tracking-wide text-white">{{ $appName }}</span>
@@ -108,23 +101,6 @@
             @if (Route::has('register'))
                 <p class="text-center text-sm text-gray-400 mt-6">Don't have an account? <a href="{{ route('register') }}" class="text-emerald-400 font-semibold">Sign Up</a></p>
             @endif
-        </div>
-    </div>
-
-    {{-- Brand / art side (desktop) --}}
-    <div class="hidden lg:block auth-hero relative overflow-hidden" @if($hero) style="background-image:linear-gradient(120deg,rgba(7,11,22,.93),rgba(7,11,22,.5)),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:center" @endif>
-        @unless($hero)
-        <div class="absolute -top-10 right-10 w-72 h-72 rounded-full bg-blue-500/40 auth-blob"></div>
-        <div class="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-emerald-500/40 auth-blob"></div>
-        @endunless
-        <div class="relative z-10 h-full flex flex-col justify-center px-16 text-white">
-            <h2 class="text-4xl font-extrabold leading-tight">Invest together.<br>Earn together.</h2>
-            <p class="text-gray-300 mt-4 max-w-md">Your capital joins a professionally managed pool. Profit is distributed daily by your share — and your funds stay under your ownership.</p>
-            <div class="flex gap-8 mt-10">
-                <div><i class="fa-solid fa-shield-halved text-2xl text-emerald-400"></i><p class="text-sm text-gray-400 mt-2">Secured &amp; verified</p></div>
-                <div><i class="fa-solid fa-chart-line text-2xl text-emerald-400"></i><p class="text-sm text-gray-400 mt-2">Daily profit share</p></div>
-            </div>
-            <p class="absolute bottom-8 text-xs text-gray-500">&copy; {{ date('Y') }} {{ $appName }} Ltd</p>
         </div>
     </div>
 </div>
