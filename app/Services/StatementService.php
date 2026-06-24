@@ -105,12 +105,12 @@ class StatementService
     }
 
     /** Spot Trading section for a currency over a period (trades + deposits/withdrawals + realized). */
-    public function spotSection(User $client, Carbon $start, Carbon $end, string $currency): array
+    public function spotSection(User $client, Carbon $start, Carbon $end): array
     {
-        $cs = $currency === 'INR' ? '₹' : '$';
-        $instIds = \App\Models\SpotInstrument::where('currency', $currency)->pluck('id');
+        $cs = '$'; // single USD base
+        $svc = app(\App\Services\SpotTradingService::class);
 
-        $allTrades = \App\Models\SpotTrade::with('instrument')->whereIn('instrument_id', $instIds)
+        $allTrades = \App\Models\SpotTrade::with('instrument')
             ->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))
             ->orderBy('id')->get();
 
@@ -139,15 +139,18 @@ class StatementService
             }
         }
 
-        $deposits = (float) \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')->where('currency', $currency)
-            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->sum('amount');
-        $withdrawals = (float) \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')->where('currency', $currency)
-            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->sum('amount');
-        $balance = (float) \App\Models\SpotAccount::where('user_id', $client->id)->where('currency', $currency)->value('balance');
+        // Deposits/withdrawals stored in any currency → convert to USD for the statement.
+        $deposits = \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')
+            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->get(['amount', 'currency'])
+            ->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency ?: 'USD'));
+        $withdrawals = \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')
+            ->where('status', 'approved')->whereBetween('created_at', [$start, $end])->get(['amount', 'currency'])
+            ->sum(fn ($w) => $svc->toUsd((float) $w->amount, $w->currency ?: 'USD'));
+        $balance = (float) \App\Models\SpotAccount::where('user_id', $client->id)->where('currency', 'USD')->value('balance');
 
         return [
-            'currency' => $currency, 'cs' => $cs,
-            'deposits' => $deposits, 'withdrawals' => $withdrawals,
+            'currency' => 'USD', 'cs' => $cs,
+            'deposits' => round($deposits, 2), 'withdrawals' => round($withdrawals, 2),
             'realized' => round($realized, 2), 'balance' => $balance,
             'trades' => $periodTrades, 'clientId' => $client->id,
         ];

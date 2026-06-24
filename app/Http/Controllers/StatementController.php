@@ -19,7 +19,7 @@ class StatementController extends Controller
         $scope = $request->get('scope', 'fund');
 
         // Spot / combined statements use the multi-section view.
-        if (in_array($scope, ['spot_usd', 'spot_inr', 'all'])) {
+        if (in_array($scope, ['spot', 'all'])) {
             return $this->scopedStatement($request, $svc, $user, $start, $end, $label, $scope);
         }
 
@@ -59,8 +59,7 @@ class StatementController extends Controller
             'client' => $user, 'name' => $user->name, 'email' => $user->email, 'code' => $user->clientCode(),
             'label' => $label, 'start' => $start, 'end' => $end, 'generatedAt' => now(), 'scope' => $scope,
             'fund' => $scope === 'all' ? $svc->data($user, $start, $end, $label) : null,
-            'usd' => in_array($scope, ['spot_usd', 'all']) ? $svc->spotSection($user, $start, $end, 'USD') : null,
-            'inr' => in_array($scope, ['spot_inr', 'all']) ? $svc->spotSection($user, $start, $end, 'INR') : null,
+            'spot' => in_array($scope, ['spot', 'all']) ? $svc->spotSection($user, $start, $end) : null,
         ];
 
         if ($request->get('action') === 'email') {

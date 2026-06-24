@@ -53,8 +53,8 @@
         </tr></table>
     @endif
 
-    {{-- Spot sections --}}
-    @foreach (['usd' => 'Spot · US/Global/Crypto (USD)', 'inr' => 'Spot · India (INR)'] as $key => $title)
+    {{-- Spot section (single USD base) --}}
+    @foreach (['spot' => 'Spot Trading (USD)'] as $key => $title)
         @php $s = $$key ?? null; @endphp
         @if (!empty($s))
             <div class="sec">{{ $title }}</div>

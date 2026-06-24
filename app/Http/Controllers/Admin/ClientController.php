@@ -245,13 +245,12 @@ class ClientController extends Controller
         $scope = $request->get('scope', 'fund');
 
         // Spot / combined (all) scopes use the multi-section statement view.
-        if (in_array($scope, ['spot_usd', 'spot_inr', 'all'])) {
+        if (in_array($scope, ['spot', 'all'])) {
             $payload = [
                 'client' => $client, 'name' => $client->name, 'email' => $client->email, 'code' => $client->clientCode(),
                 'label' => $label, 'start' => $start, 'end' => $end, 'generatedAt' => now(), 'scope' => $scope,
                 'fund' => $scope === 'all' ? $svc->data($client, $start, $end, $label) : null,
-                'usd' => in_array($scope, ['spot_usd', 'all']) ? $svc->spotSection($client, $start, $end, 'USD') : null,
-                'inr' => in_array($scope, ['spot_inr', 'all']) ? $svc->spotSection($client, $start, $end, 'INR') : null,
+                'spot' => in_array($scope, ['spot', 'all']) ? $svc->spotSection($client, $start, $end) : null,
             ];
 
             if ($request->get('action') === 'email') {
