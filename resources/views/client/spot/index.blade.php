@@ -146,8 +146,13 @@
                         <div class="flex gap-1 mb-2">
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
                         </div>
+                        {{-- NSE: show cost in ₹ too. Cost/wallet settle in USD. --}}
+                        <div x-show="dispRate!==1" class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span x-text="(side==='buy' ? 'Order cost' : 'You receive')+' ({{ $cs }})'"></span>
+                            <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="pf(cost())"></span>
+                        </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span x-text="side==='buy' ? 'Order cost (USD)' : 'You receive (USD)'"></span>
+                            <span x-text="(side==='buy' ? 'Order cost' : 'You receive')+' (USD)'"></span>
                             <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="cf(cost())"></span>
                         </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
