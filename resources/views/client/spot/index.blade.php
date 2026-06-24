@@ -69,8 +69,9 @@
                             @endif
                             @foreach ($list as $m)
                                 <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
-                                   class="flex justify-between px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
-                                    <span class="text-gray-900 dark:text-white">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
+                                   class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
+                                    <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" style="background:{{ $m->badgeColor() }}">{{ $m->monogram() }}@if($m->logoUrl())<img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" data-fallback="{{ $m->logoFallback() }}" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}">@endif</span>
+                                    <span class="flex-1 min-w-0 text-gray-900 dark:text-white truncate">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
                                     <span class="text-gray-400">{{ $rowPx($m) }}</span>
                                 </a>
                             @endforeach
@@ -99,8 +100,9 @@
                                             <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 mb-1 px-3">{{ $subLabel }}</p>
                                         @endif
                                         @foreach ($list as $m)
-                                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex justify-between px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
-                                                <span class="text-gray-900 dark:text-white">{{ $m->symbol }}</span>
+                                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
+                                                <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" style="background:{{ $m->badgeColor() }}">{{ $m->monogram() }}@if($m->logoUrl())<img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" data-fallback="{{ $m->logoFallback() }}" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}">@endif</span>
+                                                <span class="flex-1 min-w-0 text-gray-900 dark:text-white truncate">{{ $m->symbol }}</span>
                                                 <span class="text-gray-400">{{ $rowPx($m) }}</span>
                                             </a>
                                         @endforeach
