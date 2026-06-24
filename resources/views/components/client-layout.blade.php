@@ -1,4 +1,4 @@
-@props(['title' => 'Dashboard'])
+@props(['title' => 'Dashboard', 'embed' => false])
 @php
     $appName = \App\Models\Setting::get('app_name', 'GrowthCapital');
     $appShort = \App\Models\Setting::get('app_short_name', 'GC Fund');
@@ -81,6 +81,7 @@
 <body class="min-h-screen bg-gray-50 text-gray-800 dark:bg-[#070d1f] dark:text-gray-200" x-data="{ sheet: false }">
 
 {{-- Loading screen (painted before the app; covers nav so there's no glitch) --}}
+@unless ($embed)
 <div id="gc-splash" class="fixed inset-0 z-[200] items-center justify-center" style="background:radial-gradient(900px 500px at 50% 0,rgba(16,185,129,.18),transparent 60%),#070b16">
     <div class="text-center px-8">
         <img src="/logo.png?v={{ $brandV }}" alt="" class="w-24 h-24 mx-auto drop-shadow-[0_0_30px_rgba(16,185,129,.55)]" onerror="this.style.display='none'">
@@ -107,9 +108,11 @@
         });
     })();
 </script>
-<div class="lg:flex lg:min-h-screen">
+@endunless
+<div class="{{ $embed ? '' : 'lg:flex lg:min-h-screen' }}">
 
     {{-- Desktop sidebar --}}
+    @unless ($embed)
     <aside class="hidden lg:flex lg:flex-col w-64 bg-[#0a1730] text-gray-300 fixed inset-y-0">
         <div class="px-6 h-16 shrink-0 border-b border-white/[0.06] flex items-center gap-2.5">
             <img src="/logo.png?v={{ $brandV }}" alt="" class="w-9 h-9 shrink-0" onerror="this.style.display='none'">
@@ -169,10 +172,12 @@
             <p class="text-[10px] text-gray-500 mt-2 px-1">GrowthCapital Ltd. · © {{ date('Y') }}</p>
         </div>
     </aside>
+    @endunless
 
     {{-- Main --}}
-    <div class="flex-1 lg:pl-64">
+    <div class="{{ $embed ? '' : 'flex-1 lg:pl-64' }}">
         {{-- Top bar: logo+name left, notifications + profile right --}}
+        @unless ($embed)
         <header class="bg-white/95 border-b border-gray-200 dark:bg-[#0a1730]/80 dark:border-white/[0.06] backdrop-blur sticky top-0 z-30 safe-t">
             <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0 lg:hidden">
@@ -211,8 +216,9 @@
                 </div>
             </div>
         </header>
+        @endunless
 
-        <main class="px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:pb-8 page-in">
+        <main class="{{ $embed ? 'px-4 pt-4 pb-6' : 'px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:pb-8' }} page-in">
             @if (auth()->user()?->status === 'locked')
                 <div class="mb-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3 flex items-start gap-2">
                     <i class="fa-solid fa-lock mt-0.5"></i>
@@ -230,21 +236,33 @@
     </div>
 </div>{{-- end app wrapper --}}
 
-    {{-- Deposit/Withdraw action sheet (mobile +) --}}
-    <div x-show="sheet" x-transition.opacity @click="sheet=false" style="display:none" class="lg:hidden fixed inset-0 bg-black/40 z-40"></div>
-    <div x-show="sheet" x-transition x-cloak class="lg:hidden fixed inset-x-0 bottom-24 z-50 px-6 safe-b">
-        <div class="bg-white dark:bg-[#0f1b38] dark:ring-1 dark:ring-white/10 rounded-2xl shadow-xl p-3 max-w-sm mx-auto grid grid-cols-2 gap-3">
-            <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                <i class="fa-solid fa-arrow-down text-xl"></i><span class="text-sm font-medium">Deposit</span>
-            </a>
-            <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1 py-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                <i class="fa-solid fa-money-bill-transfer text-xl"></i><span class="text-sm font-medium">Withdraw</span>
-            </a>
-            <a href="{{ route('client.profit') }}" class="col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 text-gray-700 dark:bg-white/10 dark:text-gray-200">
-                <i class="fa-solid fa-chart-pie"></i><span class="text-sm font-medium">Profit History</span>
-            </a>
+    @unless ($embed)
+    {{-- Global bottom-sheet (mobile): slides up with Deposit/Withdraw/Transfer in an embedded view --}}
+    <div x-show="$store.sheet.open" x-cloak class="lg:hidden fixed inset-0 z-[80]">
+        <div class="absolute inset-0 bg-black/50" @click="$store.sheet.close()" x-transition.opacity></div>
+        <div class="absolute inset-x-0 bottom-0 h-[92vh] bg-white dark:bg-[#0a1326] rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10 shrink-0">
+                <span class="font-semibold text-gray-900 dark:text-white" x-text="$store.sheet.title"></span>
+                <button @click="$store.sheet.close()" class="w-9 h-9 grid place-items-center rounded-full bg-gray-100 dark:bg-white/10 text-gray-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <iframe :src="$store.sheet.url" class="flex-1 w-full border-0 bg-white dark:bg-[#070d1f]"></iframe>
         </div>
     </div>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('sheet', {
+                open: false, url: '', title: '',
+                show(u, t) {
+                    if (window.innerWidth >= 1024) { window.location = u; return; }
+                    this.url = u + (u.includes('?') ? '&' : '?') + 'embed=1';
+                    this.title = t; this.open = true;
+                },
+                close() { this.open = false; setTimeout(() => { this.url = ''; }, 250); },
+            });
+        });
+    </script>
 
     {{-- Mobile bottom nav: active item expands into a labeled pill (ref style) --}}
     @php
@@ -269,6 +287,7 @@
             @endforeach
         </div>
     </nav>
+    @endunless
 
 {{-- "Update available" banner (shown when a new app version is ready) --}}
 <div id="sw-update-banner" class="hidden fixed inset-x-0 bottom-24 lg:bottom-4 z-[60] px-4">

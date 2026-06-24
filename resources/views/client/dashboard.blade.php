@@ -161,17 +161,17 @@
         <p class="text-xs text-gray-400 mt-2">Last updated: {{ now()->format('Y-m-d H:i') }} · Running P&amp;L movements</p>
     </div>
 
-    {{-- Quick actions --}}
+    {{-- Quick actions (mobile: slide-up sheet · desktop: full page) --}}
     <div class="grid grid-cols-4 gap-2 mb-6 text-center">
-        <a href="{{ route('client.deposit.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+        <a href="{{ route('client.deposit.create') }}" @click.prevent="$store.sheet.show('{{ route('client.deposit.create') }}','Deposit')" class="flex flex-col items-center gap-1.5 py-1">
             <span class="w-12 h-12 grid place-items-center rounded-full bg-emerald-500/15 text-emerald-500"><i class="fa-solid fa-arrow-down text-lg"></i></span>
             <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Deposit</span>
         </a>
-        <a href="{{ route('withdraw.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+        <a href="{{ route('withdraw.create') }}" @click.prevent="$store.sheet.show('{{ route('withdraw.create') }}','Withdraw')" class="flex flex-col items-center gap-1.5 py-1">
             <span class="w-12 h-12 grid place-items-center rounded-full bg-blue-500/15 text-blue-500"><i class="fa-solid fa-arrow-up text-lg"></i></span>
             <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Withdraw</span>
         </a>
-        <a href="{{ route('transfer.create') }}" class="flex flex-col items-center gap-1.5 py-1">
+        <a href="{{ route('transfer.create') }}" @click.prevent="$store.sheet.show('{{ route('transfer.create') }}','Transfer')" class="flex flex-col items-center gap-1.5 py-1">
             <span class="w-12 h-12 grid place-items-center rounded-full bg-violet-500/15 text-violet-500"><i class="fa-solid fa-right-left text-lg"></i></span>
             <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">Transfer</span>
         </a>

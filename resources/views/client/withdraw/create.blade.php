@@ -1,7 +1,7 @@
-<x-client-layout title="Withdraw">
+<x-client-layout title="Withdraw" :embed="request()->boolean('embed')">
     @php $money = fn ($n) => '$' . number_format((float) $n, 2); @endphp
 
-    <a href="{{ route('client.dashboard') }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    @unless (request()->boolean('embed'))<a href="{{ route('client.dashboard') }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>@endunless
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Request form --}}
         <div class="lg:col-span-2 space-y-6">

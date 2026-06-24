@@ -1,4 +1,4 @@
-<x-client-layout title="Transfer">
+<x-client-layout title="Transfer" :embed="request()->boolean('embed')">
     <div class="max-w-md mx-auto" x-data="{
             dir: 'spot_to_mf',
             spot: {{ (float) $spotUsd }},
@@ -11,7 +11,7 @@
             max(){ this.amount = this.avail.toFixed(2); }
          }">
         <div class="flex items-center gap-3 mb-4">
-            <a href="{{ url()->previous() }}" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-arrow-left"></i></a>
+            @unless (request()->boolean('embed'))<a href="{{ url()->previous() }}" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-arrow-left"></i></a>@endunless
             <h1 class="text-lg font-bold text-gray-900 dark:text-white">Within Account Transfer</h1>
         </div>
 

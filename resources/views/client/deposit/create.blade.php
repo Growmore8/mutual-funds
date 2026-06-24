@@ -1,4 +1,4 @@
-<x-client-layout title="Deposit">
+<x-client-layout title="Deposit" :embed="request()->boolean('embed')">
     @php
         $money = fn ($n) => '$' . number_format((float) $n, 2);
         $methodsJson = $methods->map(fn ($m) => [
@@ -20,7 +20,7 @@
                    copy(t){ try{ navigator.clipboard.writeText(t || ''); }catch(e){} this.copied = true; clearTimeout(this._ct); this._ct = setTimeout(() => this.copied = false, 1500); },
                    qr(){ this.$nextTick(()=>{ const el=document.getElementById('pm-qr'); if(!el) return; el.innerHTML=''; if(this.sel && (this.sel.type==='crypto'||this.sel.type==='upi') && this.sel.address && window.QRCode){ new QRCode(el,{text:this.sel.address,width:150,height:150,correctLevel:QRCode.CorrectLevel.M}); } }); } }"
          x-effect="qr()">
-        <a href="{{ route('client.dashboard') }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        @unless (request()->boolean('embed'))<a href="{{ route('client.dashboard') }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>@endunless
         <div class="bg-white rounded-2xl shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-arrow-down text-emerald-600 mr-1"></i> Deposit Funds</h2>
             <p class="text-sm text-gray-500 mb-3">Choose where to deposit, pick a method, send the funds, then upload your slip.</p>
