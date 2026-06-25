@@ -29,7 +29,7 @@
                             <div class="text-gray-400 text-xs font-mono">{{ $d->user?->clientCode() }}</div>
                             <div class="text-gray-400 text-xs">{{ $d->user->email ?? '' }}</div>
                             @if (($d->purpose ?? 'fund') === 'spot')
-                                <div class="mt-1 inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded {{ $d->currency==='INR' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}"><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading · {{ $d->currency }}</div>
+                                <div class="mt-1 inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded {{ $d->currency==='INR' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}" title="Spot is a single USD wallet; INR is only the entry currency and is converted to USD."><i class="fa-solid fa-arrow-trend-up"></i> Spot Trading (USD){{ $d->currency==='INR' ? ' · entered ₹' : '' }}</div>
                             @elseif ($d->fundAccount)
                                 <div class="mt-1 inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ $d->fundAccount->code() }} · {{ $d->fundAccount->label }}</div>
                             @endif
