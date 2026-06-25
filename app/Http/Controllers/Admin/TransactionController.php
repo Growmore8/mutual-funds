@@ -134,7 +134,9 @@ class TransactionController extends Controller
         $amtUsd = $enteredCur === 'USD' ? $raw : round($raw / max(0.0000001, $spotSvc->usdRate($enteredCur)), 2);
         $desc = $data['description'] ?? null;
         if ($enteredCur !== 'USD') {
-            $desc = trim('Paid ' . number_format(abs($raw), 2) . ' ' . $enteredCur . ($desc ? ' · ' . $desc : ''));
+            $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$enteredCur] ?? ($enteredCur . ' ');
+            $rate = $amtUsd > 0 ? round(abs($raw) / abs($amtUsd), 2) : 0;   // fiat per $1, frozen
+            $desc = trim($sym . number_format(abs($raw), 2) . ' @ ' . number_format($rate, 2) . '/$' . ($desc ? ' · ' . $desc : ''));
         }
 
         // Sign by type: deposit/fee credit (+), withdrawal/reversal debit (−), adjustment as entered.

@@ -22,9 +22,10 @@ class SettingsController extends Controller
         $pct = $svc->markupPct();
         $liveInr = round($svc->usdInr() / (1 + $pct / 100), 4);
 
-        // A few sample currencies so the admin sees the markup applies everywhere.
-        $samples = collect(['INR', 'AED', 'GBP', 'EUR', 'LKR', 'SGD'])
-            ->mapWithKeys(fn ($c) => [$c => round($svc->usdRate($c), 4)]);
+        // Every currency we have a live rate for (effective = live × markup), sorted A→Z.
+        $samples = collect($svc->ratesMap())
+            ->map(fn ($eff) => round((float) $eff, 4))
+            ->sortKeys();
 
         return view('admin.settings-exchange', [
             'pct' => $pct,
