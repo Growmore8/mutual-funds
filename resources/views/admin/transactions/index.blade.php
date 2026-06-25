@@ -181,7 +181,7 @@
                 <div class="absolute inset-0 bg-black/40" @click="add=false"></div>
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
-                    <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
+                    <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm" autocomplete="off"
                           x-effect="if (add) dest = (tab==='spot' ? 'spot_usd' : 'fund')"
                           x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'{{ request('tab')==='spot' ? 'spot_usd' : 'fund' }}', fiat:false, amt:'', type:'deposit',
                                     idFor(a){ return this.dest==='fund' ? a.mf : a.st; },
@@ -198,8 +198,10 @@
                             <label class="block text-gray-700 mb-1">Client (search by name / email / account ID)</label>
                             <input type="hidden" name="fund_account_id" :value="sel ? sel.id : ''" required>
                             <input type="text" x-model="q" @focus="open=true" @click="open=true"
-                                   :placeholder="sel ? (sel.name + ' · ' + idFor(sel)) : 'Type a name, email, MF or ST account…'"
-                                   class="w-full border-gray-300 rounded-md" autocomplete="off">
+                                   :placeholder="sel ? (sel.name + ' · ' + idFor(sel)) : 'Type to search name, email, MF or ST…'"
+                                   name="acct_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                   data-1p-ignore data-lpignore="true"
+                                   class="w-full border-gray-300 rounded-md">
                             <div x-show="open" @click.outside="open=false" x-cloak
                                  class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
                                 <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
@@ -262,7 +264,7 @@
                 <div class="absolute inset-0 bg-black/40" @click="transfer=false"></div>
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4"><i class="fa-solid fa-right-left text-blue-600 mr-1"></i> Within Account Transfer</h3>
-                    <form method="POST" action="{{ route('admin.transactions.transfer') }}" class="space-y-3 text-sm"
+                    <form method="POST" action="{{ route('admin.transactions.transfer') }}" class="space-y-3 text-sm" autocomplete="off"
                           x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dir:'mf_to_spot', amt:'',
                                     get fromLabel(){ return this.dir==='mf_to_spot' ? 'Mutual Fund (profit)' : 'Spot wallet'; },
                                     get toLabel(){ return this.dir==='mf_to_spot' ? 'Spot wallet' : 'Mutual Fund'; },
@@ -275,8 +277,10 @@
                             <label class="block text-gray-700 mb-1">Client account</label>
                             <input type="hidden" name="fund_account_id" :value="sel ? sel.id : ''" required>
                             <input type="text" x-model="q" @focus="open=true" @click="open=true"
-                                   :placeholder="sel ? sel.label : 'Type a name, GC ID or GCA account…'"
-                                   class="w-full border-gray-300 rounded-md" autocomplete="off">
+                                   :placeholder="sel ? sel.label : 'Type to search name, MF or ST…'"
+                                   name="xfer_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                   data-1p-ignore data-lpignore="true"
+                                   class="w-full border-gray-300 rounded-md">
                             <div x-show="open" @click.outside="open=false" x-cloak
                                  class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
                                 <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
