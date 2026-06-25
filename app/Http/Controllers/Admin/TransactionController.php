@@ -94,10 +94,15 @@ class TransactionController extends Controller
 
         // Account picker (searchable) for the "Add transaction" form — incl. client's local fiat + balances.
         $spotBal = \App\Models\SpotAccount::where('currency', 'USD')->pluck('balance', 'user_id');
+        $spotCodes = \App\Models\SpotAccount::where('currency', 'USD')->get()->mapWithKeys(fn ($a) => [$a->user_id => $a->code()]);
         $accounts = FundAccount::with('user')->get()->map(fn ($a) => [
             'id' => $a->id,
+            'name' => $a->user->name ?? 'Client',
+            'email' => $a->user->email ?? '',
+            'mf' => $a->code(),                                  // mutual-fund account no (MF…)
+            'st' => $spotCodes[$a->user_id] ?? 'ST—',            // spot trading account no (ST…)
             'label' => ($a->user->name ?? 'Client') . ' · ' . $a->code() . ' · ' . $a->label,
-            'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
+            'search' => strtolower(trim(($a->user->name ?? '') . ' ' . ($a->user->email ?? '') . ' ' . $a->code() . ' ' . ($spotCodes[$a->user_id] ?? '') . ' ' . $a->label . ' ' . ($a->user?->clientCode() ?? ''))),
             'localCur' => $a->user?->localCurrency() ?? 'USD',
             'mfProfit' => round((float) $a->availableToWithdraw(), 2),  // movable MF profit
             'spot' => round((float) ($spotBal[$a->user_id] ?? 0), 2),    // spot USD balance
@@ -156,12 +161,14 @@ class TransactionController extends Controller
 
             // Record it so it shows in transactions (client + admin).
             if ($signed >= 0) {
-                Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'usd_amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved',
+                $isFiat = $enteredCur !== 'USD';
+                Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $isFiat ? $enteredCur : 'USD',
+                    'amount' => $isFiat ? abs($raw) : abs($signed), 'usd_amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved',
                     'value_date' => now()->toDateString(), 'approved_at' => now()]);
             } else {
-                Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'usd_amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved', 'processed_at' => now()]);
+                $isFiat = $enteredCur !== 'USD';
+                Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => $isFiat ? $enteredCur : 'USD',
+                    'amount' => $isFiat ? abs($raw) : abs($signed), 'usd_amount' => abs($signed), 'method' => 'Admin ' . $data['type'], 'status' => 'approved', 'processed_at' => now()]);
             }
 
             AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',

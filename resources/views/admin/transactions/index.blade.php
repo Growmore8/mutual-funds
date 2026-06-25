@@ -182,7 +182,9 @@
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Add transaction</h3>
                     <form method="POST" action="{{ route('admin.transactions.store') }}" class="space-y-3 text-sm"
-                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'fund', fiat:false, amt:'', type:'deposit',
+                          x-effect="if (add) dest = (tab==='spot' ? 'spot_usd' : 'fund')"
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), rates:@js($fxMap), dest:'{{ request('tab')==='spot' ? 'spot_usd' : 'fund' }}', fiat:false, amt:'', type:'deposit',
+                                    idFor(a){ return this.dest==='fund' ? a.mf : a.st; },
                                     get localCur(){ return this.sel && this.sel.localCur ? this.sel.localCur : 'USD'; },
                                     get ecur(){ return (this.fiat && this.localCur!=='USD') ? this.localCur : 'USD'; },
                                     get localSym(){ const m={INR:'₹',USD:'$',AED:'AED ',GBP:'£',EUR:'€',LKR:'Rs ',SGD:'S$',AUD:'A$',CAD:'C$',BDT:'৳',PKR:'₨',NPR:'₨',SAR:'SAR ',QAR:'QAR ',KWD:'KWD ',OMR:'OMR ',BHD:'BHD ',MYR:'RM',PHP:'₱',IDR:'Rp',JPY:'¥',ZAR:'R',NGN:'₦',KES:'KSh '}; return m[this.localCur] || (this.localCur+' '); },
@@ -193,20 +195,23 @@
                                     pickAcc(a){ this.sel=a; this.q=''; this.open=false; this.fiat=false; } }">
                         @csrf
                         <div class="relative">
-                            <label class="block text-gray-700 mb-1">Account (search by name / account ID)</label>
+                            <label class="block text-gray-700 mb-1">Client (search by name / email / account ID)</label>
                             <input type="hidden" name="fund_account_id" :value="sel ? sel.id : ''" required>
                             <input type="text" x-model="q" @focus="open=true" @click="open=true"
-                                   :placeholder="sel ? sel.label : 'Type a name, GC ID or GCA account…'"
+                                   :placeholder="sel ? (sel.name + ' · ' + idFor(sel)) : 'Type a name, email, MF or ST account…'"
                                    class="w-full border-gray-300 rounded-md" autocomplete="off">
                             <div x-show="open" @click.outside="open=false" x-cloak
                                  class="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-md shadow-lg">
                                 <template x-for="a in accs.filter(x => x.search.includes(q.toLowerCase()))" :key="a.id">
                                     <button type="button" @click="pickAcc(a)"
-                                            class="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-100 dark:hover:bg-white/10" x-text="a.label"></button>
+                                            class="w-full text-left px-3 py-2 hover:bg-emerald-100 dark:hover:bg-white/10">
+                                        <div class="text-sm font-medium text-gray-800 dark:text-gray-100" x-text="a.name"></div>
+                                        <div class="text-[11px] text-gray-400" x-text="a.email + ' · ' + idFor(a)"></div>
+                                    </button>
                                 </template>
                                 <div x-show="accs.filter(x => x.search.includes(q.toLowerCase())).length === 0" class="px-3 py-2 text-gray-400 text-sm">No match</div>
                             </div>
-                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.label"></span></p>
+                            <p x-show="sel" x-cloak class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Selected: <span x-text="sel?.name + ' · ' + idFor(sel)"></span> <span class="text-gray-400" x-text="dest==='fund' ? '(Mutual Fund)' : '(Spot Trading)'"></span></p>
                         </div>
 
                         {{-- Area: Mutual Fund / Spot --}}

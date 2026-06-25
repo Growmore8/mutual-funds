@@ -35,7 +35,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-gray-600">{{ $d->method ?? '—' }}</td>
-                        <td class="px-4 py-3 font-medium">${{ number_format((float)$d->amount,2) }}</td>
+                        <td class="px-4 py-3 font-medium">${{ number_format((float)($d->usd_amount ?? $d->amount),2) }}@if($d->currency && $d->currency!=='USD' && $d->usd_amount)<div class="text-[11px] text-gray-400 font-normal">{{ ($d->currency==='INR'?'₹':$d->currency.' ').number_format((float)$d->amount,2) }} @ {{ number_format((float)$d->amount/max(0.0001,(float)$d->usd_amount),2) }}/$</div>@endif</td>
                         <td class="px-4 py-3">
                             @if ($d->proof_path)
                                 <a href="{{ route('admin.deposits.slip',$d) }}" target="_blank" class="text-emerald-600 hover:underline"><i class="fa-regular fa-image"></i> View</a>
