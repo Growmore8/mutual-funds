@@ -22,18 +22,19 @@
 
             @php $factor = 1 + $pct / 100; @endphp
             <div x-data="{ q:'', rows:@js($samples->map(fn($eff,$code)=>['code'=>$code,'eff'=>$eff,'live'=>round($eff/$factor,4)])->values()) }">
-                <div class="relative mb-2">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <div class="relative mb-3">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                     <input x-model="q" type="text" placeholder="Search currency (e.g. INR, AED, GBP…)" autocomplete="off"
-                           class="w-full pl-8 border-gray-300 rounded-md text-sm">
+                           style="padding-left:2.5rem"
+                           class="w-full border-gray-300 rounded-lg text-sm py-2.5">
                 </div>
                 <div class="rounded-lg border border-gray-200 overflow-hidden">
                     <div class="px-4 py-2 bg-gray-50 text-xs text-gray-500 flex justify-between"><span>Currency (per $1)</span><span>Live → Effective ({{ rtrim(rtrim(number_format($pct, 2), '0'), '.') }}%)</span></div>
                     <div class="max-h-96 overflow-y-auto">
                         <template x-for="r in rows.filter(x => x.code.toLowerCase().includes(q.toLowerCase()))" :key="r.code">
-                            <div class="px-4 py-2.5 flex items-center justify-between text-sm border-t border-gray-100">
+                            <div class="px-4 py-2.5 flex items-center justify-between text-sm border-t border-gray-100 hover:bg-gray-50 dark:hover:bg-white/[0.04]">
                                 <span class="font-semibold text-gray-800 dark:text-gray-100" x-text="r.code"></span>
-                                <span class="text-gray-700 dark:text-gray-300"><span class="text-gray-400" x-text="r.live.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span> → <span x-text="r.eff.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
+                                <span class="font-mono tabular-nums text-gray-500"><span x-text="r.live.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span> <span class="text-gray-300 dark:text-gray-600">→</span> <span class="font-semibold text-gray-800 dark:text-gray-100" x-text="r.eff.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                             </div>
                         </template>
                         <div x-show="rows.filter(x => x.code.toLowerCase().includes(q.toLowerCase())).length === 0" class="px-4 py-6 text-center text-gray-400 text-sm">No currency matches.</div>
