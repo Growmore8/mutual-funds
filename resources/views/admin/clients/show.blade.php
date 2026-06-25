@@ -151,11 +151,21 @@
             {{-- Spot Trading (single USD wallet) --}}
             <div class="bg-white shadow rounded-xl p-6" id="spot">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading (USD)</h3>
+                    <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading (USD)
+                        @unless($client->spot_active)<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">deactivated</span>@elseif($client->spot_locked)<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">locked</span>@endif
+                    </h3>
                     <form method="POST" action="{{ route('admin.spot.reset', $client) }}" onsubmit="return confirm('Reset spot account? Wallet set to 0 and all spot holdings/orders/trades deleted.')">
                         @csrf<button class="text-xs text-red-600 hover:underline">Reset spot account</button>
                     </form>
                 </div>
+
+                {{-- Spot access: lock (view-only) / deactivate — independent of mutual-fund accounts --}}
+                <form method="POST" action="{{ route('admin.spot.access', $client) }}" class="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                    @csrf
+                    <label class="flex items-center gap-2"><input type="checkbox" name="spot_locked" value="1" @checked($client->spot_locked) class="rounded text-amber-600"> Lock spot (view-only)</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" name="spot_active" value="1" @checked($client->spot_active) class="rounded text-emerald-600"> Spot active (uncheck = deactivate)</label>
+                    <button class="px-3 py-1.5 bg-gray-800 text-white rounded-md text-xs">Apply spot access</button>
+                </form>
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">USD wallet</p><p class="text-xl font-bold text-gray-900">${{ number_format((float)$spotUsd->balance,2) }}</p></div>
                     <div class="rounded-lg border border-gray-200 p-3"><p class="text-xs text-gray-500">Unrealized P&L</p><p class="text-xl font-bold {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl<0?'-':'+') }}${{ number_format(abs($spotPnl),2) }}</p></div>

@@ -46,6 +46,17 @@ class SpotAdminController extends Controller
         return view('admin.spot.client', compact('client', 'usd', 'inr', 'holdings', 'orders', 'trades'));
     }
 
+    /** Lock / deactivate the client's spot trading (independent of mutual-fund accounts). */
+    public function access(Request $request, User $client)
+    {
+        $client->update([
+            'spot_locked' => $request->boolean('spot_locked'),
+            'spot_active' => $request->boolean('spot_active'),
+        ]);
+
+        return back()->with('status', 'Spot trading access updated.');
+    }
+
     public function adjust(Request $request, User $client)
     {
         $data = $request->validate([

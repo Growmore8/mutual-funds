@@ -32,6 +32,8 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         'pool_account_id',
         'plan_locked',
         'status',
+        'spot_locked',
+        'spot_active',
         'kyc_status',
         'otp_verified_at',
         'referral_code',
@@ -298,6 +300,15 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
             'otp_verified_at' => 'datetime',
             'password' => 'hashed',
             'plan_locked' => 'boolean',
+            'spot_locked' => 'boolean',
+            'spot_active' => 'boolean',
         ];
+    }
+
+    /** Spot trading is usable when the client isn't locked/suspended and spot isn't locked/deactivated. */
+    public function spotUsable(): bool
+    {
+        return ! in_array($this->status, ['locked', 'suspended'])
+            && ! $this->spot_locked && $this->spot_active !== false;
     }
 }

@@ -83,6 +83,7 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::get('/spot', [\App\Http\Controllers\Admin\SpotAdminController::class, 'index'])->name('spot.index');
     Route::get('/spot/client/{client}', [\App\Http\Controllers\Admin\SpotAdminController::class, 'client'])->name('spot.client');
     Route::post('/spot/client/{client}/adjust', [\App\Http\Controllers\Admin\SpotAdminController::class, 'adjust'])->name('spot.adjust');
+    Route::post('/spot/client/{client}/access', [\App\Http\Controllers\Admin\SpotAdminController::class, 'access'])->name('spot.access');
     Route::post('/spot/order/{order}/cancel', [\App\Http\Controllers\Admin\SpotAdminController::class, 'cancelOrder'])->name('spot.order.cancel');
     Route::post('/spot/trade/{trade}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteTrade'])->name('spot.trade.delete');
     Route::post('/spot/trade/{trade}/update', [\App\Http\Controllers\Admin\SpotAdminController::class, 'updateTrade'])->name('spot.trade.update');

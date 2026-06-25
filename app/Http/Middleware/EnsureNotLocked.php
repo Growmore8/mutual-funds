@@ -22,7 +22,15 @@ class EnsureNotLocked
 
             if ($user->status === 'locked') {
                 $msg = 'Your account is restricted (view-only). Please contact support.';
+            } elseif ($request->routeIs('spot.*')) {
+                // Spot trading is governed by the dedicated spot lock (independent of MF accounts).
+                if (! $user->spot_active) {
+                    $msg = 'Your spot trading account is deactivated. Please contact support.';
+                } elseif ($user->spot_locked) {
+                    $msg = 'Your spot trading account is locked (view-only). Please contact support.';
+                }
             } else {
+                // Mutual-fund actions follow the selected fund account's own lock/active flags.
                 $acc = $user->currentAccount();
                 if ($acc && ! $acc->active) {
                     $msg = 'This account is deactivated. Switch to another account or contact support.';

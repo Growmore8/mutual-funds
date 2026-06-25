@@ -47,6 +47,12 @@
         @if (session('status'))
             <div class="mb-3 mx-1 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300 text-sm rounded-lg p-3">{{ session('status') }}</div>
         @endif
+        @unless (auth()->user()->spotUsable())
+            <div class="mb-3 mx-1 bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 text-sm rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-lock mt-0.5"></i>
+                <span>Spot trading is currently <strong>{{ auth()->user()->spot_active === false ? 'deactivated' : 'view-only' }}</strong> on your account. You can view prices but can't place orders. Please contact support.</span>
+            </div>
+        @endunless
 
         {{-- Market tabs: NYSE (US/Global + Crypto) | NSE (India) --}}
         <div class="flex gap-2 mx-1 mb-3">
