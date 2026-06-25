@@ -62,14 +62,30 @@ class TransactionController extends Controller
                 'qty' => (float) $t->qty, 'price' => (float) $t->price]);
         });
         $fx = app(\App\Services\SpotTradingService::class);
-        $deps->each(fn ($d) => $spotItems->push((object) ['when' => $d->created_at, 'client' => $names[$d->user_id] ?? '—',
-            'detail' => 'Deposit · ' . ($d->method ?: 'spot') . ($d->currency && $d->currency !== 'USD' ? ' · ' . number_format((float) $d->amount, 2) . ' ' . $d->currency : ''),
-            'cs' => '$', 'amount' => $fx->toUsd((float) $d->amount, $d->currency ?: 'USD'), 'credit' => true, 'kind' => 'Deposit', 'id' => $d->id,
-            'del' => route('admin.spot.deposit.delete', $d), 'edit' => route('admin.spot.deposit.update', $d)]));
-        $wds->each(fn ($w) => $spotItems->push((object) ['when' => $w->created_at, 'client' => $names[$w->user_id] ?? '—',
-            'detail' => 'Withdrawal · ' . ($w->method ?: 'spot') . ($w->currency && $w->currency !== 'USD' ? ' · ' . number_format((float) $w->amount, 2) . ' ' . $w->currency : ''),
-            'cs' => '$', 'amount' => $fx->toUsd((float) $w->amount, $w->currency ?: 'USD'), 'credit' => false, 'kind' => 'Withdrawal', 'id' => $w->id,
-            'del' => route('admin.spot.withdrawal.delete', $w), 'edit' => route('admin.spot.withdrawal.update', $w)]));
+
+        // Frozen USD value + the conversion rate locked at transaction time (doesn't change daily).
+        $fiatNote = function ($row, $usd) {
+            if (! $row->currency || $row->currency === 'USD' || $usd <= 0) {
+                return '';
+            }
+            $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$row->currency] ?? ($row->currency . ' ');
+            $rate = round((float) $row->amount / $usd, 2);   // fiat per 1 USD, frozen
+            return ' · ' . $sym . number_format((float) $row->amount, 2) . ' @ ' . number_format($rate, 2) . '/$';
+        };
+        $deps->each(function ($d) use ($spotItems, $names, $fx, $fiatNote) {
+            $usd = $d->usd_amount !== null ? (float) $d->usd_amount : $fx->toUsd((float) $d->amount, $d->currency ?: 'USD');
+            $spotItems->push((object) ['when' => $d->created_at, 'client' => $names[$d->user_id] ?? '—',
+                'detail' => 'Deposit · ' . ($d->method ?: 'spot') . $fiatNote($d, $usd),
+                'cs' => '$', 'amount' => $usd, 'credit' => true, 'kind' => 'Deposit', 'id' => $d->id,
+                'del' => route('admin.spot.deposit.delete', $d), 'edit' => route('admin.spot.deposit.update', $d)]);
+        });
+        $wds->each(function ($w) use ($spotItems, $names, $fx, $fiatNote) {
+            $usd = $w->usd_amount !== null ? (float) $w->usd_amount : $fx->toUsd((float) $w->amount, $w->currency ?: 'USD');
+            $spotItems->push((object) ['when' => $w->created_at, 'client' => $names[$w->user_id] ?? '—',
+                'detail' => 'Withdrawal · ' . ($w->method ?: 'spot') . $fiatNote($w, $usd),
+                'cs' => '$', 'amount' => $usd, 'credit' => false, 'kind' => 'Withdrawal', 'id' => $w->id,
+                'del' => route('admin.spot.withdrawal.delete', $w), 'edit' => route('admin.spot.withdrawal.update', $w)]);
+        });
         if ($search !== '') {
             $needle = strtolower($search);
             $spotItems = $spotItems->filter(fn ($s) => str_contains(strtolower((string) $s->client), $needle));
