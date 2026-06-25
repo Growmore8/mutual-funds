@@ -127,6 +127,15 @@ class TransactionController extends Controller
         $destination = ($data['destination'] ?? 'fund') === 'fund' ? 'fund' : 'spot';
         if ($destination !== 'fund') {
             $signed = $signedUsd;
+
+            // Guard: never debit more than the Spot wallet holds.
+            if ($signed < 0) {
+                $bal = (float) $spotSvc->account($user->id, 'USD')->balance;
+                if (abs($signed) > $bal + 0.001) {
+                    return back()->withErrors(['amount' => 'Cannot debit more than the Spot wallet balance ($' . number_format($bal, 2) . ').'])->withInput();
+                }
+            }
+
             $spotSvc->adjustBalance($user->id, $signed, 'USD');
 
             // Record it so it shows in transactions (client + admin).
@@ -149,7 +158,14 @@ class TransactionController extends Controller
 
         // Balance runs per fund account.
         $last = Transaction::where('fund_account_id', $account->id)->latest('id')->first();
-        $balanceAfter = round((float) ($last->balance_after ?? 0) + $signedUsd, 2);
+        $current = (float) ($last->balance_after ?? 0);
+
+        // Guard: a debit (withdrawal / reversal / negative adjustment) can't exceed the account balance.
+        if ($signedUsd < 0 && abs($signedUsd) > $current + 0.001) {
+            return back()->withErrors(['amount' => 'Cannot ' . $data['type'] . ' more than the account balance ($' . number_format($current, 2) . ').'])->withInput();
+        }
+
+        $balanceAfter = round($current + $signedUsd, 2);
 
         $tx = Transaction::create([
             'user_id' => $user->id,

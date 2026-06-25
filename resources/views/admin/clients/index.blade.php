@@ -27,6 +27,7 @@
                     <th class="px-3 py-2.5 text-right">Spot</th>
                     <th class="px-3 py-2.5 text-right">PnL</th>
                     <th class="px-3 py-2.5">Status</th>
+                    <th class="px-3 py-2.5">KYC</th>
                     <th class="px-3 py-2.5 text-right">Actions</th>
                 </tr>
             </thead>
@@ -64,18 +65,9 @@
                         </td>
                         @php $pnl = $c->runningPnl(); @endphp
                         <td class="px-3 py-2 text-right font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</td>
-                        <td class="px-3 py-2">
-                            <span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span>
-                            @php
-                                $kyc = [
-                                    'approved'      => ['bg-emerald-100 text-emerald-700','fa-circle-check','KYC verified'],
-                                    'submitted'     => ['bg-amber-100 text-amber-800','fa-clock','KYC pending'],
-                                    'rejected'      => ['bg-red-100 text-red-700','fa-circle-xmark','KYC rejected'],
-                                    'not_submitted' => ['bg-gray-100 text-gray-500','fa-circle-minus','No KYC'],
-                                ][$c->kyc_status] ?? ['bg-gray-100 text-gray-500','fa-circle-minus','No KYC'];
-                            @endphp
-                            <div class="mt-1"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] {{ $kyc[0] }}"><i class="fa-solid {{ $kyc[1] }} text-[9px]"></i> {{ $kyc[2] }}</span></div>
-                        </td>
+                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
+                        @php $kycText = ['approved'=>['Verified','text-emerald-600'],'submitted'=>['Pending','text-amber-600'],'rejected'=>['Rejected','text-red-600'],'not_submitted'=>['Not submitted','text-gray-400']][$c->kyc_status] ?? ['Not submitted','text-gray-400']; @endphp
+                        <td class="px-3 py-2 text-xs font-medium {{ $kycText[1] }}">{{ $kycText[0] }}</td>
                         <td class="px-3 py-2">
                             <div class="flex items-center justify-end gap-1">
                                 <a href="{{ route('admin.clients.show',$c) }}" title="Mutual Fund manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
@@ -103,7 +95,7 @@
                     </tr>
                     @if ($multi)
                         <tr x-show="open" x-cloak class="bg-gray-50">
-                            <td colspan="10" class="px-3 pb-3 pt-0 bg-gray-50">
+                            <td colspan="11" class="px-3 pb-3 pt-0 bg-gray-50">
                                 <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
                                     <table class="min-w-full text-xs">
                                         <thead class="bg-gray-100 text-gray-500 text-left">
@@ -130,7 +122,7 @@
                 </tbody>
                 @empty
                 <tbody>
-                    <tr><td colspan="10" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
+                    <tr><td colspan="11" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
                 </tbody>
                 @endforelse
         </table>

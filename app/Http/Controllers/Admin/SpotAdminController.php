@@ -66,6 +66,15 @@ class SpotAdminController extends Controller
         ]);
 
         $delta = $data['direction'] === 'credit' ? abs($data['amount']) : -abs($data['amount']);
+
+        // Guard: never debit more than the wallet holds.
+        if ($delta < 0) {
+            $bal = (float) $this->svc->account($client->id, $data['currency'])->balance;
+            if (abs($delta) > $bal + 0.001) {
+                return back()->withErrors(['amount' => 'Cannot debit more than the wallet balance (' . ($data['currency'] === 'INR' ? '₹' : '$') . number_format($bal, 2) . ').'])->withInput();
+            }
+        }
+
         $this->svc->adjustBalance($client->id, $delta, $data['currency']);
 
         // Record it so it shows in transactions (client + admin).
