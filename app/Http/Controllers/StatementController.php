@@ -114,23 +114,23 @@ class StatementController extends Controller
             });
         $svc = app(\App\Services\SpotTradingService::class);
 
-        // Show the original fiat amount + the conversion rate locked at the transaction (frozen, not re-converted daily).
-        $fiatNote = function ($row, $usd) {
+        // Original fiat amount + the conversion rate locked at the transaction (shown on its own line).
+        $fiatSub = function ($row, $usd) {
             if (! $row->currency || $row->currency === 'USD' || $usd <= 0) {
-                return '';
+                return null;
             }
             $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$row->currency] ?? ($row->currency . ' ');
             $rate = round((float) $row->amount / $usd, 2);
-            return ' · ' . $sym . number_format((float) $row->amount, 2) . ' @ ' . number_format($rate, 2) . '/$';
+            return $sym . number_format((float) $row->amount, 2) . ' @ ' . number_format($rate, 2) . '/$';
         };
-        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($d) use ($spot, $svc, $fiatNote) {
+        \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($d) use ($spot, $svc, $fiatSub) {
             $usd = $d->usd_amount !== null ? (float) $d->usd_amount : $svc->toUsd((float) $d->amount, $d->currency ?: 'USD');
-            $spot->push((object) ['when' => $d->created_at, 'kind' => 'deposit', 'label' => 'Spot deposit' . $fiatNote($d, $usd),
+            $spot->push((object) ['when' => $d->created_at, 'kind' => 'deposit', 'label' => 'Spot deposit', 'sub' => $fiatSub($d, $usd),
                 'amount' => $usd, 'cs' => '$', 'status' => ucfirst($d->status)]);
         });
-        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($w) use ($spot, $svc, $fiatNote) {
+        \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(40)->get()->each(function ($w) use ($spot, $svc, $fiatSub) {
             $usd = $w->usd_amount !== null ? (float) $w->usd_amount : $svc->toUsd((float) $w->amount, $w->currency ?: 'USD');
-            $spot->push((object) ['when' => $w->created_at, 'kind' => 'withdrawal', 'label' => 'Spot withdrawal' . $fiatNote($w, $usd),
+            $spot->push((object) ['when' => $w->created_at, 'kind' => 'withdrawal', 'label' => 'Spot withdrawal', 'sub' => $fiatSub($w, $usd),
                 'amount' => -1 * $usd, 'cs' => '$', 'status' => ucfirst($w->status)]);
         });
         $spotActivity = $spot->sortByDesc('when')->values();

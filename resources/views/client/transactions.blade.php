@@ -75,7 +75,10 @@
                         <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 {{ $toneCls }}"><i class="fa-solid {{ $icon }}"></i></span>
                         <div class="min-w-0 flex-1">
                             <p class="font-semibold text-gray-900 dark:text-white truncate leading-tight">{{ $s->label }}</p>
-                            <p class="text-xs text-gray-400 mt-1">{{ $s->when->format('d-M-Y') }} : {{ $s->when->format('H:i') }} · {{ $s->status }}</p>
+                            @if (!empty($s->sub))
+                                <p class="text-xs text-gray-500 dark:text-gray-300 mt-0.5">{{ $s->sub }}</p>
+                            @endif
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $s->when->format('d-M-Y') }} : {{ $s->when->format('H:i') }} · {{ $s->status }}</p>
                         </div>
                         <div class="text-right shrink-0">
                             <p class="font-bold {{ $credit ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-800 dark:text-gray-100' }}">{{ $s->cs }}{{ number_format(abs((float)$s->amount), 2) }}</p>
