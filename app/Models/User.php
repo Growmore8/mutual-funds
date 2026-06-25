@@ -70,14 +70,17 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
 
     public function primaryAccount(): ?FundAccount
     {
-        return $this->fundAccounts()->where('is_primary', true)->first() ?? $this->fundAccounts()->first();
+        return $this->fundAccounts()->where('active', true)->where('is_primary', true)->first()
+            ?? $this->fundAccounts()->where('active', true)->first()
+            ?? $this->fundAccounts()->where('is_primary', true)->first()
+            ?? $this->fundAccounts()->first();
     }
 
-    /** The account the client is currently viewing (session-selected, else primary). */
+    /** The account the client is currently viewing (session-selected, else primary). Skips deactivated. */
     public function currentAccount(): ?FundAccount
     {
         $id = session('fund_account_id');
-        if ($id && ($acc = $this->fundAccounts()->find($id))) {
+        if ($id && ($acc = $this->fundAccounts()->where('active', true)->find($id))) {
             return $acc;
         }
 

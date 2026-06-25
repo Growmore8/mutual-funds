@@ -195,7 +195,7 @@
                 <div class="hidden lg:block"></div>
                 <div class="flex items-center gap-2">
                     {{-- Desktop account switcher (only when the client has more than one account) --}}
-                    @php $hdrAccs = auth()->user()->fundAccounts; $hdrCur = auth()->user()->currentAccount(); @endphp
+                    @php $hdrAccs = auth()->user()->fundAccounts->where('active', true)->values(); $hdrCur = auth()->user()->currentAccount(); @endphp
                     @if ($hdrAccs->count() > 1)
                         <div class="relative" x-data="{ o:false }">
                             <button type="button" @click="o=!o" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5">
@@ -227,10 +227,21 @@
         @endunless
 
         <main class="{{ $embed ? 'px-4 pt-4 pb-6' : 'px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:pb-8' }} page-in">
+            @php $gcAcc = auth()->user()?->currentAccount(); @endphp
             @if (auth()->user()?->status === 'locked')
                 <div class="mb-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3 flex items-start gap-2">
                     <i class="fa-solid fa-lock mt-0.5"></i>
-                    <span>Your account is currently <strong>view-only</strong> while under review. Deposits, withdrawals and statement export are disabled. Please contact support.</span>
+                    <span>Your account is currently <strong>view-only</strong>. Deposits, withdrawals and trading are disabled. Please contact support.</span>
+                </div>
+            @elseif ($gcAcc && ! $gcAcc->active)
+                <div class="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 flex items-start gap-2">
+                    <i class="fa-solid fa-ban mt-0.5"></i>
+                    <span><strong>{{ $gcAcc->label }}</strong> is <strong>deactivated</strong>. Switch to another account or contact support.</span>
+                </div>
+            @elseif ($gcAcc && $gcAcc->locked)
+                <div class="mb-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-3 flex items-start gap-2">
+                    <i class="fa-solid fa-lock mt-0.5"></i>
+                    <span><strong>{{ $gcAcc->label }}</strong> is <strong>view-only</strong>. Actions on this account are disabled. Please contact support.</span>
                 </div>
             @endif
             @if (session('status'))

@@ -11,6 +11,8 @@ class FundAccount extends Model
     protected $casts = [
         'plan_locked' => 'boolean',
         'is_primary' => 'boolean',
+        'locked' => 'boolean',
+        'active' => 'boolean',
     ];
 
     protected static function booted(): void

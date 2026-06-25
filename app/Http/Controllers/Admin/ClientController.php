@@ -185,7 +185,11 @@ class ClientController extends Controller
         ]);
 
         $oldPool = $account->pool_account_id;
-        $account->update($data + ['plan_locked' => $request->boolean('plan_locked')]);
+        $account->update($data + [
+            'plan_locked' => $request->boolean('plan_locked'),
+            'locked' => $request->boolean('locked'),
+            'active' => $request->boolean('active'),
+        ]);
 
         if ($account->pool_account_id && (int) $account->pool_account_id !== (int) $oldPool) {
             $account->deposits()->update(['pool_account_id' => $account->pool_account_id]);

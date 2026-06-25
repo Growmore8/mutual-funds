@@ -26,7 +26,7 @@ class EnsureOnboarded
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors(['email' => 'Your account is locked. Please contact support.']);
+            return redirect()->route('login')->withErrors(['email' => 'Your account has been deactivated. Please contact support.']);
         }
 
         if (! $user->otp_verified_at) {

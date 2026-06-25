@@ -17,14 +17,27 @@ class EnsureNotLocked
     {
         $user = $request->user();
 
-        if ($user && ! $user->isAdmin() && $user->status === 'locked') {
-            $msg = 'Your account is restricted (view-only). Please contact support.';
+        if ($user && ! $user->isAdmin()) {
+            $msg = null;
 
-            if ($request->expectsJson()) {
-                abort(403, $msg);
+            if ($user->status === 'locked') {
+                $msg = 'Your account is restricted (view-only). Please contact support.';
+            } else {
+                $acc = $user->currentAccount();
+                if ($acc && ! $acc->active) {
+                    $msg = 'This account is deactivated. Switch to another account or contact support.';
+                } elseif ($acc && $acc->locked) {
+                    $msg = 'This account is locked (view-only). Please contact support.';
+                }
             }
 
-            return redirect()->back()->withErrors(['locked' => $msg]);
+            if ($msg) {
+                if ($request->expectsJson()) {
+                    abort(403, $msg);
+                }
+
+                return redirect()->back()->withErrors(['locked' => $msg]);
+            }
         }
 
         return $next($request);

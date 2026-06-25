@@ -106,7 +106,10 @@
                         @php $apnl = $acc->runningPnl(); @endphp
                         <div class="border border-gray-200 rounded-xl p-4">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                <div class="font-medium text-gray-900">{{ $acc->label }} <span class="text-xs font-mono text-gray-400">{{ $acc->code() }}</span> @if($acc->is_primary)<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">primary</span>@endif</div>
+                                <div class="font-medium text-gray-900">{{ $acc->label }} <span class="text-xs font-mono text-gray-400">{{ $acc->code() }}</span>
+                                    @if($acc->is_primary)<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">primary</span>@endif
+                                    @unless($acc->active)<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">deactivated</span>@elseif($acc->locked)<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">locked</span>@endif
+                                </div>
                                 <div class="text-xs text-gray-500">Capital <strong>{{ $money($acc->totalDeposited()) }}</strong> · PnL <strong class="{{ $apnl<0?'text-red-600':'text-emerald-600' }}">{{ ($apnl<0?'-':'+').$money(abs($apnl)) }}</strong> · Withdrawable <strong>{{ $money($acc->availableToWithdraw()) }}</strong></div>
                             </div>
                             <form method="POST" action="{{ route('admin.clients.account.update', [$client, $acc]) }}" class="grid grid-cols-2 gap-2 text-sm">
@@ -125,6 +128,8 @@
                                     </select>
                                 </div>
                                 <label class="flex items-center gap-2 text-xs mt-5"><input type="checkbox" name="plan_locked" value="1" @checked($acc->plan_locked) class="rounded"> Lock plan/pool</label>
+                                <label class="flex items-center gap-2 text-xs mt-5"><input type="checkbox" name="locked" value="1" @checked($acc->locked) class="rounded text-amber-600"> Lock account (view-only)</label>
+                                <label class="flex items-center gap-2 text-xs col-span-2"><input type="checkbox" name="active" value="1" @checked($acc->active) class="rounded text-emerald-600"> Account active (uncheck = deactivate)</label>
                                 <div class="col-span-2 flex items-center justify-between gap-2">
                                     <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm">Save account</button>
                                 </div>
