@@ -26,11 +26,19 @@ class ClientController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $ids = $clients->pluck('id');
+
         // Spot wallet balance per client (single USD wallet).
         $spotBalances = \App\Models\SpotAccount::where('currency', 'USD')
-            ->whereIn('user_id', $clients->pluck('id'))->pluck('balance', 'user_id');
+            ->whereIn('user_id', $ids)->pluck('balance', 'user_id');
 
-        return view('admin.clients.index', compact('clients', 'spotBalances'));
+        // Spot trading P&L per client = unrealized P&L on open holdings (same basis as the detail page).
+        $spotPnls = \App\Models\SpotHolding::with('instrument')
+            ->whereIn('user_id', $ids)->where('qty', '>', 0)->get()
+            ->groupBy('user_id')
+            ->map(fn ($g) => round($g->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2));
+
+        return view('admin.clients.index', compact('clients', 'spotBalances', 'spotPnls'));
     }
 
     public function create()
