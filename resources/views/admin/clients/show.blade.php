@@ -27,11 +27,43 @@
     </div>
 
     {{-- Snapshot cards --}}
+    @php
+        $card = 'bg-white rounded-xl p-4 ring-1 ring-gray-200/70 shadow-sm flex items-start gap-3';
+        $chip = 'w-10 h-10 rounded-lg grid place-items-center text-base shrink-0';
+    @endphp
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund capital</p><p class="text-xl font-bold text-gray-900 mt-0.5">{{ $money($mfCapital) }}</p><p class="text-[11px] text-gray-400">{{ $client->fundAccounts->count() }} account(s)</p></div>
-        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Fund P&L</p><p class="text-xl font-bold mt-0.5 {{ $cpnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($cpnl < 0 ? '-' : '+') . $money(abs($cpnl)) }}</p><p class="text-[11px] text-gray-400">Withdrawable {{ $money($client->availableToWithdraw()) }}</p></div>
-        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot wallet</p><p class="text-xl font-bold text-gray-900 mt-0.5">{{ $money($usBal) }}</p><p class="text-[11px] text-gray-400">1 wallet (USD)</p></div>
-        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-arrow-trend-up text-gray-400 mr-1"></i> Spot floating P&L</p><p class="text-xl font-bold mt-0.5 {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl < 0 ? '-' : '+') }}${{ number_format(abs($spotPnl), 2) }}</p><p class="text-[11px] text-gray-400">Realized {{ ($spotRealized < 0 ? '-' : '+') }}${{ number_format(abs($spotRealized), 2) }}</p></div>
+        <div class="{{ $card }}">
+            <span class="{{ $chip }} bg-emerald-100 text-emerald-600"><i class="fa-solid fa-layer-group"></i></span>
+            <div class="min-w-0">
+                <p class="text-[11px] text-gray-500">Mutual Fund capital</p>
+                <p class="text-xl font-bold text-gray-900 leading-tight">{{ $money($mfCapital) }}</p>
+                <p class="text-[11px] text-gray-400">{{ $client->fundAccounts->count() }} account(s)</p>
+            </div>
+        </div>
+        <div class="{{ $card }}">
+            <span class="{{ $chip }} bg-gray-100 text-gray-500"><i class="fa-solid fa-chart-line"></i></span>
+            <div class="min-w-0">
+                <p class="text-[11px] text-gray-500">Fund P&L</p>
+                <p class="text-xl font-bold leading-tight {{ $cpnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($cpnl < 0 ? '-' : '+') . $money(abs($cpnl)) }}</p>
+                <p class="text-[11px] text-gray-400">Withdrawable {{ $money($client->availableToWithdraw()) }}</p>
+            </div>
+        </div>
+        <div class="{{ $card }}">
+            <span class="{{ $chip }} bg-blue-100 text-blue-600"><i class="fa-solid fa-wallet"></i></span>
+            <div class="min-w-0">
+                <p class="text-[11px] text-gray-500">Spot wallet</p>
+                <p class="text-xl font-bold text-gray-900 leading-tight">{{ $money($usBal) }}</p>
+                <p class="text-[11px] text-gray-400">1 wallet (USD)</p>
+            </div>
+        </div>
+        <div class="{{ $card }}">
+            <span class="{{ $chip }} {{ $spotPnl < 0 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600' }}"><i class="fa-solid fa-arrow-trend-up"></i></span>
+            <div class="min-w-0">
+                <p class="text-[11px] text-gray-500">Spot floating P&L</p>
+                <p class="text-xl font-bold leading-tight {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl < 0 ? '-' : '+') }}${{ number_format(abs($spotPnl), 2) }}</p>
+                <p class="text-[11px] text-gray-400">Realized {{ ($spotRealized < 0 ? '-' : '+') }}${{ number_format(abs($spotRealized), 2) }}</p>
+            </div>
+        </div>
     </div>
 
     <div x-data="{ tab: window.location.hash === '#spot' ? 'spot' : 'fund' }">
@@ -47,7 +79,7 @@
 
         {{-- ===================== MUTUAL FUND ===================== --}}
         <div x-show="tab==='fund'" class="space-y-6">
-            <div class="bg-white shadow rounded-xl p-6">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm">
                 <h3 class="font-semibold text-gray-900 mb-3">Fund accounts <span class="text-xs text-gray-400">({{ $client->fundAccounts->count() }})</span></h3>
                 <div class="space-y-4">
                     @forelse ($client->fundAccounts as $acc)
@@ -98,7 +130,7 @@
             </div>
 
             {{-- Account requests --}}
-            <div class="bg-white shadow rounded-xl p-6">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm">
                 <h3 class="font-semibold text-gray-900 mb-3">Additional-account requests</h3>
                 @forelse ($client->accountRequests as $r)
                     <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
@@ -125,7 +157,7 @@
 
         {{-- ===================== SPOT TRADING ===================== --}}
         <div x-show="tab==='spot'" x-cloak id="spot">
-            <div class="bg-white shadow rounded-xl p-6">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading (USD)
                         <span class="text-xs font-mono text-gray-400">{{ $spotUsd->code() }}</span>
@@ -213,7 +245,7 @@
 
         {{-- ===================== KYC ===================== --}}
         <div x-show="tab==='kyc'" x-cloak>
-            <div class="bg-white shadow rounded-xl p-6">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="font-semibold text-gray-900">KYC — National ID / Passport</h3>
                     <span class="text-xs px-2.5 py-1 rounded-full {{ $kc }}">{{ ucfirst(str_replace('_',' ',$client->kyc_status)) }}</span>
@@ -270,7 +302,7 @@
 
         {{-- ===================== ACTIVITY ===================== --}}
         <div x-show="tab==='activity'" x-cloak>
-            <div class="bg-white shadow rounded-xl p-6">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm">
                 <h3 class="font-semibold text-gray-900 mb-3">Recent transactions <span class="text-xs text-gray-400">(Mutual Fund + Spot)</span></h3>
                 <table class="min-w-full text-sm">
                     <thead class="text-gray-500 text-left"><tr><th class="py-2">Date</th><th>Area</th><th>Detail</th><th class="text-right">Amount</th></tr></thead>
@@ -292,7 +324,7 @@
 
         {{-- ===================== EDIT ===================== --}}
         <div x-show="tab==='edit'" x-cloak>
-            <div class="bg-white shadow rounded-xl p-6 max-w-2xl">
+            <div class="bg-white rounded-xl p-6 ring-1 ring-gray-200/70 shadow-sm max-w-2xl">
                 <h3 class="font-semibold text-gray-900 mb-4">Edit client</h3>
                 <form method="POST" action="{{ route('admin.clients.update', $client) }}" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     @csrf @method('PATCH')
