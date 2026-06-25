@@ -38,7 +38,7 @@ class WithdrawalController extends Controller
             $svc = app(\App\Services\SpotTradingService::class);
             $usd = round($svc->toUsd((float) $withdrawal->amount, $withdrawal->currency ?: 'USD'), 2);
             $svc->adjustBalance($withdrawal->user_id, -1 * $usd, 'USD');
-            $withdrawal->update(['status' => 'approved', 'processed_at' => now(), 'admin_note' => $request->input('admin_note')]);
+            $withdrawal->update(['status' => 'approved', 'processed_at' => now(), 'admin_note' => $request->input('admin_note'), 'usd_amount' => $usd]);
             $amt = '$' . number_format($usd, 2);
             \App\Models\AppNotification::notify($withdrawal->user_id, 'withdrawal', 'Spot withdrawal approved', $amt . ' debited from your Spot wallet.', route('spot.index'));
 

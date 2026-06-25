@@ -35,9 +35,9 @@ class SpotController extends Controller
         // Total spot deposit (capital in, net of withdrawals; NSE + NYSE in USD) and total P&L.
         $spotDeposited = round(
             \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
-                ->get(['amount', 'currency'])->sum(fn ($d) => $this->svc->toUsd((float) $d->amount, $d->currency))
+                ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($d) => $d->usd_amount !== null ? (float) $d->usd_amount : $this->svc->toUsd((float) $d->amount, $d->currency))
             - \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
-                ->get(['amount', 'currency'])->sum(fn ($w) => $this->svc->toUsd((float) $w->amount, $w->currency)), 2);
+                ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($w) => $w->usd_amount !== null ? (float) $w->usd_amount : $this->svc->toUsd((float) $w->amount, $w->currency)), 2);
         $spotTotalPnl = round($equity - $spotDeposited, 2);
 
         $orders = SpotOrder::with('instrument')->where('user_id', $user->id)

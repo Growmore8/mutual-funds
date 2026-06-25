@@ -110,9 +110,9 @@ class ClientDashboardController extends Controller
         // Total spot deposit (capital in, net of withdrawals — both NSE + NYSE, in USD).
         $spotDeposited = round(
             \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
-                ->get(['amount', 'currency'])->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency))
+                ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($d) => $d->usd_amount !== null ? (float) $d->usd_amount : $svc->toUsd((float) $d->amount, $d->currency))
             - \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')
-                ->get(['amount', 'currency'])->sum(fn ($w) => $svc->toUsd((float) $w->amount, $w->currency)), 2);
+                ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($w) => $w->usd_amount !== null ? (float) $w->usd_amount : $svc->toUsd((float) $w->amount, $w->currency)), 2);
 
         // Total spot P&L (realized + floating) = current value − capital in.
         $spotTotalPnl = round($spotEquity - $spotDeposited, 2);

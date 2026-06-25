@@ -84,6 +84,7 @@ class DepositController extends Controller
             $svc = app(\App\Services\SpotTradingService::class);
             $usd = round($svc->toUsd((float) $deposit->amount, $deposit->currency ?: 'USD'), 2);
             $svc->adjustBalance($deposit->user_id, $usd, 'USD');
+            $deposit->forceFill(['usd_amount' => $usd])->saveQuietly();   // freeze the credited USD
             $amt = '$' . number_format($usd, 2);
             \App\Models\AppNotification::notify($deposit->user_id, 'deposit', 'Spot deposit approved', $amt . ' added to your Spot wallet.', route('spot.index'));
 

@@ -141,11 +141,11 @@ class TransactionController extends Controller
             // Record it so it shows in transactions (client + admin).
             if ($signed >= 0) {
                 Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved',
+                    'amount' => abs($signed), 'usd_amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved',
                     'value_date' => now()->toDateString(), 'approved_at' => now()]);
             } else {
                 Withdrawal::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
-                    'amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved', 'processed_at' => now()]);
+                    'amount' => abs($signed), 'usd_amount' => abs($signed), 'method' => trim('Admin ' . $data['type'] . ($enteredCur !== 'USD' ? ' · ' . number_format(abs($raw), 2) . ' ' . $enteredCur : '')), 'status' => 'approved', 'processed_at' => now()]);
             }
 
             AppNotification::notify($user->id, in_array($data['type'], ['deposit', 'withdrawal']) ? $data['type'] : 'transaction',

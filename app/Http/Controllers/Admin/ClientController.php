@@ -97,9 +97,9 @@ class ClientController extends Controller
 
         // Realized spot P&L = (wallet + holdings at cost) − net capital deposited into spot.
         $spotDep = (float) \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')->where('status', 'approved')->get()
-            ->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency ?: 'USD'));
+            ->sum(fn ($d) => $d->usd_amount !== null ? (float) $d->usd_amount : $svc->toUsd((float) $d->amount, $d->currency ?: 'USD'));
         $spotWd = (float) \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')->where('status', 'approved')->get()
-            ->sum(fn ($w) => $svc->toUsd((float) $w->amount, $w->currency ?: 'USD'));
+            ->sum(fn ($w) => $w->usd_amount !== null ? (float) $w->usd_amount : $svc->toUsd((float) $w->amount, $w->currency ?: 'USD'));
         $spotNetDeposited = round($spotDep - $spotWd, 2);
         $spotHoldingsCost = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price), 2);
         $spotRealized = round(((float) $spotUsd->balance + $spotHoldingsCost) - $spotNetDeposited, 2);

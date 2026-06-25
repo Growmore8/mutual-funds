@@ -80,11 +80,11 @@ class SpotAdminController extends Controller
         // Record it so it shows in transactions (client + admin).
         if ($delta >= 0) {
             \App\Models\Deposit::create(['user_id' => $client->id, 'purpose' => 'spot', 'currency' => $data['currency'],
-                'amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved',
+                'amount' => abs($delta), 'usd_amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved',
                 'value_date' => now()->toDateString(), 'approved_at' => now()]);
         } else {
             \App\Models\Withdrawal::create(['user_id' => $client->id, 'purpose' => 'spot', 'currency' => $data['currency'],
-                'amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved', 'processed_at' => now()]);
+                'amount' => abs($delta), 'usd_amount' => abs($delta), 'method' => 'Admin adjustment', 'status' => 'approved', 'processed_at' => now()]);
         }
 
         $sym = $data['currency'] === 'INR' ? '₹' : '$';

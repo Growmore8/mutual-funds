@@ -14,9 +14,13 @@ class WithdrawalController extends Controller
     /** Spot is profit-only: withdrawable = wallet balance minus net deposited capital (that currency). */
     private function spotProfitAvailable(int $userId, string $currency): float
     {
-        $balance = (float) app(SpotTradingService::class)->account($userId, $currency)->balance;
-        $deposited = (float) Deposit::where('user_id', $userId)->where('purpose', 'spot')->where('currency', $currency)->where('status', 'approved')->sum('amount');
-        $withdrawn = (float) Withdrawal::where('user_id', $userId)->where('purpose', 'spot')->where('currency', $currency)->where('status', 'approved')->sum('amount');
+        // Single USD wallet: net capital in = sum of the frozen USD value of every spot deposit/withdrawal.
+        $svc = app(SpotTradingService::class);
+        $balance = (float) $svc->account($userId, 'USD')->balance;
+        $deposited = (float) Deposit::where('user_id', $userId)->where('purpose', 'spot')->where('status', 'approved')
+            ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($d) => $d->usd_amount !== null ? (float) $d->usd_amount : $svc->toUsd((float) $d->amount, $d->currency ?: 'USD'));
+        $withdrawn = (float) Withdrawal::where('user_id', $userId)->where('purpose', 'spot')->where('status', 'approved')
+            ->get(['amount', 'currency', 'usd_amount'])->sum(fn ($w) => $w->usd_amount !== null ? (float) $w->usd_amount : $svc->toUsd((float) $w->amount, $w->currency ?: 'USD'));
 
         return max(0, round($balance - ($deposited - $withdrawn), 2));
     }
