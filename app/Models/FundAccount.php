@@ -25,16 +25,16 @@ class FundAccount extends Model
         });
     }
 
-    /** Next clean, contiguous account number, e.g. GCA000007. */
+    /** Next mutual-fund account number, e.g. MF600001. Existing GCA##### numbers are left as-is. */
     public static function nextAccountNo(): string
     {
-        $last = static::whereNotNull('account_no')
-            ->orderByRaw('CAST(SUBSTRING(account_no, 4) AS UNSIGNED) DESC')
+        $last = static::where('account_no', 'like', 'MF%')
+            ->orderByRaw('CAST(SUBSTRING(account_no, 3) AS UNSIGNED) DESC')
             ->value('account_no');
 
-        $n = $last ? ((int) substr($last, 3)) + 1 : 1;
+        $n = $last ? ((int) substr($last, 2)) + 1 : 600001;
 
-        return 'GCA' . str_pad((string) $n, 6, '0', STR_PAD_LEFT);
+        return 'MF' . str_pad((string) $n, 6, '0', STR_PAD_LEFT);
     }
 
     public function user()

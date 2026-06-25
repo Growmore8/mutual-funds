@@ -15,6 +15,7 @@
                     <span class="text-xs font-normal text-gray-400 font-mono">{{ $client->clientCode() }}</span>
                 </h1>
                 <p class="text-xs text-gray-400">{{ $client->email }}</p>
+                @if ($client->phone)<p class="text-xs text-gray-400"><i class="fa-solid fa-phone text-[9px]"></i> {{ $client->phone }}</p>@endif
             </div>
         </div>
         <div class="flex items-center gap-2 text-xs">
@@ -126,6 +127,7 @@
             <div class="bg-white shadow rounded-xl p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot Trading (USD)
+                        <span class="text-xs font-mono text-gray-400">{{ $spotUsd->code() }}</span>
                         @unless($client->spot_active)<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">deactivated</span>@elseif($client->spot_locked)<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">locked</span>@endif
                     </h3>
                     <form method="POST" action="{{ route('admin.spot.reset', $client) }}" onsubmit="return confirm('Reset spot account? Wallet set to 0 and all spot holdings/orders/trades deleted.')">
