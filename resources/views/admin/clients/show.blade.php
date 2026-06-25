@@ -16,6 +16,7 @@
                 </h1>
                 <p class="text-xs text-gray-400">{{ $client->email }}</p>
                 @if ($client->phone)<p class="text-xs text-gray-400"><i class="fa-solid fa-phone text-[9px]"></i> {{ $client->phone }}</p>@endif
+                @if ($client->country)<p class="text-xs text-gray-400"><i class="fa-solid fa-location-dot text-[9px]"></i> {{ $client->country }}</p>@endif
             </div>
         </div>
         <div class="flex items-center gap-2 text-xs">

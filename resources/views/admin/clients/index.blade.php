@@ -40,6 +40,7 @@
                             <div class="font-medium text-gray-900 leading-tight">{{ $c->name }}</div>
                             <div class="text-gray-400 text-xs">{{ $c->email }}</div>
                             @if ($c->phone)<div class="text-gray-400 text-xs"><i class="fa-solid fa-phone text-[9px]"></i> {{ $c->phone }}</div>@endif
+                            @if ($c->country)<div class="text-gray-400 text-xs"><i class="fa-solid fa-location-dot text-[9px]"></i> {{ $c->country }}</div>@endif
                             @if ($c->referrer)<div class="text-[11px] text-emerald-600 mt-0.5"><i class="fa-solid fa-gift text-[9px]"></i> Referred by {{ $c->referrer->name }}</div>@endif
                             @if ($multi)
                                 <button type="button" @click="open=!open" class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full hover:bg-emerald-100">
