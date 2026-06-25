@@ -19,7 +19,10 @@
 </head>
 <body class="h-full bg-[#070b16] text-gray-200">
 @if($hero)
-<div class="fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.38) 0%,rgba(7,11,22,.78) 40%,rgba(7,11,22,.92) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% 26%;background-repeat:no-repeat"></div>
+{{-- MOBILE: darker top & bottom black shade so the form stays readable --}}
+<div class="lg:hidden fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.80) 0%,rgba(7,11,22,.62) 32%,rgba(7,11,22,.90) 68%,rgba(7,11,22,1) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% 26%;background-repeat:no-repeat"></div>
+{{-- DESKTOP: unchanged --}}
+<div class="hidden lg:block fixed inset-0" style="z-index:0;background-image:linear-gradient(to bottom,rgba(7,11,22,.38) 0%,rgba(7,11,22,.78) 40%,rgba(7,11,22,.92) 100%),url('{{ $hero }}?v={{ $brandV }}');background-size:cover;background-position:68% 26%;background-repeat:no-repeat"></div>
 @endif
 <div class="relative flex flex-col justify-end lg:justify-center {{ $hero ? '' : 'auth-hero' }}" style="min-height:100vh;min-height:100dvh;z-index:1">
     <div class="w-full max-w-sm mx-auto px-6 pt-32 lg:pt-10 relative z-10" style="padding-bottom:max(2rem,env(safe-area-inset-bottom))">
