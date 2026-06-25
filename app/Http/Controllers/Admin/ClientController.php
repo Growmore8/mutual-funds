@@ -26,7 +26,11 @@ class ClientController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.clients.index', compact('clients'));
+        // Spot wallet balance per client (single USD wallet).
+        $spotBalances = \App\Models\SpotAccount::where('currency', 'USD')
+            ->whereIn('user_id', $clients->pluck('id'))->pluck('balance', 'user_id');
+
+        return view('admin.clients.index', compact('clients', 'spotBalances'));
     }
 
     public function create()

@@ -23,7 +23,8 @@
                     <th class="px-3 py-2.5">Client</th>
                     <th class="px-3 py-2.5">Pool ID</th>
                     <th class="px-3 py-2.5">Plan</th>
-                    <th class="px-3 py-2.5 text-right">Capital (Balance)</th>
+                    <th class="px-3 py-2.5 text-right">Mutual Fund</th>
+                    <th class="px-3 py-2.5 text-right">Spot</th>
                     <th class="px-3 py-2.5 text-right">PnL</th>
                     <th class="px-3 py-2.5">Status</th>
                     <th class="px-3 py-2.5 text-right">Actions</th>
@@ -51,7 +52,14 @@
                                 <span class="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700">{{ $c->accountType->name }}</span>
                             @else <span class="text-gray-300">—</span> @endif
                         </td>
-                        <td class="px-3 py-2 text-right font-medium">${{ number_format($c->totalDeposited(), 2) }}</td>
+                        <td class="px-3 py-2 text-right">
+                            <div class="font-medium text-gray-900">${{ number_format($c->totalDeposited(), 2) }}</div>
+                            <div class="text-[11px] text-gray-400">{{ $accs->count() }} acct</div>
+                        </td>
+                        <td class="px-3 py-2 text-right">
+                            <div class="font-medium text-gray-900">${{ number_format((float)($spotBalances[$c->id] ?? 0), 2) }}</div>
+                            <div class="text-[11px] text-gray-400">1 wallet</div>
+                        </td>
                         @php $pnl = $c->runningPnl(); @endphp
                         <td class="px-3 py-2 text-right font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</td>
                         <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
@@ -82,7 +90,7 @@
                     </tr>
                     @if ($multi)
                         <tr x-show="open" x-cloak class="bg-gray-50">
-                            <td colspan="9" class="px-3 pb-3 pt-0 bg-gray-50">
+                            <td colspan="10" class="px-3 pb-3 pt-0 bg-gray-50">
                                 <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
                                     <table class="min-w-full text-xs">
                                         <thead class="bg-gray-100 text-gray-500 text-left">
@@ -109,7 +117,7 @@
                 </tbody>
                 @empty
                 <tbody>
-                    <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
+                    <tr><td colspan="10" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
                 </tbody>
                 @endforelse
         </table>
