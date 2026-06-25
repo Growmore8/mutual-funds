@@ -92,8 +92,28 @@ class ClientController extends Controller
         $spotHoldings = \App\Models\SpotHolding::with('instrument')->where('user_id', $client->id)->where('qty', '>', 0)->get();
         $spotTrades = \App\Models\SpotTrade::with('instrument')->where(fn ($q) => $q->where('buyer_id', $client->id)->orWhere('seller_id', $client->id))->latest('id')->limit(15)->get();
 
-        // Unrealized spot P&L (all holdings, USD).
+        // Floating (unrealized) spot P&L (open holdings, USD).
         $spotPnl = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (((float) ($h->instrument->last_price ?: $h->avg_price)) - (float) $h->avg_price)), 2);
+
+        // Realized spot P&L = (wallet + holdings at cost) − net capital deposited into spot.
+        $spotDep = (float) \App\Models\Deposit::where('user_id', $client->id)->where('purpose', 'spot')->where('status', 'approved')->get()
+            ->sum(fn ($d) => $svc->toUsd((float) $d->amount, $d->currency ?: 'USD'));
+        $spotWd = (float) \App\Models\Withdrawal::where('user_id', $client->id)->where('purpose', 'spot')->where('status', 'approved')->get()
+            ->sum(fn ($w) => $svc->toUsd((float) $w->amount, $w->currency ?: 'USD'));
+        $spotNetDeposited = round($spotDep - $spotWd, 2);
+        $spotHoldingsCost = round($spotHoldings->sum(fn ($h) => (float) $h->qty * (float) $h->avg_price), 2);
+        $spotRealized = round(((float) $spotUsd->balance + $spotHoldingsCost) - $spotNetDeposited, 2);
+
+        // Holdings breakdown for the reference chart (symbol → market value + floating P&L).
+        $spotChart = $spotHoldings->map(function ($h) {
+            $last = (float) ($h->instrument->last_price ?: $h->avg_price);
+            return [
+                'symbol' => $h->instrument->symbol,
+                'qty' => (float) $h->qty,
+                'value' => round((float) $h->qty * $last, 2),
+                'pnl' => round((float) $h->qty * ($last - (float) $h->avg_price), 2),
+            ];
+        })->sortByDesc('value')->values();
 
         // Merged recent activity: mutual fund transactions + spot trades + spot deposits/withdrawals.
         $activity = collect();
@@ -125,6 +145,9 @@ class ClientController extends Controller
             'spotHoldings' => $spotHoldings,
             'spotTrades' => $spotTrades,
             'spotPnl' => $spotPnl,
+            'spotRealized' => $spotRealized,
+            'spotNetDeposited' => $spotNetDeposited,
+            'spotChart' => $spotChart,
             'activity' => $activity,
         ]);
     }

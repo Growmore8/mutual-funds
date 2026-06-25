@@ -31,7 +31,7 @@
         <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-layer-group text-emerald-500 mr-1"></i> Mutual Fund capital</p><p class="text-xl font-bold text-gray-900 mt-0.5">{{ $money($mfCapital) }}</p><p class="text-[11px] text-gray-400">{{ $client->fundAccounts->count() }} account(s)</p></div>
         <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-chart-line text-gray-400 mr-1"></i> Fund P&L</p><p class="text-xl font-bold mt-0.5 {{ $cpnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($cpnl < 0 ? '-' : '+') . $money(abs($cpnl)) }}</p><p class="text-[11px] text-gray-400">Withdrawable {{ $money($client->availableToWithdraw()) }}</p></div>
         <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Spot wallet</p><p class="text-xl font-bold text-gray-900 mt-0.5">{{ $money($usBal) }}</p><p class="text-[11px] text-gray-400">1 wallet (USD)</p></div>
-        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-arrow-trend-up text-gray-400 mr-1"></i> Spot P&L</p><p class="text-xl font-bold mt-0.5 {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl < 0 ? '-' : '+') }}${{ number_format(abs($spotPnl), 2) }}</p><p class="text-[11px] text-gray-400">Unrealized</p></div>
+        <div class="bg-white shadow rounded-xl p-4"><p class="text-[11px] text-gray-500"><i class="fa-solid fa-arrow-trend-up text-gray-400 mr-1"></i> Spot floating P&L</p><p class="text-xl font-bold mt-0.5 {{ $spotPnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spotPnl < 0 ? '-' : '+') }}${{ number_format(abs($spotPnl), 2) }}</p><p class="text-[11px] text-gray-400">Realized {{ ($spotRealized < 0 ? '-' : '+') }}${{ number_format(abs($spotRealized), 2) }}</p></div>
     </div>
 
     <div x-data="{ tab: window.location.hash === '#spot' ? 'spot' : 'fund' }">
@@ -160,6 +160,34 @@
                     <label class="flex items-center gap-2"><input type="checkbox" name="spot_active" value="1" @checked($client->spot_active) class="rounded text-emerald-600"> Active (uncheck = deactivate)</label>
                     <button class="px-3 py-1.5 bg-gray-800 text-white rounded-md text-xs">Save access</button>
                 </form>
+
+                {{-- P&L section: live balance vs floating --}}
+                @php $spotTotal = round($spotRealized + $spotPnl, 2); @endphp
+                <p class="text-xs font-semibold text-gray-500 mb-1">Profit &amp; Loss</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-[11px] text-gray-500">Net deposited</p><p class="text-base font-bold text-gray-900">${{ number_format($spotNetDeposited,2) }}</p></div>
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-[11px] text-gray-500">PnL balance <span class="text-gray-400">(realized)</span></p><p class="text-base font-bold {{ $spotRealized<0?'text-red-600':'text-emerald-600' }}">{{ ($spotRealized<0?'-':'+') }}${{ number_format(abs($spotRealized),2) }}</p></div>
+                    <div class="rounded-lg border border-gray-200 p-3"><p class="text-[11px] text-gray-500">Floating PnL <span class="text-gray-400">(live)</span></p><p class="text-base font-bold {{ $spotPnl<0?'text-red-600':'text-emerald-600' }}">{{ ($spotPnl<0?'-':'+') }}${{ number_format(abs($spotPnl),2) }}</p></div>
+                    <div class="rounded-lg border-2 {{ $spotTotal<0?'border-red-200':'border-emerald-200' }} p-3"><p class="text-[11px] text-gray-500">Total PnL</p><p class="text-base font-bold {{ $spotTotal<0?'text-red-600':'text-emerald-600' }}">{{ ($spotTotal<0?'-':'+') }}${{ number_format(abs($spotTotal),2) }}</p></div>
+                </div>
+
+                {{-- Reference chart: which products the client holds (by market value) --}}
+                <p class="text-xs font-semibold text-gray-500 mb-1">Products held <span class="text-gray-400">(by value · floating P&L)</span></p>
+                @php $chartMax = $spotChart->max('value') ?: 1; @endphp
+                <div class="space-y-1.5 mb-5">
+                    @forelse ($spotChart as $row)
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-20 font-medium text-gray-700 truncate">{{ $row['symbol'] }}</span>
+                            <div class="flex-1 bg-gray-100 rounded h-5 overflow-hidden">
+                                <div class="h-5 rounded {{ $row['pnl']<0 ? 'bg-red-400' : 'bg-emerald-400' }}" style="width: {{ max(3, round($row['value'] / $chartMax * 100)) }}%"></div>
+                            </div>
+                            <span class="w-24 text-right text-gray-600">${{ number_format($row['value'],2) }}</span>
+                            <span class="w-20 text-right font-medium {{ $row['pnl']<0?'text-red-600':'text-emerald-600' }}">{{ ($row['pnl']<0?'-':'+') }}${{ number_format(abs($row['pnl']),2) }}</span>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-400">No open positions.</p>
+                    @endforelse
+                </div>
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>

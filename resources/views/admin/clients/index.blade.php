@@ -25,7 +25,8 @@
                     <th class="px-3 py-2.5">Plan</th>
                     <th class="px-3 py-2.5 text-right">Mutual Fund</th>
                     <th class="px-3 py-2.5 text-right">Spot</th>
-                    <th class="px-3 py-2.5 text-right">PnL (MF / Spot)</th>
+                    <th class="px-3 py-2.5 text-right">MF PnL</th>
+                    <th class="px-3 py-2.5 text-right">Spot PnL</th>
                     <th class="px-3 py-2.5">Status</th>
                     <th class="px-3 py-2.5">KYC</th>
                     <th class="px-3 py-2.5 text-right">Actions</th>
@@ -64,10 +65,8 @@
                             <div class="text-[11px] text-gray-400">1 wallet</div>
                         </td>
                         @php $pnl = $c->runningPnl(); $spnl = (float) ($spotPnls[$c->id] ?? 0); @endphp
-                        <td class="px-3 py-2 text-right">
-                            <div class="font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}"><span class="text-[10px] font-normal text-gray-400">MF</span> {{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</div>
-                            <div class="text-xs font-medium {{ $spnl < 0 ? 'text-red-600' : 'text-emerald-600' }}"><span class="text-[10px] font-normal text-gray-400">Spot</span> {{ ($spnl < 0 ? '-' : '+') }}${{ number_format(abs($spnl), 2) }}</div>
-                        </td>
+                        <td class="px-3 py-2 text-right font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</td>
+                        <td class="px-3 py-2 text-right font-semibold {{ $spnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($spnl < 0 ? '-' : '+') }}${{ number_format(abs($spnl), 2) }}<div class="text-[10px] font-normal text-gray-400">floating</div></td>
                         <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
                         @php $kycText = ['approved'=>['Verified','text-emerald-600'],'submitted'=>['Pending','text-amber-600'],'rejected'=>['Rejected','text-red-600'],'not_submitted'=>['Not submitted','text-gray-400']][$c->kyc_status] ?? ['Not submitted','text-gray-400']; @endphp
                         <td class="px-3 py-2 text-xs font-medium {{ $kycText[1] }}">{{ $kycText[0] }}</td>
@@ -98,7 +97,7 @@
                     </tr>
                     @if ($multi)
                         <tr x-show="open" x-cloak class="bg-gray-50">
-                            <td colspan="11" class="px-3 pb-3 pt-0 bg-gray-50">
+                            <td colspan="12" class="px-3 pb-3 pt-0 bg-gray-50">
                                 <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
                                     <table class="min-w-full text-xs">
                                         <thead class="bg-gray-100 text-gray-500 text-left">
@@ -125,7 +124,7 @@
                 </tbody>
                 @empty
                 <tbody>
-                    <tr><td colspan="11" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
+                    <tr><td colspan="12" class="px-4 py-8 text-center text-gray-400">No clients found.</td></tr>
                 </tbody>
                 @endforelse
         </table>
