@@ -270,31 +270,13 @@
                     <div><label class="block text-gray-700">Phone</label><input name="phone" value="{{ old('phone',$client->phone) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
                     <div><label class="block text-gray-700">Country</label><x-country-select name="country" :value="old('country',$client->country)" class="mt-1 w-full border-gray-300 rounded-md" /></div>
                     <div class="sm:col-span-2"><label class="block text-gray-700">Address</label><input name="address" value="{{ old('address',$client->address) }}" class="mt-1 w-full border-gray-300 rounded-md"></div>
-                    <div>
-                        <label class="block text-gray-700">Account type</label>
-                        <select name="account_type_id" class="mt-1 w-full border-gray-300 rounded-md">
-                            <option value="">— none —</option>
-                            @foreach ($accountTypes as $at)<option value="{{ $at->id }}" @selected($client->account_type_id==$at->id)>{{ $at->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Live ID (pool account)</label>
-                        <select name="pool_account_id" class="mt-1 w-full border-gray-300 rounded-md">
-                            <option value="">— unassigned —</option>
-                            @foreach ($pools as $p)<option value="{{ $p->id }}" @selected($client->pool_account_id==$p->id)>{{ $p->account_ref }} {{ $p->name ? '· '.$p->name : '' }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div>
+                    <div class="sm:col-span-2">
                         <label class="block text-gray-700">Account status</label>
                         <select name="status" class="mt-1 w-full border-gray-300 rounded-md">
                             @foreach (['pending','active','suspended','locked'] as $s)<option value="{{ $s }}" @selected($client->status===$s)>{{ ucfirst($s) }}</option>@endforeach
                         </select>
-                        <p class="text-[11px] text-gray-400 mt-1">Locked = view-only · Suspended = signed out / no access.</p>
+                        <p class="text-[11px] text-gray-400 mt-1">Locked = view-only · Suspended = signed out / no access. Plan &amp; Live ID are set per account in the <span class="font-medium">Mutual Fund</span> tab.</p>
                     </div>
-                    <label class="sm:col-span-2 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-md p-2">
-                        <input type="checkbox" name="plan_locked" value="1" @checked($client->plan_locked) class="rounded mt-0.5">
-                        <span><span class="font-medium text-amber-800">Lock plan &amp; Live ID</span> — keep the chosen plan/pool fixed; deposit-based auto-upgrade won't change it.</span>
-                    </label>
                     <div class="sm:col-span-2"><button class="px-4 py-2 bg-emerald-600 text-white rounded-md">Save changes</button></div>
                 </form>
 

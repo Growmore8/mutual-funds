@@ -131,18 +131,11 @@ class ClientController extends Controller
             'phone' => ['nullable', 'string', 'max:40'],
             'country' => ['nullable', 'string', 'max:80'],
             'address' => ['nullable', 'string', 'max:255'],
-            'account_type_id' => ['nullable', 'exists:account_types,id'],
-            'pool_account_id' => ['nullable', 'exists:pool_accounts,id'],
             'status' => ['required', 'in:pending,active,suspended,locked'],
         ]);
 
-        $oldPool = $client->pool_account_id;
-        $client->update($data + ['plan_locked' => $request->boolean('plan_locked')]);
-
-        // If admin moved the client's Live ID, move their capital to that pool too.
-        if ($client->pool_account_id && (int) $client->pool_account_id !== (int) $oldPool) {
-            $client->deposits()->update(['pool_account_id' => $client->pool_account_id]);
-        }
+        // Plan / Live ID / plan-lock are managed per fund account (Mutual Fund tab), not here.
+        $client->update($data);
 
         return back()->with('status', 'Client updated.');
     }
