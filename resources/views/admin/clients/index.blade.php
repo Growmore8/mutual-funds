@@ -64,7 +64,18 @@
                         </td>
                         @php $pnl = $c->runningPnl(); @endphp
                         <td class="px-3 py-2 text-right font-semibold {{ $pnl < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($pnl < 0 ? '-' : '+') }}${{ number_format(abs($pnl), 2) }}</td>
-                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span></td>
+                        <td class="px-3 py-2">
+                            <span class="px-2 py-0.5 rounded-full text-xs {{ ['pending'=>'bg-gray-100 text-gray-600','active'=>'bg-green-100 text-green-800','suspended'=>'bg-red-100 text-red-800','locked'=>'bg-amber-100 text-amber-800'][$c->status] ?? 'bg-gray-100' }}">{{ ucfirst($c->status) }}</span>
+                            @php
+                                $kyc = [
+                                    'approved'      => ['bg-emerald-100 text-emerald-700','fa-circle-check','KYC verified'],
+                                    'submitted'     => ['bg-amber-100 text-amber-800','fa-clock','KYC pending'],
+                                    'rejected'      => ['bg-red-100 text-red-700','fa-circle-xmark','KYC rejected'],
+                                    'not_submitted' => ['bg-gray-100 text-gray-500','fa-circle-minus','No KYC'],
+                                ][$c->kyc_status] ?? ['bg-gray-100 text-gray-500','fa-circle-minus','No KYC'];
+                            @endphp
+                            <div class="mt-1"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] {{ $kyc[0] }}"><i class="fa-solid {{ $kyc[1] }} text-[9px]"></i> {{ $kyc[2] }}</span></div>
+                        </td>
                         <td class="px-3 py-2">
                             <div class="flex items-center justify-end gap-1">
                                 <a href="{{ route('admin.clients.show',$c) }}" title="Mutual Fund manage" class="w-8 h-8 grid place-items-center rounded-md text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></a>
