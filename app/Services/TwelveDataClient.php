@@ -37,6 +37,43 @@ class TwelveDataClient
         return $this->get('/price', $this->sym($symbol, $exchange), 1);
     }
 
+    /**
+     * Batched quotes — one request for many symbols (same exchange).
+     * Returns a map of symbol => quote-array. Far fewer API credits/requests than
+     * one call per symbol, which avoids rate-limiting when many symbols are enabled.
+     */
+    public function quoteBatch(array $symbols, ?string $exchange = null): array
+    {
+        $symbols = array_values(array_unique($symbols));
+        if (empty($symbols)) {
+            return [];
+        }
+
+        $params = ['symbol' => implode(',', $symbols)];
+        if ($exchange) {
+            $params['exchange'] = $exchange;
+        }
+
+        $data = $this->get('/quote', $params, 2);
+        if (! is_array($data)) {
+            return [];
+        }
+
+        // A single symbol returns the quote object directly; many return it keyed by symbol.
+        if (count($symbols) === 1) {
+            return ($data['status'] ?? null) === 'error' ? [] : [$symbols[0] => $data];
+        }
+
+        $out = [];
+        foreach ($data as $sym => $q) {
+            if (is_array($q) && ($q['status'] ?? null) !== 'error') {
+                $out[$sym] = $q;
+            }
+        }
+
+        return $out;
+    }
+
     /** OHLC candles for the in-house chart. */
     public function timeSeries(string $symbol, string $interval = '1day', int $outputsize = 90, ?string $exchange = null): ?array
     {

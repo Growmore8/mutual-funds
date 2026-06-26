@@ -20,18 +20,33 @@ class SpotLiquiditySeeder
 
     private float $depth = 1000;      // qty per maker level
 
+    private int $logosThisRun = 0;          // cap logo lookups per run to avoid bursts
+
+    private int $logosPerRun = 8;
+
     public function seedAll(): int
     {
+        $this->logosThisRun = 0;
         $count = 0;
-        foreach (SpotInstrument::enabled()->get() as $ins) {
-            if ($this->seed($ins)) {
-                $count++;
+
+        // Fetch quotes in ONE request per exchange (batched) — avoids rate-limiting with many symbols.
+        foreach (SpotInstrument::enabled()->get()->groupBy(fn ($i) => (string) $i->exchange) as $exchange => $group) {
+            foreach ($group->chunk(100) as $chunk) {
+                $quotes = $this->td->quoteBatch($chunk->pluck('symbol')->all(), $exchange ?: null);
+                foreach ($chunk as $ins) {
+                    $q = $quotes[$ins->symbol] ?? null;
+                    $native = (float) ($q['close'] ?? $q['price'] ?? 0);
+                    if ($native > 0 && $this->seedFromPrice($ins, $native)) {
+                        $count++;
+                    }
+                }
             }
         }
 
         return $count;
     }
 
+    /** Single-instrument refresh (admin / fallback). */
     public function seed(SpotInstrument $ins): bool
     {
         $q = $this->td->quote($ins->symbol, $ins->exchange) ?? $this->td->price($ins->symbol, $ins->exchange);
@@ -40,13 +55,19 @@ class SpotLiquiditySeeder
             return false;
         }
 
+        return $this->seedFromPrice($ins, $native);
+    }
+
+    private function seedFromPrice(SpotInstrument $ins, float $native): bool
+    {
         // Single USD base: store every instrument's price in USD (INR markets converted).
         $price = round($this->engine->toUsd($native, $ins->currency), 6);
 
         $ins->update(['last_price' => $price]);
 
         // Backfill the real logo once (Twelve Data /logo), then it's cached on the row.
-        if (empty($ins->logo_url)) {
+        if (empty($ins->logo_url) && $this->logosThisRun < $this->logosPerRun) {
+            $this->logosThisRun++;
             if ($url = $this->td->logo($ins->symbol, $ins->exchange)) {
                 $ins->update(['logo_url' => $url]);
             }
