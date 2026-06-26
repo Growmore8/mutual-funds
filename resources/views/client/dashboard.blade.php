@@ -327,7 +327,7 @@
                     @forelse ($recent as $t)
                         <tr>
                             <td class="py-2 {{ $sub }} text-xs">{{ $t->when->format('d M Y') }}</td>
-                            <td class="py-2 text-gray-600 dark:text-gray-300">{{ $t->label }}</td>
+                            <td class="py-2 text-gray-600 dark:text-gray-300">{{ $t->label }}@if(!empty($t->sub))<span class="block text-[11px] text-gray-400">{{ $t->sub }}</span>@endif</td>
                             <td class="py-2 text-right font-medium {{ $t->amount < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($t->amount<0?'-':'+') . $t->cs . number_format(abs((float)$t->amount),2) }}</td>
                         </tr>
                     @empty

@@ -89,12 +89,24 @@ class ClientDashboardController extends Controller
                     'amount' => ($isBuy ? -1 : 1) * (float) $t->qty * (float) $t->price,
                     'cs' => $t->instrument->currencySymbol()]);
             });
+        $fxsvc = app(\App\Services\SpotTradingService::class);
+        $fiatBracket = function ($row, $usd) {
+            if (! $row->currency || $row->currency === 'USD' || $usd <= 0) {
+                return null;
+            }
+            $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$row->currency] ?? ($row->currency . ' ');
+            return '(' . $sym . number_format((float) $row->amount, 2) . ' @ ' . number_format(round((float) $row->amount / $usd, 2), 2) . '/$)';
+        };
         \App\Models\Deposit::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(5)->get()
-            ->each(fn ($d) => $recent->push((object) ['when' => $d->created_at, 'label' => 'Spot deposit (' . $d->currency . ')',
-                'amount' => (float) $d->amount, 'cs' => $d->currency === 'INR' ? '₹' : '$']));
+            ->each(function ($d) use ($recent, $fxsvc, $fiatBracket) {
+                $usd = $d->usd_amount !== null ? (float) $d->usd_amount : $fxsvc->toUsd((float) $d->amount, $d->currency ?: 'USD');
+                $recent->push((object) ['when' => $d->created_at, 'label' => 'Spot deposit', 'sub' => $fiatBracket($d, $usd), 'amount' => $usd, 'cs' => '$']);
+            });
         \App\Models\Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->latest('id')->limit(5)->get()
-            ->each(fn ($w) => $recent->push((object) ['when' => $w->created_at, 'label' => 'Spot withdrawal (' . $w->currency . ')',
-                'amount' => -1 * (float) $w->amount, 'cs' => $w->currency === 'INR' ? '₹' : '$']));
+            ->each(function ($w) use ($recent, $fxsvc, $fiatBracket) {
+                $usd = $w->usd_amount !== null ? (float) $w->usd_amount : $fxsvc->toUsd((float) $w->amount, $w->currency ?: 'USD');
+                $recent->push((object) ['when' => $w->created_at, 'label' => 'Spot withdrawal', 'sub' => $fiatBracket($w, $usd), 'amount' => -1 * $usd, 'cs' => '$']);
+            });
         $recent = $recent->sortByDesc('when')->take(8)->values();
 
         $referralEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'referral')->sum('amount');

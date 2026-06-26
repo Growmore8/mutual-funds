@@ -59,7 +59,8 @@
                             <td class="px-3 py-3">@if ($t->fundAccount)<div class="font-mono text-xs text-gray-700">{{ $t->fundAccount->code() }}</div><div class="text-[11px] text-gray-400">{{ $t->fundAccount->label }}</div>@else<span class="text-gray-300">—</span>@endif</td>
                             <td class="px-3 py-3 text-right">
                                 <span class="font-semibold {{ $t->amount < 0 ? 'text-red-600' : 'text-emerald-600' }}">{{ ($t->amount < 0 ? '-' : '+') . '$' . number_format(abs((float)$t->amount),2) }}</span>
-                                <div class="text-[11px] text-gray-400">{{ $t->amount < 0 ? 'Debit' : 'Credit' }} · {{ ucfirst($t->type) }}</div>
+                                @php $ti = ['deposit'=>'fa-circle-down','withdrawal'=>'fa-circle-up','profit'=>'fa-arrow-trend-up','fee'=>'fa-receipt','reversal'=>'fa-rotate-left','adjustment'=>'fa-sliders','referral'=>'fa-gift'][$t->type] ?? 'fa-arrow-right-arrow-left'; @endphp
+                                <div class="text-[11px] text-gray-400"><i class="fa-solid {{ $ti }} mr-0.5"></i> {{ $t->amount < 0 ? 'Debit' : 'Credit' }} · {{ ucfirst($t->type) }}</div>
                             </td>
                             <td class="px-3 py-3">
                                 @if ($method)
@@ -106,7 +107,7 @@
                             <tr x-show="spotKind==='all' || spotKind==='{{ strtolower($s->kind) }}'">
                                 <td class="px-3 py-3 text-gray-400 text-xs">{{ $s->when->format('d M Y') }}<br>{{ $s->when->format('h:i A') }}</td>
                                 <td class="px-3 py-3 font-medium text-gray-900">{{ $s->client }}</td>
-                                <td class="px-3 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $s->kind }}</span></td>
+                                <td class="px-3 py-3">@php $si = ['Deposit'=>'fa-circle-down','Withdrawal'=>'fa-circle-up','Trade'=>'fa-arrow-right-arrow-left'][$s->kind] ?? 'fa-arrow-right-arrow-left'; @endphp<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"><i class="fa-solid {{ $si }} mr-0.5"></i> {{ $s->kind }}</span></td>
                                 <td class="px-3 py-3 text-gray-600">{{ $s->detail }}</td>
                                 <td class="px-3 py-3 text-right font-semibold {{ $s->credit ? 'text-emerald-600' : 'text-red-600' }}">{{ ($s->credit ? '+' : '-') . $s->cs . number_format(abs((float)$s->amount), 2) }}</td>
                                 <td class="px-3 py-3 text-right">

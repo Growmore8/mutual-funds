@@ -29,12 +29,15 @@
                         $credit = (float) $t->amount >= 0;
                         $loss = $t->type === 'profit' && ! $credit;
                         [$icon, $tone] = match (true) {
-                            $t->type === 'deposit' => ['fa-arrow-down-to-bracket', 'emerald'],
-                            $t->type === 'withdrawal' => ['fa-arrow-up-from-bracket', 'amber'],
+                            $t->type === 'deposit' => ['fa-circle-down', 'emerald'],
+                            $t->type === 'withdrawal' => ['fa-circle-up', 'amber'],
                             $t->type === 'profit' && $credit => ['fa-arrow-trend-up', 'emerald'],
                             $loss => ['fa-arrow-trend-down', 'rose'],
                             $t->type === 'referral' => ['fa-gift', 'emerald'],
-                            default => [$credit ? 'fa-arrow-down-left' : 'fa-arrow-up-right', $credit ? 'emerald' : 'violet'],
+                            $t->type === 'fee' => ['fa-receipt', 'gray'],
+                            $t->type === 'reversal' => ['fa-rotate-left', 'rose'],
+                            $t->type === 'adjustment' => ['fa-sliders', 'violet'],
+                            default => [$credit ? 'fa-arrow-down' : 'fa-arrow-up', $credit ? 'emerald' : 'violet'],
                         };
                         $toneCls = ['emerald'=>'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300','amber'=>'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300','rose'=>'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300','violet'=>'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300','gray'=>'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300'][$tone];
                     @endphp
@@ -65,8 +68,8 @@
                         [$icon, $tone] = match ($s->kind) {
                             'buy' => ['fa-arrow-trend-up', 'emerald'],
                             'sell' => ['fa-arrow-trend-down', 'rose'],
-                            'deposit' => ['fa-arrow-down-to-bracket', 'emerald'],
-                            'withdrawal' => ['fa-arrow-up-from-bracket', 'amber'],
+                            'deposit' => ['fa-circle-down', 'emerald'],
+                            'withdrawal' => ['fa-circle-up', 'amber'],
                             default => ['fa-arrow-right-arrow-left', 'gray'],
                         };
                         $toneCls = ['emerald'=>'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300','amber'=>'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300','rose'=>'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300','gray'=>'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300'][$tone];
