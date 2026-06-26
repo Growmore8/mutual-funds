@@ -71,7 +71,10 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // "remember me" → persistent cookie so the session survives the user switching
+        // to their email app to copy the OTP and returning (otherwise mobile/PWA can drop
+        // the session cookie and bounce them off the verify page to login).
+        Auth::login($user, true);
 
         // Send the email verification OTP, then take the user to the verify step.
         $otp->issue($user->email, $user->name);
