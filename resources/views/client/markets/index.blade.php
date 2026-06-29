@@ -52,11 +52,12 @@
                     <div class="w-28 text-right">
                         <p class="font-semibold text-sm transition-colors duration-300" :class="dir({{ $m->id }})>0?'text-emerald-500':(dir({{ $m->id }})<0?'text-red-500':'text-gray-900 dark:text-white')" x-text="fmt({{ $m->id }})">{{ $m->market==='india' ? '₹'.number_format((float)$m->last_price*$usdInr,2) : '$'.number_format((float)$m->last_price,2) }}</p>
                     </div>
-                    <div class="w-20 text-right">
-                        <span class="inline-block px-2 py-1 rounded-md text-xs font-semibold text-white transition-colors duration-300"
+                    <div class="w-12 text-right">
+                        <span class="inline-block px-1.5 py-1 rounded-md text-xs font-semibold text-white transition-colors duration-300"
                               :class="dir({{ $m->id }})<0 ? 'bg-red-500' : (dir({{ $m->id }})>0 ? 'bg-emerald-500' : 'bg-gray-400')"
                               x-text="dir({{ $m->id }})<0?'▼':(dir({{ $m->id }})>0?'▲':'•')">—</span>
                     </div>
+                    <span class="ml-1 shrink-0 px-3 py-1.5 rounded-lg bg-emerald-500 group-hover:bg-emerald-600 text-white text-xs font-bold">Trade</span>
                 </a>
             @endforeach
         </div>

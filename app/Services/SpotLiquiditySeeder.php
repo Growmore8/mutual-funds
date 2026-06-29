@@ -31,10 +31,49 @@ class SpotLiquiditySeeder
 
         $count = 0;
         $instruments = SpotInstrument::enabled()->get();
+        $prices = $this->fetchPrices($instruments);
 
-        // Request OUR symbols explicitly in chunks (the no-filter call only returns CubeX's
-        // small default watchlist). CubeX drops unknown symbols and returns the rest.
-        // Pause between chunks so the burst isn't rate-limited (which silently dropped later chunks).
+        foreach ($instruments as $ins) {
+            $native = (float) ($prices[$this->cubexSymbol($ins->symbol)] ?? 0);
+            if ($native > 0 && $this->seedFromPrice($ins, $native)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Lightweight: update only last_price (+ trigger limit orders) from CubeX.
+     * Used by the spot:stream worker for sub-minute live prices without rebuilding the book.
+     */
+    public function refreshPrices(): int
+    {
+        if (! $this->cubex->configured()) {
+            return 0;
+        }
+
+        $count = 0;
+        $instruments = SpotInstrument::enabled()->get();
+        $prices = $this->fetchPrices($instruments);
+
+        foreach ($instruments as $ins) {
+            $native = (float) ($prices[$this->cubexSymbol($ins->symbol)] ?? 0);
+            if ($native <= 0) {
+                continue;
+            }
+            $price = round($this->engine->toUsd($native, $ins->currency), 6);
+            $ins->update(['last_price' => $price]);
+            $this->engine->triggerLimitOrders($ins, $price);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /** Fetch CubeX prices for the given instruments (chunked + paused to avoid rate-limit). */
+    private function fetchPrices($instruments): array
+    {
         $prices = [];
         $batches = $instruments->map(fn ($i) => $this->cubexSymbol($i->symbol))->unique()->chunk(50)->values();
         foreach ($batches as $n => $batch) {
@@ -46,14 +85,7 @@ class SpotLiquiditySeeder
             }
         }
 
-        foreach ($instruments as $ins) {
-            $native = (float) ($prices[$this->cubexSymbol($ins->symbol)] ?? 0);
-            if ($native > 0 && $this->seedFromPrice($ins, $native)) {
-                $count++;
-            }
-        }
-
-        return $count;
+        return $prices;
     }
 
     /** Single-instrument refresh (admin). */
