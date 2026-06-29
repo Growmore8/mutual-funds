@@ -60,18 +60,10 @@ class SpotController extends Controller
     /** Batched live quotes for the markets list (shared cache, light on the API). */
     public function marketQuotes()
     {
-        $data = \Illuminate\Support\Facades\Cache::remember('markets.quotes.v1', 60, function () {
-            $out = [];
-            foreach (SpotInstrument::enabled()->get() as $ins) {
-                $q = $this->td->quote($ins->symbol, $ins->exchange);
-                $native = (float) ($q['close'] ?? $ins->last_price ?? 0);
-                $out[$ins->id] = [
-                    'price' => $native > 0 ? round($this->svc->toUsd($native, $ins->currency), 6) : (float) $ins->last_price,
-                    'change' => (float) ($q['percent_change'] ?? 0),
-                ];
-            }
-
-            return $out;
+        $data = \Illuminate\Support\Facades\Cache::remember('markets.quotes.v3', 5, function () {
+            return SpotInstrument::enabled()->get()
+                ->mapWithKeys(fn ($i) => [$i->id => ['price' => (float) $i->last_price, 'change' => 0]])
+                ->all();
         });
 
         return response()->json($data)->header('Cache-Control', 'no-store');
@@ -100,35 +92,12 @@ class SpotController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
-    /** Live prices for the markets list (id => USD price), pulled from CubeX and cached ~8s (shared). */
+    /** Live prices for the markets list (id => USD price) — fast DB read, refreshed by spot:seed. */
     public function prices(Request $request)
     {
-        $map = \Illuminate\Support\Facades\Cache::remember('spot_live_prices', 8, function () {
-            $instruments = SpotInstrument::enabled()->get();
-
-            // One shared CubeX fetch (chunked + paused) for everyone.
-            $raw = [];
-            foreach ($instruments->map(fn ($i) => str_replace('/', '', strtoupper($i->symbol)))->unique()->chunk(50)->values() as $n => $batch) {
-                if ($n > 0) {
-                    usleep(300000);
-                }
-                foreach ($this->cubex->prices($batch->values()->all()) as $sym => $price) {
-                    $raw[strtoupper($sym)] = (float) $price;
-                }
-            }
-
-            $out = [];
-            foreach ($instruments as $ins) {
-                $native = $raw[str_replace('/', '', strtoupper($ins->symbol))] ?? 0;
-                $out[$ins->id] = $native > 0
-                    ? round($this->svc->toUsd($native, $ins->currency), 6)
-                    : (float) $ins->last_price;   // fall back to last good price
-            }
-
-            return $out;
-        });
-
-        return response()->json($map)->header('Cache-Control', 'no-store');
+        return response()->json(
+            SpotInstrument::enabled()->pluck('last_price', 'id')->map(fn ($p) => (float) $p)
+        )->header('Cache-Control', 'no-store');
     }
 
     /** OHLC candles for the in-house chart. */

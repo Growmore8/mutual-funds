@@ -50,12 +50,12 @@
                         <p class="text-[11px] text-gray-400 truncate">{{ $m->name }}</p>
                     </div>
                     <div class="w-28 text-right">
-                        <p class="font-semibold text-gray-900 dark:text-white text-sm" x-text="fmt({{ $m->id }})">{{ $m->market==='india' ? '₹'.number_format((float)$m->last_price*$usdInr,2) : '$'.number_format((float)$m->last_price,2) }}</p>
+                        <p class="font-semibold text-sm transition-colors duration-300" :class="dir({{ $m->id }})>0?'text-emerald-500':(dir({{ $m->id }})<0?'text-red-500':'text-gray-900 dark:text-white')" x-text="fmt({{ $m->id }})">{{ $m->market==='india' ? '₹'.number_format((float)$m->last_price*$usdInr,2) : '$'.number_format((float)$m->last_price,2) }}</p>
                     </div>
                     <div class="w-20 text-right">
-                        <span class="inline-block px-2 py-1 rounded-md text-xs font-semibold text-white"
-                              :class="chg({{ $m->id }}) < 0 ? 'bg-red-500' : 'bg-emerald-500'"
-                              x-text="chgTxt({{ $m->id }})">—</span>
+                        <span class="inline-block px-2 py-1 rounded-md text-xs font-semibold text-white transition-colors duration-300"
+                              :class="dir({{ $m->id }})<0 ? 'bg-red-500' : (dir({{ $m->id }})>0 ? 'bg-emerald-500' : 'bg-gray-400')"
+                              x-text="dir({{ $m->id }})<0?'▼':(dir({{ $m->id }})>0?'▲':'•')">—</span>
                     </div>
                 </a>
             @endforeach
@@ -65,14 +65,18 @@
     <script>
         function markets(){
             return {
-                q: '', grp: 'All', rate: {{ (float) $usdInr }}, inrIds: {{ Illuminate\Support\Js::from($inrIds) }}, quotes: {{ Illuminate\Support\Js::from($initQuotes) }},
-                init(){ this.tick(); this._t = setInterval(()=>this.tick(), 15000); },
+                q: '', grp: 'All', rate: {{ (float) $usdInr }}, inrIds: {{ Illuminate\Support\Js::from($inrIds) }}, quotes: {{ Illuminate\Support\Js::from($initQuotes) }}, dirs: {},
+                init(){ this.tick(); this._t = setInterval(()=>this.tick(), 5000); },
                 async tick(){
-                    try { this.quotes = await (await fetch('{{ route('markets.quotes') }}', {cache:'no-store'})).json(); } catch(e){}
+                    try {
+                        const q = await (await fetch('{{ route('markets.quotes') }}', {cache:'no-store'})).json();
+                        const old = this.quotes; const nd = {};
+                        for (const id in q){ const np = q[id].price, op = old[id] ? old[id].price : np; nd[id] = np>op ? 1 : (np<op ? -1 : (this.dirs[id]||0)); }
+                        this.dirs = nd; this.quotes = q;
+                    } catch(e){}
                 },
                 fmt(id){ const x = this.quotes[id]; if(!x) return null; const inr = this.inrIds.includes(id); const p = inr ? x.price*this.rate : x.price; return (inr?'₹':'$') + p.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits: p<10?4:2}); },
-                chg(id){ return this.quotes[id] ? this.quotes[id].change : 0; },
-                chgTxt(id){ const c = this.chg(id); return (c>=0?'+':'') + c.toFixed(2) + '%'; },
+                dir(id){ return this.dirs[id] || 0; },
             };
         }
     </script>
