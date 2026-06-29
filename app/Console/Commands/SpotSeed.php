@@ -11,8 +11,9 @@ class SpotSeed extends Command
 
     protected $description = 'Refresh seeded liquidity (house maker bids/asks) around the Twelve Data price';
 
-    public function handle(SpotLiquiditySeeder $seeder): int
+    public function handle(SpotLiquiditySeeder $seeder, \App\Services\SpotTradingService $fx): int
     {
+        $fx->refreshFx();   // warm USD/INR (network) on the CLI so web pages never block on it
         $n = $seeder->seedAll();
         $this->info("Seeded liquidity for {$n} instrument(s).");
 

@@ -22,11 +22,27 @@ class SpotTradingService
     /** Live USD/INR rate (cached 1h, fallback 84). */
     public function usdInr(): float
     {
-        $base = (float) \Illuminate\Support\Facades\Cache::remember('fx.usdinr', 3600, function () {
-            return (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
-        }) ?: 84.0;
+        // Never call the network here — read the cached/stored rate (warmed by the cron). Page render must not block.
+        $base = (float) \Illuminate\Support\Facades\Cache::get('fx.usdinr', 0);
+        if ($base <= 0) {
+            $base = (float) \App\Models\Setting::get('fx_usdinr_last', 84);
+        }
 
         return round($base * (1 + $this->markupPct() / 100), 4);
+    }
+
+    /** Refresh FX from the network — call ONLY from the scheduler (CLI), never inline in a web request. */
+    public function refreshFx(): void
+    {
+        try {
+            $p = (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
+            if ($p > 0) {
+                \Illuminate\Support\Facades\Cache::put('fx.usdinr', $p, 7200);
+                \App\Models\Setting::put('fx_usdinr_last', $p);
+            }
+        } catch (\Throwable $e) {
+            // keep the last known rate
+        }
     }
 
     /** Admin markup % applied on top of every live FX rate (all countries). */
