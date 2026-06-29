@@ -223,6 +223,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/markets/quotes', [\App\Http\Controllers\SpotController::class, 'marketQuotes'])->name('markets.quotes');
         Route::get('/spot', [\App\Http\Controllers\SpotController::class, 'index'])->name('spot.index');
         Route::get('/spot/quote', [\App\Http\Controllers\SpotController::class, 'quote'])->name('spot.quote');
+        Route::get('/spot/prices', [\App\Http\Controllers\SpotController::class, 'prices'])->name('spot.prices');
         Route::get('/spot/candles', [\App\Http\Controllers\SpotController::class, 'candles'])->name('spot.candles');
         Route::get('/spot/book', [\App\Http\Controllers\SpotController::class, 'book'])->name('spot.book');
         Route::post('/spot/order', [\App\Http\Controllers\SpotController::class, 'order'])->middleware('notlocked')->name('spot.order');

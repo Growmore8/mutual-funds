@@ -1,24 +1,16 @@
 <x-client-layout title="Spot Trading">
     @php
         $usdInr = app(\App\Services\SpotTradingService::class)->usdInr();
-        $isInrMkt = $selected && $selected->market === 'india';
-        $cs = $isInrMkt ? '₹' : '$';            // display currency for the selected instrument
-        $dispRate = $isInrMkt ? $usdInr : 1;    // USD price × this = display price
-        $rowPx = function ($m) use ($usdInr) {  // per-row price for the markets lists
-            $p = (float) $m->last_price;
-            if (! $p) return '—';
-            return $m->market === 'india' ? '₹' . number_format($p * $usdInr, 2) : '$' . number_format($p, 2);
-        };
-        $sym = fn ($n, $s) => $s . number_format((float) $n, 2);
         $selHolding = $selected ? optional($holdings->firstWhere('instrument_id', $selected->id))->qty : 0;
         $upnl = $unrealized ?? 0;
-        $marketGroups = ['usd' => 'NYSE · US/Global + Crypto', 'inr' => 'NSE · India'];
-        $grp = fn ($m) => $m === 'india' ? 'inr' : 'usd';
-        $selGroup = $grp($selected->market ?? 'india');
-        // Within the NYSE (USD) group, split stocks vs crypto into sub-categories.
-        $subGroups = fn ($list) => $selGroup === 'usd'
-            ? ['US Stocks' => $list->where('market', '!=', 'crypto'), 'Crypto' => $list->where('market', 'crypto')]
-            : ['' => $list];
+        // Everything the front-end needs to switch symbols without a page reload.
+        $insJson = $instruments->map(fn ($m) => [
+            'id' => $m->id, 'symbol' => $m->symbol, 'exchange' => $m->exchange, 'market' => $m->market,
+            'currency' => $m->currency, 'price' => (float) $m->last_price, 'group' => $m->market === 'india' ? 'inr' : 'usd',
+            'logo' => $m->logoUrl(), 'fallback' => $m->logoFallback(), 'mono' => $m->monogram(), 'color' => $m->badgeColor(),
+        ])->values();
+        $holdingsJson = $holdings->pluck('qty', 'instrument_id');
+        $selGroup = ($selected->market ?? 'india') === 'india' ? 'inr' : 'usd';
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
@@ -54,66 +46,56 @@
             </div>
         @endunless
 
-        {{-- Market tabs: NYSE (US/Global + Crypto) | NSE (India) --}}
+        {{-- Market tabs: NYSE (US/Global + Crypto) | NSE (India) — switch with no reload --}}
         <div class="flex gap-2 mx-1 mb-3">
-            <a href="{{ route('spot.index', ['market' => 'global']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></a>
-            <a href="{{ route('spot.index', ['market' => 'india']) }}" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold {{ $selGroup==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500' }}">NSE <span class="font-normal text-[11px]">India · $</span></a>
+            <button @click="setGroup('usd')" :class="group==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></button>
+            <button @click="setGroup('inr')" :class="group==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NSE <span class="font-normal text-[11px]">India · $</span></button>
         </div>
 
         {{-- ============ Terminal grid (desktop) / stacked (mobile) ============ --}}
         <div class="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-4 lg:items-start px-1">
 
-            {{-- Markets — desktop sidebar (current group only) --}}
+            {{-- Markets — desktop sidebar (live prices, no reload on select) --}}
             <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
-                <p class="text-xs font-semibold text-gray-500 mb-2">{{ $marketGroups[$selGroup] ?? '' }}</p>
+                <p class="text-xs font-semibold text-gray-500 mb-2" x-text="group==='inr' ? 'NSE · India' : 'NYSE · US/Global + Crypto'"></p>
                 <div class="max-h-[560px] overflow-y-auto">
-                    @php $active = $instruments->filter(fn ($m) => $grp($m->market) === $selGroup); @endphp
-                    @foreach ($subGroups($active) as $subLabel => $list)
-                        @if ($list->count())
-                            @if ($subLabel)
-                                <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-2 mb-1 px-2.5">{{ $subLabel }}</p>
-                            @endif
-                            @foreach ($list as $m)
-                                <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}"
-                                   class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5 {{ $selected && $selected->id===$m->id ? 'bg-gray-100 dark:bg-white/10' : '' }}">
-                                    <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" style="background:{{ $m->badgeColor() }}">{{ $m->monogram() }}@if($m->logoUrl())<img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" data-fallback="{{ $m->logoFallback() }}" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}">@endif</span>
-                                    <span class="flex-1 min-w-0 text-gray-900 dark:text-white truncate">{{ $m->symbol }} <span class="text-[10px] text-gray-400">{{ $m->exchange }}</span></span>
-                                    <span class="text-gray-400">{{ $rowPx($m) }}</span>
-                                </a>
-                            @endforeach
-                        @endif
-                    @endforeach
+                    <template x-for="m in listed" :key="m.id">
+                        <button @click="select(m)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5" :class="active && active.id===m.id ? 'bg-gray-100 dark:bg-white/10' : ''">
+                            <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" :style="'background:'+m.color">
+                                <span x-text="m.mono"></span>
+                                <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" @error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
+                            </span>
+                            <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
+                            <span class="text-[10px] text-gray-400" x-text="m.exchange"></span>
+                            <span class="text-gray-400 font-mono text-xs" x-text="rowPrice(m)"></span>
+                        </button>
+                    </template>
                 </div>
             </aside>
 
             {{-- Center: symbol header + chart --}}
             <div class="min-w-0">
-                <div class="flex items-center justify-between mb-3" x-data="{ pick:false }">
+                <div class="flex items-center justify-between mb-3">
                     <div class="relative">
                         <button @click="pick=!pick" class="flex items-center gap-2">
-                            <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $selected->symbol ?? '—' }}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded {{ $cs==='₹' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">{{ $selGroup==='inr' ? 'NSE' : 'NYSE' }}</span>
+                            <span class="text-xl font-extrabold text-gray-900 dark:text-white" x-text="sym"></span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded" :class="group==='inr' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'" x-text="group==='inr' ? 'NSE' : 'NYSE'"></span>
                             <i class="fa-solid fa-chevron-down text-xs text-gray-400 lg:hidden"></i>
                         </button>
                         <p class="text-sm font-semibold" :class="change>=0?'text-emerald-500':'text-red-500'"><span x-text="(change>=0?'+':'')+change.toFixed(2)+'%'"></span></p>
-                        {{-- mobile symbol picker (current group only) --}}
+                        {{-- mobile symbol picker --}}
                         <div x-show="pick" @click.outside="pick=false" x-cloak class="lg:hidden absolute z-30 mt-1 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-2">
                             <div class="max-h-64 overflow-y-auto">
-                                @php $activeM = $instruments->filter(fn ($m) => $grp($m->market) === $selGroup); @endphp
-                                @foreach ($subGroups($activeM) as $subLabel => $list)
-                                    @if ($list->count())
-                                        @if ($subLabel)
-                                            <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 mb-1 px-3">{{ $subLabel }}</p>
-                                        @endif
-                                        @foreach ($list as $m)
-                                            <a href="{{ route('spot.index', ['symbol' => $m->symbol]) }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
-                                                <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" style="background:{{ $m->badgeColor() }}">{{ $m->monogram() }}@if($m->logoUrl())<img src="{{ $m->logoUrl() }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" data-fallback="{{ $m->logoFallback() }}" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}">@endif</span>
-                                                <span class="flex-1 min-w-0 text-gray-900 dark:text-white truncate">{{ $m->symbol }}</span>
-                                                <span class="text-gray-400">{{ $rowPx($m) }}</span>
-                                            </a>
-                                        @endforeach
-                                    @endif
-                                @endforeach
+                                <template x-for="m in listed" :key="'p'+m.id">
+                                    <button @click="select(m)" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" :style="'background:'+m.color">
+                                            <span x-text="m.mono"></span>
+                                            <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" @error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
+                                        </span>
+                                        <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
+                                        <span class="text-gray-400 font-mono text-xs" x-text="rowPrice(m)"></span>
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -129,7 +111,7 @@
                     <canvas id="spot-chart" class="w-full h-56 lg:h-[440px]"></canvas>
                 </div>
 
-                {{-- Orders / Holdings / Trades — desktop shows here under the chart --}}
+                {{-- Orders / Holdings / Trades — desktop (account-wide, refresh on order) --}}
                 <div x-data="{ tab:'holdings' }" class="hidden lg:block mt-4">
                     <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
                         <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
@@ -149,23 +131,21 @@
                             <button @click="side='buy'"  :class="side==='buy'  ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Buy</button>
                             <button @click="side='sell'" :class="side==='sell' ? 'bg-red-500 text-white'     : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="py-2">Sell</button>
                         </div>
-                        {{-- Market / Limit --}}
                         <div class="grid grid-cols-2 rounded-lg overflow-hidden mb-2 text-xs font-semibold border border-gray-200 dark:border-white/10">
                             <button type="button" @click="otype='market'" :class="otype==='market' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Market</button>
                             <button type="button" @click="otype='limit'; if(!oprice||oprice==0) oprice=(price*dispRate).toFixed(dp())" :class="otype==='limit' ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400'" class="py-1.5">Limit</button>
                         </div>
                         <div x-show="otype==='market'" class="w-full bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs mb-2 text-gray-400 text-center"><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Fills at current market price</div>
                         <div x-show="otype==='limit'" x-cloak class="mb-2">
-                            <label class="block text-[11px] text-gray-400 mb-1">Limit price ({{ $cs }})</label>
+                            <label class="block text-[11px] text-gray-400 mb-1"><span x-text="'Limit price ('+curSym+')'"></span></label>
                             <input x-model="oprice" type="number" step="any" min="0" inputmode="decimal" placeholder="Price" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm">
                         </div>
-                        <input x-model="oqty" type="number" step="any" min="0" inputmode="decimal" placeholder="Quantity ({{ $selected->symbol ?? '' }})" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
+                        <input x-model="oqty" type="number" step="any" min="0" inputmode="decimal" :placeholder="'Quantity ('+sym+')'" class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm mb-2">
                         <div class="flex gap-1 mb-2">
                             <template x-for="p in [25,50,75,100]" :key="p"><button @click="setPct(p)" class="flex-1 py-1 rounded text-[11px] bg-gray-100 dark:bg-white/5 text-gray-500" x-text="p+'%'"></button></template>
                         </div>
-                        {{-- NSE: show cost in ₹ too. Cost/wallet settle in USD. --}}
                         <div x-show="dispRate!==1" class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span x-text="(side==='buy' ? 'Order cost' : 'You receive')+' ({{ $cs }})'"></span>
+                            <span x-text="(side==='buy' ? 'Order cost' : 'You receive')+' ('+curSym+')'"></span>
                             <span class="text-gray-700 dark:text-gray-300 font-medium" x-text="pf(cost())"></span>
                         </div>
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
@@ -175,17 +155,17 @@
                         <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
                             <span>Available</span>
                             <span x-show="side==='buy'" class="text-gray-700 dark:text-gray-300">${{ number_format((float)$account->balance,2) }}</span>
-                            <span x-show="side==='sell'" class="text-gray-700 dark:text-gray-300">{{ rtrim(rtrim((string)($selHolding ?? 0),'0'),'.') ?: '0' }} {{ $selected->symbol ?? '' }}</span>
+                            <span x-show="side==='sell'" class="text-gray-700 dark:text-gray-300"><span x-text="(+holdingQty).toLocaleString(undefined,{maximumFractionDigits:6})"></span> <span x-text="sym"></span></span>
                         </div>
                         <button @click="submit()" :disabled="busy" :class="side==='buy' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'" class="w-full py-3 rounded-full text-white font-bold text-sm disabled:opacity-60">
-                            <span x-text="busy ? '…' : (side==='buy'?'Buy ':'Sell ')+'{{ $selected->symbol ?? '' }}'"></span>
+                            <span x-text="busy ? '…' : (side==='buy'?'Buy ':'Sell ')+sym"></span>
                         </button>
                         <p x-show="msg" x-cloak x-text="msg" :class="ok?'text-emerald-600 dark:text-emerald-400':'text-red-600 dark:text-red-400'" class="text-xs text-center mt-2 font-medium"></p>
                     </div>
 
                     {{-- Order book --}}
                     <div class="lg:gcard lg:rounded-2xl lg:p-4 lg:bg-white lg:dark:bg-white/[0.04]">
-                        <div class="flex justify-between text-[10px] text-gray-400 mb-1"><span>Price ({{ $cs }})</span><span>Qty</span></div>
+                        <div class="flex justify-between text-[10px] text-gray-400 mb-1"><span x-text="'Price ('+curSym+')'"></span><span>Qty</span></div>
                         <div class="space-y-0.5 text-[11px] font-mono">
                             <template x-for="a in book.asks.slice().reverse()" :key="'a'+a.price"><div class="flex justify-between"><span class="text-red-500" x-text="pn(a.price)"></span><span class="text-gray-400" x-text="a.qty"></span></div></template>
                         </div>
@@ -197,13 +177,13 @@
                 </div>
 
                 <div class="flex gap-2 mt-3">
-                    <a href="{{ route('client.deposit.create', ['for' => 'spot', 'cur' => $selected->currency ?? 'USD']) }}" class="flex-1 text-center py-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 text-sm font-semibold"><i class="fa-solid fa-plus mr-1"></i> Add funds</a>
-                    <a href="{{ route('withdraw.create', ['for' => 'spot', 'cur' => $selected->currency ?? 'USD']) }}" class="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 text-sm font-semibold">Withdraw</a>
+                    <a :href="'{{ route('client.deposit.create') }}?for=spot&cur='+(active?active.currency:'USD')" class="flex-1 text-center py-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 text-sm font-semibold"><i class="fa-solid fa-plus mr-1"></i> Add funds</a>
+                    <a :href="'{{ route('withdraw.create') }}?for=spot&cur='+(active?active.currency:'USD')" class="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 text-sm font-semibold">Withdraw</a>
                 </div>
             </div>
         </div>
 
-        {{-- Orders / Holdings / Trades — mobile (below everything) --}}
+        {{-- Orders / Holdings / Trades — mobile --}}
         <div x-data="{ tab:'holdings' }" class="lg:hidden mt-4 px-1">
             <div class="flex gap-5 border-b border-gray-200 dark:border-white/10 text-sm mb-3">
                 <button @click="tab='holdings'" :class="tab==='holdings'?'text-emerald-500 border-emerald-500':'text-gray-400 border-transparent'" class="pb-2 border-b-2">Holdings</button>
@@ -217,38 +197,79 @@
     <script>
         function spot(){
             return {
+                instruments: @json($insJson),
+                holdings: @json($holdingsJson),
+                usdInr: {{ (float)$usdInr }},
+                group: '{{ $selGroup }}',
+                active: null,
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
-                curSym: '{{ $cs }}', dispRate: {{ (float)$dispRate }}, interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true,
-                side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) * $dispRate }}', ototal:'', oqty:'',
-                avail: {{ (float)$account->balance }}, holdingQty: {{ (float)($selHolding ?? 0) }},
-                busy:false, msg:'', ok:false, _t:null,
+                interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true, pick:false,
+                side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', oqty:'',
+                avail: {{ (float)$account->balance }},
+                busy:false, msg:'', ok:false, _t:null, _p:null, _c:0,
                 candles: [], dir: 0,
+
+                get curSym(){ return this.active && this.active.market==='india' ? '₹' : '$'; },
+                get dispRate(){ return this.active && this.active.market==='india' ? this.usdInr : 1; },
+                get sym(){ return this.active ? this.active.symbol : '—'; },
+                get holdingQty(){ return this.active ? (+(this.holdings[this.active.id]||0)) : 0; },
+                get listed(){ return this.instruments.filter(m => m.group===this.group); },
+
+                rowPrice(m){
+                    if(!m.price) return '—';
+                    var v = m.market==='india' ? m.price*this.usdInr : m.price;
+                    var sym = m.market==='india' ? '₹' : '$';
+                    return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+                },
                 dp(){ var p=Math.abs((this.price||0)*this.dispRate); return p>0 && p<10 ? 4 : 2; },
-                // price display in the instrument currency (₹ for NSE, $ otherwise)
                 pn(usd){ var d=this.dp(); return ((usd||0)*this.dispRate).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); },
                 pf(usd){ return this.curSym + this.pn(usd); },
-                // cost / wallet are always USD (single base)
                 cf(usd){ return '$' + (usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); },
-                init(){ if(!this.id) return; this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); this.$watch('showChart', v=>{ if(v) this.loadCandles(); }); window.addEventListener('resize', ()=>this.draw()); },
-                // limit price field is in display currency → convert to USD for cost/settlement
                 cost(){ const pxUsd = this.otype==='limit' ? ((parseFloat(this.oprice)||0)/this.dispRate) : this.price; return (parseFloat(this.oqty)||0) * pxUsd; },
                 setPct(p){
                     if(this.side==='buy'){ let maxq= this.price>0 ? this.avail/this.price : 0; this.oqty=(maxq*p/100).toFixed(6); }
                     else { this.oqty=(this.holdingQty*p/100).toFixed(6); }
                 },
-                async tick(){
-                    try{
-                        const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
-                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change;
-                            // only track live price in MARKET mode; never overwrite a manual limit price (display currency)
-                            if(this.otype!=='limit'){ this.oprice=(q.price*this.dispRate); }
-                            // live chart: move the latest point with the price
-                            if(this.showChart && this.candles.length){ this.candles[this.candles.length-1].close = q.price; this.draw(); } }
-                        const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
-                        this._c=(this._c||0)+1; if(this._c%30===0) this.loadCandles();   // refresh bars periodically
+
+                init(){
+                    this.active = this.instruments.find(m=>m.id===this.id) || this.instruments.find(m=>m.group===this.group) || this.instruments[0] || null;
+                    if(this.active){ this.id=this.active.id; this.group=this.active.group; this.price=this.active.price; }
+                    if(this.id){ this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); }
+                    this.refreshList(); this._p=setInterval(()=>this.refreshList(), 5000);
+                    this.$watch('showChart', v=>{ if(v) this.loadCandles(); });
+                    window.addEventListener('resize', ()=>this.draw());
+                },
+
+                // switch symbol with NO page reload
+                select(m){
+                    this.active = m; this.id = m.id; this.price = m.price; this.change = 0;
+                    this.oqty=''; this.msg=''; this.pick=false;
+                    if(this.otype!=='limit') this.oprice = (m.price*this.dispRate);
+                    this.book={asks:[],bids:[],last:0}; this.candles=[];
+                    this.tick(); this.$nextTick(()=>this.loadCandles());
+                },
+                setGroup(g){ this.group=g; const first=this.instruments.find(m=>m.group===g); if(first) this.select(first); },
+
+                // live prices for the whole list (from DB, refreshed each minute by spot:seed)
+                async refreshList(){
+                    try{ const m=await (await fetch('{{ route('spot.prices') }}',{cache:'no-store'})).json();
+                        this.instruments.forEach(i=>{ if(m[i.id]!=null) i.price=+m[i.id]; });
+                        if(this.active && m[this.active.id]!=null && this.otype!=='limit'){ /* keep header price fresh via tick */ }
                     }catch(e){}
                 },
-                async loadCandles(){ try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.candles=d.values||[]; this.draw(); }catch(e){} },
+                async tick(){
+                    if(!this.id) return;
+                    try{
+                        const q=await (await fetch('{{ route('spot.quote') }}?id='+this.id, {cache:'no-store'})).json();
+                        if(q.price){ this.dir = q.price>this.price ? 1 : (q.price<this.price ? -1 : this.dir); this.price=q.price; this.change=q.change||0;
+                            if(this.active) this.active.price=q.price;
+                            if(this.otype!=='limit'){ this.oprice=(q.price*this.dispRate); }
+                            if(this.showChart && this.candles.length){ this.candles[this.candles.length-1].close = q.price; this.draw(); } }
+                        const b=await (await fetch('{{ route('spot.book') }}?id='+this.id, {cache:'no-store'})).json(); this.book=b;
+                        this._c=(this._c||0)+1; if(this._c%30===0) this.loadCandles();
+                    }catch(e){}
+                },
+                async loadCandles(){ if(!this.id) return; try{ const d=await (await fetch('{{ route('spot.candles') }}?id='+this.id+'&interval='+this.interval)).json(); this.candles=d.values||[]; this.draw(); }catch(e){} },
                 draw(){
                     const c=document.getElementById('spot-chart'); if(!c||!this.candles.length) return;
                     const pts=this.candles.map(v=>+v.close), times=this.candles.map(v=>v.time);
@@ -260,16 +281,12 @@
                     const grid=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)', txt=dark?'#7d8aa0':'#94a3b8';
                     const px=i=>padL+i*(W-padL-padR)/(Math.max(1,pts.length-1)), py=v=>padT+(max-v)/(max-min)*(H-padT-padB);
                     x.font='10px sans-serif'; x.fillStyle=txt; x.strokeStyle=grid; x.lineWidth=1;
-                    // horizontal grid + price labels
                     for(let r=0;r<=4;r++){ const v=max-(max-min)*r/4, y=py(v); x.beginPath(); x.moveTo(padL,y); x.lineTo(W-padR,y); x.stroke(); x.textAlign='right'; x.fillText(this.curSym+(v*this.dispRate).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}), padL-6, y+3); }
-                    // x time labels (first/mid/last)
                     x.textAlign='center';
                     [0, Math.floor(pts.length/2), pts.length-1].forEach(i=>{ const t=(times[i]||'').slice(5,16); x.fillText(t, px(i), H-7); });
-                    // area + line
                     const g=x.createLinearGradient(0,padT,0,H-padB); g.addColorStop(0,'rgba(16,185,129,.28)'); g.addColorStop(1,'rgba(16,185,129,0)');
                     x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.lineTo(px(pts.length-1),H-padB); x.lineTo(px(0),H-padB); x.closePath(); x.fillStyle=g; x.fill();
                     x.beginPath(); x.moveTo(px(0),py(pts[0])); pts.forEach((v,i)=>x.lineTo(px(i),py(v))); x.strokeStyle='#10b981'; x.lineWidth=2; x.stroke();
-                    // last price dashed marker
                     const last=pts[pts.length-1], ly=py(last); x.setLineDash([4,4]); x.strokeStyle='rgba(16,185,129,.6)'; x.beginPath(); x.moveTo(padL,ly); x.lineTo(W-padR,ly); x.stroke(); x.setLineDash([]);
                     x.fillStyle='#10b981'; x.beginPath(); x.arc(px(pts.length-1),ly,3,0,7); x.fill();
                 },

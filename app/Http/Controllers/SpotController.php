@@ -6,13 +6,14 @@ use App\Models\SpotHolding;
 use App\Models\SpotInstrument;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
+use App\Services\CubexMarketClient;
 use App\Services\SpotTradingService;
 use App\Services\TwelveDataClient;
 use Illuminate\Http\Request;
 
 class SpotController extends Controller
 {
-    public function __construct(private SpotTradingService $svc, private TwelveDataClient $td) {}
+    public function __construct(private SpotTradingService $svc, private TwelveDataClient $td, private CubexMarketClient $cubex) {}
 
     public function index(Request $request)
     {
@@ -80,23 +81,31 @@ class SpotController extends Controller
     public function quote(Request $request)
     {
         $ins = SpotInstrument::findOrFail($request->get('id'));
-        // /price is the most real-time value; /quote gives the day change %.
-        $p = $this->td->price($ins->symbol, $ins->exchange);
-        $q = $this->td->quote($ins->symbol, $ins->exchange);
-        $native = (float) ($p['price'] ?? $q['close'] ?? 0);
+        // Live price from CubeX (single symbol, no slash); fall back to the stored last price.
+        $key = str_replace('/', '', strtoupper($ins->symbol));
+        $native = (float) ($this->cubex->prices([$key])[$key] ?? 0);
         $price = $native > 0 ? round($this->svc->toUsd($native, $ins->currency), 6) : (float) $ins->last_price;
 
         // Auto-execute any resting limit orders the live price has now reached.
         if ($price > 0) {
+            $ins->update(['last_price' => $price]);
             $this->svc->triggerLimitOrders($ins, $price);
         }
 
         return response()->json([
             'price' => $price,
-            'change' => (float) ($q['percent_change'] ?? 0),
-            'name' => $q['name'] ?? $ins->name,
+            'change' => 0,
+            'name' => $ins->name,
             'last' => $price,
         ])->header('Cache-Control', 'no-store');
+    }
+
+    /** Live prices for the markets list — served from the DB (refreshed each minute by spot:seed). */
+    public function prices(Request $request)
+    {
+        return response()->json(
+            SpotInstrument::enabled()->pluck('last_price', 'id')->map(fn ($p) => (float) $p)
+        )->header('Cache-Control', 'no-store');
     }
 
     /** OHLC candles for the in-house chart. */
