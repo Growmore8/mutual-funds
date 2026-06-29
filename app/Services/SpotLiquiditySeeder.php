@@ -32,10 +32,10 @@ class SpotLiquiditySeeder
         $count = 0;
         $instruments = SpotInstrument::enabled()->get();
 
-        // Live prices from our own CubeX API — ONE request for every symbol, no rate limit.
-        $prices = $this->cubex->prices($instruments->pluck('symbol')->all());
+        // CubeX keys prices by plain symbol with no slash (BTC/USD -> BTCUSD); stocks unchanged.
+        $prices = $this->cubex->prices($instruments->map(fn ($i) => $this->cubexSymbol($i->symbol))->all());
         foreach ($instruments as $ins) {
-            $native = (float) ($prices[$ins->symbol] ?? 0);
+            $native = (float) ($prices[$this->cubexSymbol($ins->symbol)] ?? 0);
             if ($native > 0 && $this->seedFromPrice($ins, $native)) {
                 $count++;
             }
@@ -47,12 +47,19 @@ class SpotLiquiditySeeder
     /** Single-instrument refresh (admin). */
     public function seed(SpotInstrument $ins): bool
     {
-        $native = (float) ($this->cubex->prices([$ins->symbol])[$ins->symbol] ?? 0);
+        $key = $this->cubexSymbol($ins->symbol);
+        $native = (float) ($this->cubex->prices([$key])[$key] ?? 0);
         if ($native <= 0) {
             return false;
         }
 
         return $this->seedFromPrice($ins, $native);
+    }
+
+    /** CubeX symbol form: no slash, upper-case (BTC/USD -> BTCUSD, AAPL -> AAPL). */
+    private function cubexSymbol(string $symbol): string
+    {
+        return str_replace('/', '', strtoupper($symbol));
     }
 
     private function seedFromPrice(SpotInstrument $ins, float $native): bool
