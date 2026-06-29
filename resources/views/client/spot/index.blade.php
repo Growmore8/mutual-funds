@@ -234,11 +234,19 @@
                 init(){
                     this.active = this.instruments.find(m=>m.id===this.id) || this.instruments.find(m=>m.group===this.group) || this.instruments[0] || null;
                     if(this.active){ this.id=this.active.id; this.group=this.active.group; this.price=this.active.price; }
-                    if(this.id){ this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); }
-                    this.refreshList(); this._p=setInterval(()=>this.refreshList(), 3000);
+                    this.$nextTick(()=>{ if(this.id) this.loadCandles(); });
+                    this.start();
+                    // Pause all polling when the app/tab is hidden — saves battery and prevents lag on return.
+                    document.addEventListener('visibilitychange', ()=>{ document.hidden ? this.stop() : this.start(); });
                     this.$watch('showChart', v=>{ if(v) this.loadCandles(); });
                     window.addEventListener('resize', ()=>this.draw());
                 },
+                start(){
+                    if(this._t) return;
+                    if(this.id){ this.tick(); this._t=setInterval(()=>this.tick(), 3000); }
+                    this.refreshList(); this._p=setInterval(()=>this.refreshList(), 5000);
+                },
+                stop(){ clearInterval(this._t); clearInterval(this._p); this._t=null; this._p=null; },
 
                 // switch symbol with NO page reload
                 select(m){

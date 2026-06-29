@@ -74,7 +74,12 @@
                     return this.instruments.filter(m => (this.grp==='All' || this.grp===m.group)
                         && (m.symbol+' '+m.name).toLowerCase().includes(q));
                 },
-                init(){ this.tick(); this._t = setInterval(()=>this.tick(), 6000); },
+                init(){
+                    this.start();
+                    document.addEventListener('visibilitychange', ()=>{ document.hidden ? this.stop() : this.start(); });
+                },
+                start(){ if(this._t) return; this.tick(); this._t = setInterval(()=>this.tick(), 6000); },
+                stop(){ clearInterval(this._t); this._t = null; },
                 async tick(){
                     try {
                         const q = await (await fetch('{{ route('markets.quotes') }}', {cache:'no-store'})).json();
