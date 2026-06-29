@@ -18,7 +18,7 @@ class StatementMail extends Mailable
      * @param  array<string,mixed>  $data
      * @param  string|null  $pdfBytes  Raw PDF bytes to attach (null if no PDF engine).
      */
-    public function __construct(public array $data, public ?string $pdfBytes = null, public string $view = 'emails.statement', public ?string $subjectLine = null)
+    public function __construct(public array $data, public ?string $pdfBytes = null, public string $viewName = 'emails.statement', public ?string $subjectLine = null)
     {
     }
 
@@ -34,7 +34,7 @@ class StatementMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: $this->view);
+        return new Content(view: $this->viewName);
     }
 
     public function attachments(): array
