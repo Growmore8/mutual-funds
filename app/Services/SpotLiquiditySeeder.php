@@ -32,12 +32,13 @@ class SpotLiquiditySeeder
         $count = 0;
         $instruments = SpotInstrument::enabled()->get();
 
-        // Pull the WHOLE CubeX price universe in one request, then match locally.
-        // (Avoids per-symbol caps / unknown-symbol issues; CubeX keys by no-slash symbol e.g. BTCUSD.)
-        $raw = $this->cubex->prices([]);
+        // Request OUR symbols explicitly in chunks (the no-filter call only returns CubeX's
+        // small default watchlist). CubeX drops unknown symbols and returns the rest.
         $prices = [];
-        foreach ($raw as $sym => $p) {
-            $prices[strtoupper($sym)] = $p;
+        foreach ($instruments->map(fn ($i) => $this->cubexSymbol($i->symbol))->unique()->chunk(60) as $batch) {
+            foreach ($this->cubex->prices($batch->values()->all()) as $sym => $p) {
+                $prices[strtoupper($sym)] = $p;
+            }
         }
 
         foreach ($instruments as $ins) {
