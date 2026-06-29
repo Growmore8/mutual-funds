@@ -97,16 +97,21 @@ class SpotController extends Controller
         )->header('Cache-Control', 'no-store');
     }
 
-    /** OHLC candles for the in-house chart. */
+    /** OHLC candles for the in-house chart (cached per symbol+interval so the chart loads instantly). */
     public function candles(Request $request)
     {
         $ins = SpotInstrument::findOrFail($request->get('id'));
         $interval = $request->get('interval', '1day');
-        $data = $this->td->timeSeries($ins->symbol, $interval, 90, $ins->exchange);
-        $values = collect($data['values'] ?? [])->reverse()->values()->map(fn ($c) => [
-            'time' => $c['datetime'],
-            'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
-        ]);
+        $ttl = $interval === '1day' ? 600 : 60;   // intraday refreshes faster
+
+        $values = \Illuminate\Support\Facades\Cache::remember("spot.candles.{$ins->id}.{$interval}", $ttl, function () use ($ins, $interval) {
+            $data = $this->td->timeSeries($ins->symbol, $interval, 90, $ins->exchange);
+
+            return collect($data['values'] ?? [])->reverse()->values()->map(fn ($c) => [
+                'time' => $c['datetime'],
+                'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
+            ])->all();
+        });
 
         return response()->json(['values' => $values]);
     }
