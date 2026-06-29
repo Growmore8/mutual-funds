@@ -47,7 +47,7 @@ class CubexMarketClient
         }
 
         try {
-            $res = Http::withHeaders(['x-api-key' => $this->key])->timeout(8)->get($this->url, $params);
+            $res = Http::withHeaders(['x-api-key' => $this->key])->timeout(4)->connectTimeout(3)->get($this->url, $params);
             if (! $res->ok()) {
                 return [];
             }

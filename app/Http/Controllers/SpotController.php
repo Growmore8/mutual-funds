@@ -72,15 +72,12 @@ class SpotController extends Controller
     /** Live quote (price + change) for one instrument. */
     public function quote(Request $request)
     {
+        // Fast DB read only — never call CubeX from a web request (it blocks workers).
+        // The DB price is kept fresh by the spot:seed cron / spot:stream worker.
         $ins = SpotInstrument::findOrFail($request->get('id'));
-        // Live price from CubeX (single symbol, no slash); fall back to the stored last price.
-        $key = str_replace('/', '', strtoupper($ins->symbol));
-        $native = (float) ($this->cubex->prices([$key])[$key] ?? 0);
-        $price = $native > 0 ? round($this->svc->toUsd($native, $ins->currency), 6) : (float) $ins->last_price;
+        $price = (float) $ins->last_price;
 
-        // Auto-execute any resting limit orders the live price has now reached.
         if ($price > 0) {
-            $ins->update(['last_price' => $price]);
             $this->svc->triggerLimitOrders($ins, $price);
         }
 
