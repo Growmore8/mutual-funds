@@ -116,9 +116,9 @@ class SpotLiquiditySeeder
         // Auto-execute resting limit orders the live price has reached (fallback when nobody's watching).
         $this->engine->triggerLimitOrders($ins, $price);
 
-        // Clear previous maker quotes (leave real client orders alone).
-        SpotOrder::where('instrument_id', $ins->id)->where('is_maker', true)
-            ->whereIn('status', ['open', 'partial'])->update(['status' => 'cancelled']);
+        // Remove previous house maker quotes entirely (DELETE, not cancel) so the table
+        // doesn't accumulate millions of dead rows. Real client orders are untouched.
+        SpotOrder::where('instrument_id', $ins->id)->where('is_maker', true)->delete();
 
         // Level 0 sits at the exact reference price so market orders fill at qty × price.
         // Levels 1..n add depth around it for the order-book display.
