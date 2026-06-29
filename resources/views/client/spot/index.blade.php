@@ -5,7 +5,7 @@
         $upnl = $unrealized ?? 0;
         // Everything the front-end needs to switch symbols without a page reload.
         $insJson = $instruments->map(fn ($m) => [
-            'id' => $m->id, 'symbol' => $m->symbol, 'exchange' => $m->exchange, 'market' => $m->market,
+            'id' => $m->id, 'symbol' => $m->symbol, 'name' => $m->name, 'exchange' => $m->exchange, 'market' => $m->market,
             'currency' => $m->currency, 'price' => (float) $m->last_price, 'group' => $m->market === 'india' ? 'inr' : 'usd',
             'logo' => $m->logoUrl(), 'fallback' => $m->logoFallback(), 'mono' => $m->monogram(), 'color' => $m->badgeColor(),
         ])->values();
@@ -58,6 +58,7 @@
             {{-- Markets — desktop sidebar (live prices, no reload on select) --}}
             <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
                 <p class="text-xs font-semibold text-gray-500 mb-2" x-text="group==='inr' ? 'NSE · India' : 'NYSE · US/Global + Crypto'"></p>
+                <input x-model="lq" type="text" placeholder="Search…" autocomplete="off" class="w-full mb-2 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 rounded-lg text-xs py-1.5">
                 <div class="max-h-[560px] overflow-y-auto">
                     <template x-for="m in listed" :key="m.id">
                         <button @click="select(m)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5" :class="active && active.id===m.id ? 'bg-gray-100 dark:bg-white/10' : ''">
@@ -85,6 +86,7 @@
                         <p class="text-sm font-semibold" :class="change>=0?'text-emerald-500':'text-red-500'"><span x-text="(change>=0?'+':'')+change.toFixed(2)+'%'"></span></p>
                         {{-- mobile symbol picker --}}
                         <div x-show="pick" @click.outside="pick=false" x-cloak class="lg:hidden absolute z-30 mt-1 w-72 bg-white dark:bg-[#0a1730] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-2">
+                            <input x-model="lq" type="text" placeholder="Search…" autocomplete="off" class="w-full mb-2 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 rounded-lg text-sm py-1.5">
                             <div class="max-h-64 overflow-y-auto">
                                 <template x-for="m in listed" :key="'p'+m.id">
                                     <button @click="select(m)" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
@@ -203,7 +205,7 @@
                 group: '{{ $selGroup }}',
                 active: null,
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
-                interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true, pick:false,
+                interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true, pick:false, lq:'',
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', oqty:'',
                 avail: {{ (float)$account->balance }},
                 busy:false, msg:'', ok:false, _t:null, _p:null, _c:0,
@@ -213,7 +215,11 @@
                 get dispRate(){ return this.active && this.active.market==='india' ? this.usdInr : 1; },
                 get sym(){ return this.active ? this.active.symbol : '—'; },
                 get holdingQty(){ return this.active ? (+(this.holdings[this.active.id]||0)) : 0; },
-                get listed(){ return this.instruments.filter(m => m.group===this.group); },
+                get listed(){
+                    const q=(this.lq||'').toLowerCase();
+                    const arr=this.instruments.filter(m => m.group===this.group && (!q || (m.symbol+' '+(m.name||'')).toLowerCase().includes(q)));
+                    return q ? arr.slice(0,200) : arr.slice(0,40);   // cap rendered rows for speed
+                },
 
                 rowPrice(m){
                     if(!m.price) return '—';
