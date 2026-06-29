@@ -7,13 +7,12 @@ use App\Models\SpotOrder;
 
 /**
  * Seeds liquidity for the internal order book: posts "house" maker bids/asks around
- * the Twelve Data reference price so client orders always have a counterparty.
- * Run on a schedule (e.g. every minute) to keep quotes fresh.
+ * the live reference price (from the CubeX prices API) so client orders always have a
+ * counterparty. Run on a schedule (e.g. every minute) to keep quotes fresh.
  */
 class SpotLiquiditySeeder
 {
     public function __construct(
-        private TwelveDataClient $td,
         private SpotTradingService $engine,
         private CubexMarketClient $cubex,
     ) {}
@@ -24,54 +23,31 @@ class SpotLiquiditySeeder
 
     private float $depth = 1000;      // qty per maker level
 
-    private int $logosThisRun = 0;          // cap logo lookups per run to avoid bursts
-
-    private int $logosPerRun = 8;
-
     public function seedAll(): int
     {
-        $this->logosThisRun = 0;
+        if (! $this->cubex->configured()) {
+            return 0;
+        }
+
         $count = 0;
         $instruments = SpotInstrument::enabled()->get();
 
-        // Preferred source: our own CubeX external prices API — ONE request for every symbol,
-        // no per-symbol rate limit (unlike TwelveData direct).
-        if ($this->cubex->configured()) {
-            $prices = $this->cubex->prices($instruments->pluck('symbol')->all());
-            if (! empty($prices)) {
-                foreach ($instruments as $ins) {
-                    $native = (float) ($prices[$ins->symbol] ?? 0);
-                    if ($native > 0 && $this->seedFromPrice($ins, $native)) {
-                        $count++;
-                    }
-                }
-
-                return $count;
-            }
-        }
-
-        // Fallback: TwelveData, batched per exchange.
-        foreach ($instruments->groupBy(fn ($i) => (string) $i->exchange) as $exchange => $group) {
-            foreach ($group->chunk(100) as $chunk) {
-                $quotes = $this->td->quoteBatch($chunk->pluck('symbol')->all(), $exchange ?: null);
-                foreach ($chunk as $ins) {
-                    $q = $quotes[$ins->symbol] ?? null;
-                    $native = (float) ($q['close'] ?? $q['price'] ?? 0);
-                    if ($native > 0 && $this->seedFromPrice($ins, $native)) {
-                        $count++;
-                    }
-                }
+        // Live prices from our own CubeX API — ONE request for every symbol, no rate limit.
+        $prices = $this->cubex->prices($instruments->pluck('symbol')->all());
+        foreach ($instruments as $ins) {
+            $native = (float) ($prices[$ins->symbol] ?? 0);
+            if ($native > 0 && $this->seedFromPrice($ins, $native)) {
+                $count++;
             }
         }
 
         return $count;
     }
 
-    /** Single-instrument refresh (admin / fallback). */
+    /** Single-instrument refresh (admin). */
     public function seed(SpotInstrument $ins): bool
     {
-        $q = $this->td->quote($ins->symbol, $ins->exchange) ?? $this->td->price($ins->symbol, $ins->exchange);
-        $native = (float) ($q['close'] ?? $q['price'] ?? 0);
+        $native = (float) ($this->cubex->prices([$ins->symbol])[$ins->symbol] ?? 0);
         if ($native <= 0) {
             return false;
         }
@@ -85,14 +61,6 @@ class SpotLiquiditySeeder
         $price = round($this->engine->toUsd($native, $ins->currency), 6);
 
         $ins->update(['last_price' => $price]);
-
-        // Backfill the real logo once (Twelve Data /logo), then it's cached on the row.
-        if (empty($ins->logo_url) && $this->logosThisRun < $this->logosPerRun) {
-            $this->logosThisRun++;
-            if ($url = $this->td->logo($ins->symbol, $ins->exchange)) {
-                $ins->update(['logo_url' => $url]);
-            }
-        }
 
         // Auto-execute resting limit orders the live price has reached (fallback when nobody's watching).
         $this->engine->triggerLimitOrders($ins, $price);
