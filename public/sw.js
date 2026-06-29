@@ -1,6 +1,6 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
 // Cache-first for immutable hashed build assets; network-first for navigations.
-const CACHE = 'gc-funds-v9';
+const CACHE = 'gc-funds-v10';
 
 // The page asks us to activate the new version when the user taps "Update".
 self.addEventListener('message', (event) => {
@@ -37,10 +37,16 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-    );
-    self.clients.claim();
+    event.waitUntil((async () => {
+        // Navigation Preload: fetch the page in parallel with SW startup — kills the
+        // "tap → pause → page" lag on mobile PWAs (SW cold-start no longer blocks nav).
+        if (self.registration.navigationPreload) {
+            try { await self.registration.navigationPreload.enable(); } catch (e) {}
+        }
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+        await self.clients.claim();
+    })());
 });
 
 self.addEventListener('fetch', (event) => {
@@ -49,9 +55,15 @@ self.addEventListener('fetch', (event) => {
     if (req.method !== 'GET') return;
 
     if (req.mode === 'navigate') {
-        event.respondWith(
-            fetch(req).catch(() => caches.match('/offline.html'))
-        );
+        event.respondWith((async () => {
+            try {
+                const pre = await event.preloadResponse;   // started before the SW woke up
+                if (pre) return pre;
+                return await fetch(req);
+            } catch (e) {
+                return caches.match('/offline.html');
+            }
+        })());
         return;
     }
 
