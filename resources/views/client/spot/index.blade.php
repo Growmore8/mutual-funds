@@ -67,7 +67,7 @@
                             </span>
                             <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
                             <span class="text-[10px] text-gray-400" x-text="m.exchange"></span>
-                            <span class="text-gray-400 font-mono text-xs" x-text="rowPrice(m)"></span>
+                            <span class="font-mono text-xs transition-colors duration-300" :class="(m.dir||0)>0?'text-emerald-500':((m.dir||0)<0?'text-red-500':'text-gray-400')" x-text="rowPrice(m)"></span>
                         </button>
                     </template>
                 </div>
@@ -93,7 +93,7 @@
                                             <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" x-on:error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
                                         </span>
                                         <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
-                                        <span class="text-gray-400 font-mono text-xs" x-text="rowPrice(m)"></span>
+                                        <span class="font-mono text-xs transition-colors duration-300" :class="(m.dir||0)>0?'text-emerald-500':((m.dir||0)<0?'text-red-500':'text-gray-400')" x-text="rowPrice(m)"></span>
                                     </button>
                                 </template>
                             </div>
@@ -235,7 +235,7 @@
                     this.active = this.instruments.find(m=>m.id===this.id) || this.instruments.find(m=>m.group===this.group) || this.instruments[0] || null;
                     if(this.active){ this.id=this.active.id; this.group=this.active.group; this.price=this.active.price; }
                     if(this.id){ this.tick(); this._t=setInterval(()=>this.tick(), 2000); this.$nextTick(()=>this.loadCandles()); }
-                    this.refreshList(); this._p=setInterval(()=>this.refreshList(), 5000);
+                    this.refreshList(); this._p=setInterval(()=>this.refreshList(), 3000);
                     this.$watch('showChart', v=>{ if(v) this.loadCandles(); });
                     window.addEventListener('resize', ()=>this.draw());
                 },
@@ -250,11 +250,15 @@
                 },
                 setGroup(g){ this.group=g; const first=this.instruments.find(m=>m.group===g); if(first) this.select(first); },
 
-                // live prices for the whole list (from DB, refreshed each minute by spot:seed)
+                // live prices for the WHOLE list (every row, all the time) with up/down colour
                 async refreshList(){
                     try{ const m=await (await fetch('{{ route('spot.prices') }}',{cache:'no-store'})).json();
-                        this.instruments.forEach(i=>{ if(m[i.id]!=null) i.price=+m[i.id]; });
-                        if(this.active && m[this.active.id]!=null && this.otype!=='limit'){ /* keep header price fresh via tick */ }
+                        this.instruments.forEach(i=>{
+                            if(m[i.id]==null) return;
+                            const np=+m[i.id];
+                            if(i.price){ i.dir = np>i.price ? 1 : (np<i.price ? -1 : (i.dir||0)); }
+                            i.price=np;
+                        });
                     }catch(e){}
                 },
                 async tick(){
