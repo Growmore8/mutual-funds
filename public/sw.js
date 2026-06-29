@@ -1,6 +1,6 @@
 // GrowthCapital Funds — minimal service worker (enables PWA install).
-// Network-first; falls back to cache only for the offline shell.
-const CACHE = 'gc-funds-v8';
+// Cache-first for immutable hashed build assets; network-first for navigations.
+const CACHE = 'gc-funds-v9';
 
 // The page asks us to activate the new version when the user taps "Update".
 self.addEventListener('message', (event) => {
@@ -55,16 +55,32 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static same-origin assets: network-first so new builds always win,
-    // falling back to cache only when offline. (Cache-first served stale CSS/JS.)
     const url = new URL(req.url);
-    if (url.origin === self.location.origin && /\.(css|js|svg|png|ico|woff2?)$/.test(url.pathname)) {
+    if (url.origin !== self.location.origin) return;
+
+    // Immutable hashed build assets (/build/...): CACHE-FIRST — instant, no network wait.
+    if (url.pathname.startsWith('/build/')) {
         event.respondWith(
-            fetch(req).then((res) => {
+            caches.match(req).then((hit) => hit || fetch(req).then((res) => {
                 const copy = res.clone();
                 caches.open(CACHE).then((c) => c.put(req, copy));
                 return res;
-            }).catch(() => caches.match(req))
+            }))
+        );
+        return;
+    }
+
+    // Other static assets (logo, fonts, icons): stale-while-revalidate — serve cache fast, refresh in bg.
+    if (/\.(svg|png|ico|woff2?|jpg|jpeg|webp)$/.test(url.pathname)) {
+        event.respondWith(
+            caches.match(req).then((hit) => {
+                const net = fetch(req).then((res) => {
+                    const copy = res.clone();
+                    caches.open(CACHE).then((c) => c.put(req, copy));
+                    return res;
+                }).catch(() => hit);
+                return hit || net;
+            })
         );
     }
 });
