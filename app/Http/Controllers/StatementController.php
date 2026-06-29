@@ -30,6 +30,7 @@ class StatementController extends Controller
             try {
                 Mail::to($user->email)->send(new StatementMail($data, $pdf?->output()));
             } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Statement email failed for ' . $user->email . ': ' . $e->getMessage());
                 if ($request->wantsJson()) {
                     return response()->json(['ok' => false, 'message' => 'Could not send the statement right now. Please try again later.'], 500);
                 }
@@ -67,6 +68,7 @@ class StatementController extends Controller
             try {
                 Mail::to($user->email)->send(new StatementMail($payload, $pdf?->output(), 'emails.statement-generic', 'Your GrowthCapital statement · ' . $label));
             } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Statement email failed for ' . $user->email . ': ' . $e->getMessage());
                 if ($request->wantsJson()) {
                     return response()->json(['ok' => false, 'message' => 'Could not send the statement right now.'], 500);
                 }

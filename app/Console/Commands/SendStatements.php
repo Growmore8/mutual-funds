@@ -23,13 +23,19 @@ class SendStatements extends Command
         $sent = 0;
         User::where('role', 'client')->whereNotNull('email')->chunkById(100, function ($clients) use ($svc, $start, $end, $label, &$sent) {
             foreach ($clients as $client) {
-                $data = $svc->data($client, $start, $end, $label);
-                $pdf = $svc->pdf($data);
+                // One combined report: Mutual Fund + Spot Trading together (not separate emails).
+                $payload = [
+                    'client' => $client, 'name' => $client->name, 'email' => $client->email, 'code' => $client->clientCode(),
+                    'label' => $label, 'start' => $start, 'end' => $end, 'generatedAt' => now(), 'scope' => 'all',
+                    'fund' => $svc->data($client, $start, $end, $label),
+                    'spot' => $svc->spotSection($client, $start, $end),
+                ];
+                $pdf = $svc->pdfFromView('pdf.account-statement', $payload);
                 try {
-                    Mail::to($client->email)->send(new StatementMail($data, $pdf?->output()));
+                    Mail::to($client->email)->send(new StatementMail($payload, $pdf?->output(), 'emails.statement-generic', 'Your GrowthCapital statement · ' . $label));
                     $sent++;
                 } catch (\Throwable $e) {
-                    Log::warning('Statement email failed for ' . $client->email . ': ' . $e->getMessage());
+                    Log::error('Statement email failed for ' . $client->email . ': ' . $e->getMessage());
                 }
             }
         });
