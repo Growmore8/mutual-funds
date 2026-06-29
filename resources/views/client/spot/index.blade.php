@@ -234,11 +234,10 @@
                 init(){
                     this.active = this.instruments.find(m=>m.id===this.id) || this.instruments.find(m=>m.group===this.group) || this.instruments[0] || null;
                     if(this.active){ this.id=this.active.id; this.group=this.active.group; this.price=this.active.price; }
-                    this.$nextTick(()=>{ if(this.id) this.loadCandles(); });
-                    this.start();
-                    // Pause all polling when the app/tab is hidden — saves battery and prevents lag on return.
+                    // Let the page paint & become interactive FIRST, then start live data (~0.4s later) — feels instant.
+                    setTimeout(()=>{ this.start(); if(this.id) this.loadCandles(); }, 400);
                     document.addEventListener('visibilitychange', ()=>{ document.hidden ? this.stop() : this.start(); });
-                    this.$watch('showChart', v=>{ if(v) this.loadCandles(); });
+                    this.$watch('showChart', v=>{ if(v && this.id) this.loadCandles(); });
                     window.addEventListener('resize', ()=>this.draw());
                 },
                 start(){
