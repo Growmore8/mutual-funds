@@ -12,7 +12,11 @@ use App\Models\SpotOrder;
  */
 class SpotLiquiditySeeder
 {
-    public function __construct(private TwelveDataClient $td, private SpotTradingService $engine) {}
+    public function __construct(
+        private TwelveDataClient $td,
+        private SpotTradingService $engine,
+        private CubexMarketClient $cubex,
+    ) {}
 
     private float $spread = 0.0008;   // 0.08% per level
 
@@ -28,9 +32,26 @@ class SpotLiquiditySeeder
     {
         $this->logosThisRun = 0;
         $count = 0;
+        $instruments = SpotInstrument::enabled()->get();
 
-        // Fetch quotes in ONE request per exchange (batched) — avoids rate-limiting with many symbols.
-        foreach (SpotInstrument::enabled()->get()->groupBy(fn ($i) => (string) $i->exchange) as $exchange => $group) {
+        // Preferred source: our own CubeX external prices API — ONE request for every symbol,
+        // no per-symbol rate limit (unlike TwelveData direct).
+        if ($this->cubex->configured()) {
+            $prices = $this->cubex->prices($instruments->pluck('symbol')->all());
+            if (! empty($prices)) {
+                foreach ($instruments as $ins) {
+                    $native = (float) ($prices[$ins->symbol] ?? 0);
+                    if ($native > 0 && $this->seedFromPrice($ins, $native)) {
+                        $count++;
+                    }
+                }
+
+                return $count;
+            }
+        }
+
+        // Fallback: TwelveData, batched per exchange.
+        foreach ($instruments->groupBy(fn ($i) => (string) $i->exchange) as $exchange => $group) {
             foreach ($group->chunk(100) as $chunk) {
                 $quotes = $this->td->quoteBatch($chunk->pluck('symbol')->all(), $exchange ?: null);
                 foreach ($chunk as $ins) {
