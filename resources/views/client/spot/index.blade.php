@@ -63,7 +63,7 @@
                         <button @click="select(m)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5" :class="active && active.id===m.id ? 'bg-gray-100 dark:bg-white/10' : ''">
                             <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" :style="'background:'+m.color">
                                 <span x-text="m.mono"></span>
-                                <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" @error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
+                                <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" x-on:error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
                             </span>
                             <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
                             <span class="text-[10px] text-gray-400" x-text="m.exchange"></span>
@@ -90,7 +90,7 @@
                                     <button @click="select(m)" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="relative w-6 h-6 shrink-0 rounded-full grid place-items-center text-white text-[9px] font-bold overflow-hidden" :style="'background:'+m.color">
                                             <span x-text="m.mono"></span>
-                                            <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" @error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
+                                            <template x-if="m.logo"><img :src="m.logo" :data-fallback="m.fallback" class="absolute inset-0 w-full h-full object-cover" x-on:error="if($el.dataset.fallback){$el.src=$el.dataset.fallback;$el.dataset.fallback='';}else{$el.remove();}"></template>
                                         </span>
                                         <span class="flex-1 min-w-0 text-left text-gray-900 dark:text-white truncate" x-text="m.symbol"></span>
                                         <span class="text-gray-400 font-mono text-xs" x-text="rowPrice(m)"></span>
