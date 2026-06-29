@@ -34,8 +34,13 @@ class SpotLiquiditySeeder
 
         // Request OUR symbols explicitly in chunks (the no-filter call only returns CubeX's
         // small default watchlist). CubeX drops unknown symbols and returns the rest.
+        // Pause between chunks so the burst isn't rate-limited (which silently dropped later chunks).
         $prices = [];
-        foreach ($instruments->map(fn ($i) => $this->cubexSymbol($i->symbol))->unique()->chunk(60) as $batch) {
+        $batches = $instruments->map(fn ($i) => $this->cubexSymbol($i->symbol))->unique()->chunk(50)->values();
+        foreach ($batches as $n => $batch) {
+            if ($n > 0) {
+                usleep(350000); // 0.35s between requests
+            }
             foreach ($this->cubex->prices($batch->values()->all()) as $sym => $p) {
                 $prices[strtoupper($sym)] = $p;
             }
