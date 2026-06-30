@@ -70,6 +70,9 @@
         </div>
     @endif
 
+    {{-- FIFA World Cup 2026 promo (auto-hides after the final) --}}
+    <x-worldcup-banner />
+
     {{-- Welcome --}}
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>

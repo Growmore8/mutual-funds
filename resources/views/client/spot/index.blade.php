@@ -11,6 +11,9 @@
         ])->values();
         $holdingsJson = $holdings->pluck('qty', 'instrument_id');
         $selGroup = ($selected->market ?? 'india') === 'india' ? 'inr' : 'usd';
+        $wcCfg = config('promo.worldcup');
+        $wcActive = ($wcCfg['enabled'] ?? false) && now()->lt(\Illuminate\Support\Carbon::parse($wcCfg['until'] ?? '2026-07-20')->endOfDay());
+        $wcSyms = $wcActive ? array_values($wcCfg['symbols'] ?? []) : [];
     @endphp
 
     <div x-data="spot()" x-init="init()" class="-mx-1">
@@ -50,6 +53,7 @@
         <div class="flex gap-2 mx-1 mb-3">
             <button @click="setGroup('usd')" :class="group==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></button>
             <button @click="setGroup('inr')" :class="group==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NSE <span class="font-normal text-[11px]">India · $</span></button>
+            <button x-show="wcActive" @click="wc=!wc" :class="wc ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="shrink-0 px-3 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">⚽ World Cup</button>
         </div>
 
         {{-- ============ Terminal grid (desktop) / stacked (mobile) ============ --}}
@@ -57,7 +61,7 @@
 
             {{-- Markets — desktop sidebar (live prices, no reload on select) --}}
             <aside class="hidden lg:block gcard rounded-2xl p-3 bg-white dark:bg-white/[0.04]">
-                <p class="text-xs font-semibold text-gray-500 mb-2" x-text="group==='inr' ? 'NSE · India' : 'NYSE · US/Global + Crypto'"></p>
+                <p class="text-xs font-semibold text-gray-500 mb-2" x-text="wc ? '⚽ World Cup 2026' : (group==='inr' ? 'NSE · India' : 'NYSE · US/Global + Crypto')"></p>
                 <input x-model="lq" type="text" placeholder="Search…" autocomplete="off" class="w-full mb-2 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 rounded-lg text-xs py-1.5">
                 <div class="max-h-[560px] overflow-y-auto">
                     <template x-for="m in listed" :key="m.id">
@@ -206,6 +210,7 @@
                 active: null,
                 id: {{ $selected->id ?? 'null' }}, price: {{ (float)($selected->last_price ?? 0) }}, change: 0,
                 interval: '1min', book: {asks:[], bids:[], last:0}, showChart: true, pick:false, lq:'',
+                wc:false, wcActive: {{ $wcActive ? 'true' : 'false' }}, wcSyms: @json($wcSyms),
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', oqty:'',
                 avail: {{ (float)$account->balance }},
                 busy:false, msg:'', ok:false, _t:null, _p:null, _c:0,
@@ -217,6 +222,9 @@
                 get holdingQty(){ return this.active ? (+(this.holdings[this.active.id]||0)) : 0; },
                 get listed(){
                     const q=(this.lq||'').toLowerCase();
+                    if(this.wc && this.wcActive){
+                        return this.instruments.filter(m => this.wcSyms.includes(m.symbol) && (!q || (m.symbol+' '+(m.name||'')).toLowerCase().includes(q)));
+                    }
                     const arr=this.instruments.filter(m => m.group===this.group && (!q || (m.symbol+' '+(m.name||'')).toLowerCase().includes(q)));
                     return q ? arr.slice(0,200) : arr.slice(0,40);   // cap rendered rows for speed
                 },
@@ -240,6 +248,7 @@
                 init(){
                     this.active = this.instruments.find(m=>m.id===this.id) || this.instruments.find(m=>m.group===this.group) || this.instruments[0] || null;
                     if(this.active){ this.id=this.active.id; this.group=this.active.group; this.price=this.active.price; }
+                    try{ if(this.wcActive && new URLSearchParams(location.search).get('wc')==='1') this.wc=true; }catch(e){}
                     // Let the page paint & become interactive FIRST, then start live data (~0.4s later) — feels instant.
                     setTimeout(()=>{ this.start(); if(this.id) this.loadCandles(); }, 400);
                     document.addEventListener('visibilitychange', ()=>{ document.hidden ? this.stop() : this.start(); });
