@@ -53,7 +53,6 @@
         <div class="flex gap-2 mx-1 mb-3">
             <button @click="setGroup('usd')" :class="group==='usd' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NYSE <span class="font-normal text-[11px]">US/Global + Crypto · $</span></button>
             <button @click="setGroup('inr')" :class="group==='inr' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold">NSE <span class="font-normal text-[11px]">India · $</span></button>
-            <button x-show="wcActive" @click="wc=!wc" :class="wc ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'" class="shrink-0 px-3 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">⚽ World Cup</button>
         </div>
 
         {{-- ============ Terminal grid (desktop) / stacked (mobile) ============ --}}
@@ -270,7 +269,7 @@
                     this.book={asks:[],bids:[],last:0}; this.candles=[];
                     this.tick(); this.$nextTick(()=>this.loadCandles());
                 },
-                setGroup(g){ this.group=g; const first=this.instruments.find(m=>m.group===g); if(first) this.select(first); },
+                setGroup(g){ this.wc=false; this.group=g; const first=this.instruments.find(m=>m.group===g); if(first) this.select(first); },
 
                 // live prices for the WHOLE list (every row, all the time) with up/down colour
                 async refreshList(){
