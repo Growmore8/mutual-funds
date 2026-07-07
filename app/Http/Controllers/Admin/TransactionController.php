@@ -248,7 +248,7 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'fund_account_id' => ['required', 'exists:fund_accounts,id'],
-            'direction' => ['required', 'in:mf_to_spot,spot_to_mf'],
+            'direction' => ['required', 'in:mf_to_spot,spot_to_mf,mf_reinvest,spot_reinvest'],
             'amount' => ['required', 'numeric', 'min:0.01'],
         ]);
 
@@ -256,6 +256,49 @@ class TransactionController extends Controller
         $user = $account->user;
         $amount = round((float) $data['amount'], 2);
         $spot = app(\App\Services\SpotTradingService::class);
+
+        // Reinvest MF profit -> MF capital (compound); net ledger balance unchanged.
+        if ($data['direction'] === 'mf_reinvest') {
+            $max = $account->availableToWithdraw();
+            if ($amount > $max + 0.001) {
+                return back()->with('status', 'Only mutual-fund profit can be reinvested (max $' . number_format($max, 2) . ' for ' . $account->code() . ').');
+            }
+            $base = (float) (Transaction::where('fund_account_id', $account->id)->latest('id')->value('balance_after') ?? 0);
+            $wtx = Transaction::create(['user_id' => $user->id, 'fund_account_id' => $account->id, 'type' => 'withdrawal',
+                'amount' => -$amount, 'currency' => 'USD', 'balance_after' => round($base - $amount, 2),
+                'status' => 'completed', 'description' => 'Reinvested profit to capital (admin)']);
+            $wd = Withdrawal::create(['user_id' => $user->id, 'fund_account_id' => $account->id, 'purpose' => 'fund',
+                'amount' => $amount, 'currency' => 'USD', 'method' => 'Reinvest profit to capital', 'status' => 'approved', 'processed_at' => now()]);
+            $wtx->update(['source_type' => Withdrawal::class, 'source_id' => $wd->id]);
+            $dtx = Transaction::create(['user_id' => $user->id, 'fund_account_id' => $account->id, 'type' => 'deposit',
+                'amount' => $amount, 'currency' => 'USD', 'balance_after' => round($base, 2),
+                'status' => 'completed', 'description' => 'Reinvested profit to capital (admin)']);
+            $dep = Deposit::create(['user_id' => $user->id, 'fund_account_id' => $account->id,
+                'pool_account_id' => $account->pool_account_id, 'account_type_id' => $account->account_type_id,
+                'amount' => $amount, 'currency' => 'USD', 'status' => 'approved', 'value_date' => now()->toDateString(), 'approved_at' => now()]);
+            $dtx->update(['source_type' => Deposit::class, 'source_id' => $dep->id]);
+            $account->recalcPlan();
+
+            return back()->with('status', '$' . number_format($amount, 2) . ' profit reinvested into Mutual Fund capital for ' . $user->name . '.');
+        }
+
+        // Reinvest Spot profit -> Spot capital (money stays in the wallet, counted as capital).
+        if ($data['direction'] === 'spot_reinvest') {
+            $bal = (float) $spot->account($user->id, 'USD')->balance;
+            $dep = (float) Deposit::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')->get(['amount', 'currency', 'usd_amount'])
+                ->sum(fn ($d) => $d->usd_amount !== null ? (float) $d->usd_amount : $spot->toUsd((float) $d->amount, $d->currency));
+            $wdw = (float) Withdrawal::where('user_id', $user->id)->where('purpose', 'spot')->where('status', 'approved')->get(['amount', 'currency', 'usd_amount'])
+                ->sum(fn ($w) => $w->usd_amount !== null ? (float) $w->usd_amount : $spot->toUsd((float) $w->amount, $w->currency));
+            $max = max(0, round($bal - ($dep - $wdw), 2));
+            if ($amount > $max + 0.001) {
+                return back()->with('status', 'Only spot profit can be reinvested (max $' . number_format($max, 2) . ') for ' . $user->name . '.');
+            }
+            Deposit::create(['user_id' => $user->id, 'purpose' => 'spot', 'currency' => 'USD',
+                'amount' => $amount, 'usd_amount' => $amount, 'method' => 'Reinvest profit to capital', 'status' => 'approved',
+                'value_date' => now()->toDateString(), 'approved_at' => now()]);
+
+            return back()->with('status', '$' . number_format($amount, 2) . ' spot profit locked into capital for ' . $user->name . '.');
+        }
 
         if ($data['direction'] === 'mf_to_spot') {
             $max = $account->availableToWithdraw();

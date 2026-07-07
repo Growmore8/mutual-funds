@@ -264,14 +264,14 @@
             <div x-show="transfer" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/40" @click="transfer=false"></div>
                 <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                    <h3 class="font-semibold text-gray-900 mb-4"><i class="fa-solid fa-right-left text-blue-600 mr-1"></i> Within Account Transfer</h3>
+                    <h3 class="font-semibold text-gray-900 mb-4"><i class="fa-solid fa-right-left text-blue-600 mr-1"></i> Transfer &amp; Reinvest</h3>
                     <form method="POST" action="{{ route('admin.transactions.transfer') }}" class="space-y-3 text-sm" autocomplete="off"
-                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dir:'mf_to_spot', amt:'',
-                                    get fromLabel(){ return this.dir==='mf_to_spot' ? 'Mutual Fund (profit)' : 'Spot wallet'; },
-                                    get toLabel(){ return this.dir==='mf_to_spot' ? 'Spot wallet' : 'Mutual Fund'; },
-                                    get avail(){ if(!this.sel) return 0; return this.dir==='mf_to_spot' ? this.sel.mfProfit : this.sel.spot; },
-                                    get over(){ return parseFloat(this.amt) > this.avail + 0.001; },
-                                    flip(){ this.dir = this.dir==='mf_to_spot' ? 'spot_to_mf' : 'mf_to_spot'; } }">
+                          x-data="{ q:'', open:false, sel:null, accs:@js($accounts), dir:'mf_reinvest', amt:'',
+                                    meta:{ mf_reinvest:{from:'Mutual Fund profit',to:'Mutual Fund capital',src:'mfProfit'}, spot_reinvest:{from:'Spot profit',to:'Spot capital',src:'spot'}, mf_to_spot:{from:'Mutual Fund profit',to:'Spot wallet',src:'mfProfit'}, spot_to_mf:{from:'Spot wallet',to:'Mutual Fund capital',src:'spot'} },
+                                    get fromLabel(){ return this.meta[this.dir].from; },
+                                    get toLabel(){ return this.meta[this.dir].to; },
+                                    get avail(){ if(!this.sel) return 0; return this.sel[this.meta[this.dir].src] || 0; },
+                                    get over(){ return parseFloat(this.amt) > this.avail + 0.001; } }">
                         @csrf
                         <input type="hidden" name="direction" :value="dir">
                         <div class="relative">
@@ -291,13 +291,20 @@
                             <p x-show="sel" x-cloak class="text-xs text-emerald-600 mt-1">Selected: <span x-text="sel?.label"></span></p>
                         </div>
 
-                        {{-- From → To with flip --}}
-                        <div class="relative border border-gray-200 rounded-lg px-3">
-                            <div class="flex items-center justify-between py-3 border-b border-gray-100"><span class="text-xs text-gray-400 w-12">From</span><span class="font-semibold text-gray-900" x-text="fromLabel"></span></div>
-                            <button type="button" @click="flip()" class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 w-8 h-8 grid place-items-center rounded-full bg-blue-600 text-white shadow"><i class="fa-solid fa-arrow-down-up-across-line text-xs"></i></button>
-                            <div class="flex items-center justify-between py-3"><span class="text-xs text-gray-400 w-12">To</span><span class="font-semibold text-gray-900" x-text="toLabel"></span></div>
+                        <div>
+                            <label class="block text-gray-700 mb-1">Action</label>
+                            <select x-model="dir" @change="amt=''" class="w-full border-gray-300 rounded-md">
+                                <option value="mf_reinvest">Reinvest Mutual Fund profit → capital</option>
+                                <option value="spot_reinvest">Reinvest Spot profit → capital</option>
+                                <option value="mf_to_spot">Move MF profit → Spot wallet</option>
+                                <option value="spot_to_mf">Move Spot → MF capital</option>
+                            </select>
                         </div>
-                        <p class="text-[11px] text-amber-600" x-show="dir==='mf_to_spot'" x-cloak><i class="fa-solid fa-circle-info"></i> Only mutual-fund profit can be moved (not invested capital).</p>
+                        <div class="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-2.5">
+                            <div><span class="text-[11px] text-gray-400 block">From</span><span class="font-semibold text-gray-900" x-text="fromLabel"></span></div>
+                            <i class="fa-solid fa-arrow-right text-emerald-500"></i>
+                            <div class="text-right"><span class="text-[11px] text-gray-400 block">To</span><span class="font-semibold text-gray-900" x-text="toLabel"></span></div>
+                        </div>
 
                         <div>
                             <label class="block text-gray-700 mb-1">Amount (USD)</label>
