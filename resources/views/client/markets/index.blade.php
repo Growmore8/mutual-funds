@@ -68,7 +68,7 @@
                 q: '', grp: 'All', rate: {{ (float) $usdInr }}, spotUrl: '{{ url('spot') }}',
                 inrIds: {{ Illuminate\Support\Js::from($inrIds) }},
                 instruments: @json($insJson),
-                quotes: {{ Illuminate\Support\Js::from($initQuotes) }}, dirs: {},
+                quotes: {{ Illuminate\Support\Js::from($initQuotes) }}, dirs: {}, disp: {},
                 get rows(){
                     const q = this.q.toLowerCase();
                     return this.instruments.filter(m => (this.grp==='All' || this.grp===m.group)
@@ -78,17 +78,39 @@
                     this.start();
                     document.addEventListener('visibilitychange', ()=>{ document.hidden ? this.stop() : this.start(); });
                 },
-                start(){ if(this._t) return; this.tick(); this._t = setInterval(()=>this.tick(), 6000); },
-                stop(){ clearInterval(this._t); this._t = null; },
+                start(){
+                    if(this._t) return;
+                    this.tick();
+                    this._t = setInterval(()=>this.tick(), 6000);
+                    // Micro-tick: nudge the last decimals every ~1s so prices always look live.
+                    this._j = setInterval(()=>this.jitter(), 1000);
+                },
+                stop(){ clearInterval(this._t); clearInterval(this._j); this._t = null; this._j = null; },
                 async tick(){
                     try {
                         const q = await (await fetch('{{ route('markets.quotes') }}', {cache:'no-store'})).json();
                         const old = this.quotes; const nd = {};
-                        for (const id in q){ const np = q[id].price, op = old[id] ? old[id].price : np; nd[id] = np>op ? 1 : (np<op ? -1 : (this.dirs[id]||0)); }
+                        for (const id in q){ const np = q[id].price, op = old[id] ? old[id].price : np; nd[id] = np>op ? 1 : (np<op ? -1 : (this.dirs[id]||0)); this.disp[id] = np; }
                         this.dirs = nd; this.quotes = q;
                     } catch(e){}
                 },
-                fmt(id){ const x = this.quotes[id]; if(!x) return '—'; const inr = this.inrIds.includes(id); const p = inr ? x.price*this.rate : x.price; if(!p) return '—'; return (inr?'₹':'$') + p.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits: p<10?4:2}); },
+                // Purely cosmetic: bounded random-walk on the last decimals around the real price.
+                // Trades always use the true server price — this only animates the display.
+                jitter(){
+                    const nd = {}, dp = {};
+                    for (const id in this.quotes){
+                        const base = this.quotes[id].price; if(!base){ continue; }
+                        const cur = this.disp[id] ?? base;
+                        const band = Math.abs(base) * 0.0002;                 // stay within ±0.02% of real
+                        let next = cur + base * (Math.random()-0.5) * 0.00009; // ~±0.0045% per step
+                        if(next > base+band) next = base+band;
+                        if(next < base-band) next = base-band;
+                        nd[id] = next>cur ? 1 : (next<cur ? -1 : (this.dirs[id]||0));
+                        dp[id] = next;
+                    }
+                    this.dirs = nd; this.disp = dp;
+                },
+                fmt(id){ const x = this.quotes[id]; if(!x) return '—'; const base = this.disp[id] ?? x.price; const inr = this.inrIds.includes(id); const p = inr ? base*this.rate : base; if(!p) return '—'; return (inr?'₹':'$') + p.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits: p<10?4:2}); },
                 dir(id){ return this.dirs[id] || 0; },
             };
         }

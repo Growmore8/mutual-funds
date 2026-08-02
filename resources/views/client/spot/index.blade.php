@@ -174,7 +174,7 @@
                         <div class="space-y-0.5 text-[11px] font-mono">
                             <template x-for="a in book.asks.slice().reverse()" :key="'a'+a.price"><div class="flex justify-between"><span class="text-red-500" x-text="pn(a.price)"></span><span class="text-gray-400" x-text="a.qty"></span></div></template>
                         </div>
-                        <div class="my-1 text-base font-extrabold transition-colors duration-300" :class="dir>0?'text-emerald-500':(dir<0?'text-red-500':'text-gray-700 dark:text-gray-200')" x-text="pf(price||book.last)"></div>
+                        <div class="my-1 text-base font-extrabold transition-colors duration-300" :class="dir>0?'text-emerald-500':(dir<0?'text-red-500':'text-gray-700 dark:text-gray-200')" x-text="pf(bigPx()||book.last)"></div>
                         <div class="space-y-0.5 text-[11px] font-mono">
                             <template x-for="b in book.bids" :key="'b'+b.price"><div class="flex justify-between"><span class="text-emerald-500" x-text="pn(b.price)"></span><span class="text-gray-400" x-text="b.qty"></span></div></template>
                         </div>
@@ -212,8 +212,8 @@
                 wc:false, wcActive: {{ $wcActive ? 'true' : 'false' }}, wcSyms: @json($wcSyms),
                 side:'buy', otype:'market', oprice:'{{ (float)($selected->last_price ?? 0) }}', oqty:'',
                 avail: {{ (float)$account->balance }},
-                busy:false, msg:'', ok:false, _t:null, _p:null, _c:0,
-                candles: [], dir: 0,
+                busy:false, msg:'', ok:false, _t:null, _p:null, _j:null, _c:0,
+                candles: [], dir: 0, jd: {},
 
                 get curSym(){ return this.active && this.active.market==='india' ? '₹' : '$'; },
                 get dispRate(){ return this.active && this.active.market==='india' ? this.usdInr : 1; },
@@ -229,8 +229,9 @@
                 },
 
                 rowPrice(m){
-                    if(!m.price) return '—';
-                    var v = m.market==='india' ? m.price*this.usdInr : m.price;
+                    const raw = this.jd[m.id] ?? m.price;
+                    if(!raw) return '—';
+                    var v = m.market==='india' ? raw*this.usdInr : raw;
                     var sym = m.market==='india' ? '₹' : '$';
                     return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
                 },
@@ -258,8 +259,29 @@
                     if(this._t) return;
                     if(this.id){ this.tick(); this._t=setInterval(()=>this.tick(), 3000); }
                     this.refreshList(); this._p=setInterval(()=>this.refreshList(), 5000);
+                    // Micro-tick: nudge the last decimals every ~1s so prices always look live.
+                    this._j=setInterval(()=>this.jitter(), 1000);
                 },
-                stop(){ clearInterval(this._t); clearInterval(this._p); this._t=null; this._p=null; },
+                stop(){ clearInterval(this._t); clearInterval(this._p); clearInterval(this._j); this._t=null; this._p=null; this._j=null; },
+
+                // Purely cosmetic: bounded random-walk on the last decimals around the real price.
+                // Display only (jd) — this.price and all order math stay on the true server price.
+                jitter(){
+                    const jd={};
+                    for(const i of this.instruments){
+                        const base=i.price; if(!base){ continue; }
+                        const cur=this.jd[i.id] ?? base;
+                        const band=Math.abs(base)*0.0002;                  // within ±0.02% of real
+                        let next=cur + base*(Math.random()-0.5)*0.00009;    // ~±0.0045% per step
+                        if(next>base+band) next=base+band;
+                        if(next<base-band) next=base-band;
+                        i.dir = next>cur ? 1 : (next<cur ? -1 : (i.dir||0));
+                        jd[i.id]=next;
+                        if(i.id===this.id) this.dir=i.dir;
+                    }
+                    this.jd=jd;
+                },
+                bigPx(){ return (this.jd[this.id] ?? this.price); },
 
                 // switch symbol with NO page reload
                 select(m){
