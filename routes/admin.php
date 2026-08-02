@@ -148,6 +148,9 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::get('/settings/notify', [SettingsController::class, 'notify'])->name('settings.notify');
     Route::post('/settings/notify', [SettingsController::class, 'updateNotify'])->name('settings.notify.update');
     Route::post('/settings/notify/test', [SettingsController::class, 'testNotify'])->name('settings.notify.test');
+    Route::get('/settings/market-data', [SettingsController::class, 'marketData'])->name('settings.marketdata');
+    Route::post('/settings/market-data', [SettingsController::class, 'updateMarketData'])->name('settings.marketdata.update');
+    Route::post('/settings/market-data/test', [SettingsController::class, 'testMarketData'])->name('settings.marketdata.test');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
 

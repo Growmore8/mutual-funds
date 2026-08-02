@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PoolAccount;
 use App\Models\PoolSnapshot;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -19,8 +20,9 @@ class PoolApiClient
         private ?string $baseUrl = null,
         private ?string $apiKey = null,
     ) {
-        $this->baseUrl ??= config('services.pool.url');
-        $this->apiKey ??= config('services.pool.key');
+        // Admin-managed values (DB) take precedence; .env stays as fallback.
+        $this->baseUrl ??= (Setting::get('pool_url') ?: config('services.pool.url'));
+        $this->apiKey ??= (Setting::get('pool_key') ?: config('services.pool.key'));
     }
 
     public function isLive(): bool

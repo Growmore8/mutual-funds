@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -20,8 +21,9 @@ class CubexMarketClient
 
     public function __construct()
     {
-        $this->url = config('services.cubex.prices_url');
-        $this->key = config('services.cubex.key');
+        // Admin-managed values (DB) take precedence; .env stays as fallback.
+        $this->url = Setting::get('cubex_prices_url') ?: config('services.cubex.prices_url');
+        $this->key = Setting::get('cubex_api_key') ?: config('services.cubex.key');
     }
 
     public function configured(): bool
@@ -87,7 +89,7 @@ class CubexMarketClient
         }
 
         // Candles live on the same host as prices: .../v1/prices -> .../v1/candles (overridable).
-        $url = config('services.cubex.candles_url');
+        $url = Setting::get('cubex_candles_url') ?: config('services.cubex.candles_url');
         if (empty($url)) {
             $url = str_replace('/prices', '/candles', (string) $this->url);
         }

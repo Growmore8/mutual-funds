@@ -83,6 +83,7 @@
             {!! $link('admin.settings.security', 'Security', 'fa-shield-halved') !!}
             {!! $link('admin.settings.branding', 'Branding', 'fa-palette') !!}
             {!! $link('admin.settings.notify', 'SMS (Notify.lk)', 'fa-comment-sms') !!}
+            {!! $link('admin.settings.marketdata', 'Market Data / API', 'fa-plug') !!}
             <button type="button" onclick="var d=document.documentElement.classList.toggle('dark');localStorage.setItem('theme',d?'dark':'light');"
                     class="w-full text-left {{ $base }} {{ $idle }}">
                 <i class="fa-solid fa-circle-half-stroke w-5 text-center"></i><span>Appearance</span>

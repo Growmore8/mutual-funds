@@ -139,6 +139,63 @@ class SettingsController extends Controller
         return view('admin.settings-security');
     }
 
+    /** Market data / API keys (CubeX + Pool) — DB-managed, .env fallback. */
+    public function marketData()
+    {
+        return view('admin.settings-marketdata', [
+            'cubexPricesUrl' => Setting::get('cubex_prices_url', config('services.cubex.prices_url')),
+            'cubexCandlesUrl' => Setting::get('cubex_candles_url', config('services.cubex.candles_url')),
+            'cubexKey' => Setting::get('cubex_api_key', config('services.cubex.key')),
+            'poolUrl' => Setting::get('pool_url', config('services.pool.url')),
+            'poolKey' => Setting::get('pool_key', config('services.pool.key')),
+        ]);
+    }
+
+    public function updateMarketData(Request $request)
+    {
+        $data = $request->validate([
+            'cubex_prices_url' => ['nullable', 'url', 'max:255'],
+            'cubex_candles_url' => ['nullable', 'url', 'max:255'],
+            'cubex_api_key' => ['nullable', 'string', 'max:191'],
+            'pool_url' => ['nullable', 'url', 'max:255'],
+            'pool_key' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        Setting::put('cubex_prices_url', trim((string) ($data['cubex_prices_url'] ?? '')));
+        Setting::put('cubex_candles_url', trim((string) ($data['cubex_candles_url'] ?? '')));
+        Setting::put('pool_url', trim((string) ($data['pool_url'] ?? '')));
+
+        // Keys: only overwrite when a new value is typed (leave blank to keep current).
+        if (! empty($data['cubex_api_key'])) {
+            Setting::put('cubex_api_key', trim($data['cubex_api_key']));
+        }
+        if (! empty($data['pool_key'])) {
+            Setting::put('pool_key', trim($data['pool_key']));
+        }
+
+        return back()->with('status', 'Market-data settings saved.');
+    }
+
+    public function testMarketData()
+    {
+        $cubex = app(\App\Services\CubexMarketClient::class);
+        $lines = [];
+
+        if (! $cubex->configured()) {
+            $lines[] = 'CubeX: not configured (set prices URL + API key).';
+        } else {
+            $price = $cubex->prices(['EURUSD'])['EURUSD'] ?? null;
+            $lines[] = $price ? "CubeX prices: OK ✔ (EURUSD = {$price})" : 'CubeX prices: FAILED ✖ (check key/URL).';
+            $candles = $cubex->candles('EURUSD', '1h', 3);
+            $lines[] = $candles ? 'CubeX candles: OK ✔ (' . count($candles) . ' bars).' : 'CubeX candles: FAILED ✖ (check candles URL).';
+        }
+
+        $pool = app(\App\Services\PoolApiClient::class);
+        $lines[] = $pool->isLive() ? 'Pool API: URL + key configured ✔' : 'Pool API: not set (using simulated data).';
+
+        return back()->with('status', implode('  ·  ', $lines));
+    }
+
     /** Notify.lk SMS settings + live balance. */
     public function notify()
     {
