@@ -9,22 +9,22 @@
 
         <div class="bg-white shadow rounded-xl p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-1"><i class="fa-solid fa-plug text-emerald-600"></i> Market Data / API</h2>
-            <p class="text-sm text-gray-500">Manage the <strong>CubeX</strong> market-data keys (spot prices &amp; chart candles, plus USD/INR) and the <strong>Pool</strong> API (mutual-fund PnL sync). Values saved here override the server <code>.env</code> — no server login needed.</p>
+            <p class="text-sm text-gray-500">Manage the market-data API keys (spot prices &amp; chart candles) and the <strong>Pool</strong> API (mutual-fund PnL sync). Values saved here override the server <code>.env</code> — no server login needed.</p>
         </div>
 
         <form method="POST" action="{{ route('admin.settings.marketdata.update') }}" class="space-y-6 text-sm">
             @csrf
 
-            {{-- CubeX --}}
+            {{-- Spot prices --}}
             <div class="bg-white shadow rounded-xl p-6 space-y-4">
-                <h3 class="font-semibold text-gray-900">CubeX (spot prices &amp; candles)</h3>
+                <h3 class="font-semibold text-gray-900">Spot Prices &amp; Candles</h3>
                 <div>
                     <label class="block text-gray-700 mb-1">Prices URL</label>
-                    <input name="cubex_prices_url" value="{{ old('cubex_prices_url', $cubexPricesUrl) }}" class="w-full border-gray-300 rounded-md font-mono text-xs" placeholder="https://trade.cubexenterprises.com/api/external/v1/prices">
+                    <input name="cubex_prices_url" value="{{ old('cubex_prices_url', $cubexPricesUrl) }}" class="w-full border-gray-300 rounded-md font-mono text-xs" placeholder="https://your-trading-domain.com/api/external/v1/prices">
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-1">Candles URL</label>
-                    <input name="cubex_candles_url" value="{{ old('cubex_candles_url', $cubexCandlesUrl) }}" class="w-full border-gray-300 rounded-md font-mono text-xs" placeholder="https://trade.cubexenterprises.com/api/external/v1/candles">
+                    <input name="cubex_candles_url" value="{{ old('cubex_candles_url', $cubexCandlesUrl) }}" class="w-full border-gray-300 rounded-md font-mono text-xs" placeholder="https://your-trading-domain.com/api/external/v1/candles">
                     <p class="text-[11px] text-gray-400 mt-1">Leave blank to auto-derive from the prices URL (/prices → /candles).</p>
                 </div>
                 <div>

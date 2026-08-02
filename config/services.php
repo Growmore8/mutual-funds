@@ -58,8 +58,8 @@ return [
         'key' => env('POOL_API_KEY'),
     ],
 
-    // CubeX external market-data API — live Spot prices in ONE call (avoids TwelveData rate limits).
-    // prices_url e.g. https://<cubex-domain>/api/external/v1/prices ; key = the tenant's ck_live_ key.
+    // External market-data API — live Spot prices in ONE call (avoids TwelveData rate limits).
+    // prices_url e.g. https://<your-trading-domain>/api/external/v1/prices ; key = ck_live_ API key.
     'cubex' => [
         'prices_url' => env('CUBEX_PRICES_URL'),
         // Optional: OHLC candles for the chart. If unset, derived from prices_url (/prices -> /candles).
