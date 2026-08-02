@@ -67,6 +67,8 @@ return [
     // prices_url e.g. https://<cubex-domain>/api/external/v1/prices ; key = the tenant's ck_live_ key.
     'cubex' => [
         'prices_url' => env('CUBEX_PRICES_URL'),
+        // Optional: OHLC candles for the chart. If unset, derived from prices_url (/prices -> /candles).
+        'candles_url' => env('CUBEX_CANDLES_URL'),
         'key' => env('CUBEX_API_KEY', env('POOL_API_KEY')),
     ],
 

@@ -102,9 +102,20 @@ class SpotController extends Controller
     {
         $ins = SpotInstrument::findOrFail($request->get('id'));
         $interval = $request->get('interval', '1day');
-        $ttl = $interval === '1day' ? 600 : 60;   // intraday refreshes faster
+        $ttl = in_array($interval, ['1day', '1week'], true) ? 600 : 60;   // intraday refreshes faster
 
         $values = \Illuminate\Support\Facades\Cache::remember("spot.candles.{$ins->id}.{$interval}", $ttl, function () use ($ins, $interval) {
+            // Prefer CubeX candles (same feed as live prices). Returns oldest-first, native currency, unix time.
+            $sym = str_replace('/', '', strtoupper($ins->symbol));
+            $cx = $this->cubex->candles($sym, $this->cubexInterval($interval), 150);
+            if (! empty($cx)) {
+                return collect($cx)->map(fn ($c) => [
+                    'time' => gmdate('Y-m-d H:i:s', (int) $c['time']),
+                    'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
+                ])->all();
+            }
+
+            // Fallback: TwelveData (newest-first, so reverse).
             $data = $this->td->timeSeries($ins->symbol, $interval, 90, $ins->exchange);
 
             return collect($data['values'] ?? [])->reverse()->values()->map(fn ($c) => [
@@ -114,6 +125,15 @@ class SpotController extends Controller
         });
 
         return response()->json(['values' => $values]);
+    }
+
+    /** Map the UI's TwelveData-style interval to CubeX's candle interval format. */
+    private function cubexInterval(string $iv): string
+    {
+        return [
+            '1min' => '1m', '5min' => '5m', '15min' => '15m', '30min' => '30m',
+            '1h' => '1h', '2h' => '4h', '4h' => '4h', '1day' => '1d', '1week' => '1w',
+        ][$iv] ?? '1h';
     }
 
     /** Aggregated order book for one instrument. */
