@@ -101,6 +101,15 @@ class WithdrawalController extends Controller
             route('admin.withdrawals.index'),
         );
 
+        // SMS alert (Notify.lk) — product, client id, name, amount.
+        $product = $purpose === 'spot' ? 'Spot Trading' : 'Mutual Fund';
+        $clientId = $account?->code() ?? ('CID-' . $user->id);
+        app(\App\Services\NotifyService::class)->event('withdrawal',
+            $product . " withdrawal request\n"
+            . 'Client: ' . $user->name . ' (' . $clientId . ")\n"
+            . 'Amount: ' . $currency . ' ' . number_format((float) $data['amount'], 2) . "\n"
+            . 'Method: ' . $method->title());
+
         return redirect()->route('withdraw.create', $purpose === 'spot' ? ['for' => 'spot'] : [])
             ->with('status', 'Withdrawal request submitted. Our team will review it shortly.');
     }

@@ -139,6 +139,65 @@ class SettingsController extends Controller
         return view('admin.settings-security');
     }
 
+    /** Notify.lk SMS settings + live balance. */
+    public function notify()
+    {
+        $svc = app(\App\Services\NotifyService::class);
+
+        return view('admin.settings-notify', [
+            'enabled' => (string) Setting::get('notify_enabled', config('notify.enabled') ? '1' : '0') === '1',
+            'userId' => Setting::get('notify_user_id', config('notify.user_id')),
+            'apiKey' => Setting::get('notify_api_key', config('notify.api_key')),
+            'senderId' => Setting::get('notify_sender_id', config('notify.sender_id')),
+            'numbers' => Setting::get('notify_numbers', ''),
+            'onDeposit' => (string) Setting::get('notify_on_deposit', '1') === '1',
+            'onWithdrawal' => (string) Setting::get('notify_on_withdrawal', '1') === '1',
+            'onKyc' => (string) Setting::get('notify_on_kyc', '1') === '1',
+            'configured' => $svc->configured(),
+            'balance' => $svc->balance(),
+        ]);
+    }
+
+    public function updateNotify(Request $request)
+    {
+        $data = $request->validate([
+            'notify_user_id' => ['nullable', 'string', 'max:60'],
+            'notify_api_key' => ['nullable', 'string', 'max:120'],
+            'notify_sender_id' => ['nullable', 'string', 'max:40'],
+            'notify_numbers' => ['nullable', 'string', 'max:3000'],
+        ]);
+
+        Setting::put('notify_enabled', $request->boolean('notify_enabled') ? '1' : '0');
+        Setting::put('notify_user_id', trim((string) ($data['notify_user_id'] ?? '')));
+        Setting::put('notify_sender_id', trim((string) ($data['notify_sender_id'] ?? '')));
+        Setting::put('notify_numbers', trim((string) ($data['notify_numbers'] ?? '')));
+        Setting::put('notify_on_deposit', $request->boolean('notify_on_deposit') ? '1' : '0');
+        Setting::put('notify_on_withdrawal', $request->boolean('notify_on_withdrawal') ? '1' : '0');
+        Setting::put('notify_on_kyc', $request->boolean('notify_on_kyc') ? '1' : '0');
+
+        // Only overwrite the API key when a new one is typed (leave blank to keep current).
+        if (! empty($data['notify_api_key'])) {
+            Setting::put('notify_api_key', trim($data['notify_api_key']));
+        }
+
+        return back()->with('status', 'SMS settings saved.');
+    }
+
+    public function testNotify(Request $request)
+    {
+        $data = $request->validate([
+            'test_phone' => ['required', 'string', 'max:20'],
+            'test_message' => ['nullable', 'string', 'max:300'],
+        ]);
+
+        $msg = $data['test_message'] ?: ('Test SMS from ' . config('app.name', 'the platform') . ' — Notify.lk is working.');
+        $res = app(\App\Services\NotifyService::class)->send($data['test_phone'], $msg);
+
+        $ok = ($res['status'] ?? null) === 'success';
+
+        return back()->with('status', ($ok ? 'Test SMS sent ✔ ' : 'Notify.lk responded: ') . json_encode($res));
+    }
+
     public function updateProfile(Request $request)
     {
         $admin = $request->user();

@@ -45,7 +45,15 @@ class KycController extends Controller
 
         $request->user()->update(['kyc_status' => 'submitted']);
 
-        \App\Models\AppNotification::notifyAdmins('kyc', 'New KYC submission', $request->user()->name . ' uploaded their ID for review.', route('admin.kyc.index'));
+        $user = $request->user();
+        \App\Models\AppNotification::notifyAdmins('kyc', 'New KYC submission', $user->name . ' uploaded their ID for review.', route('admin.kyc.index'));
+
+        // SMS alert (Notify.lk) — client id + name.
+        $clientId = $user->currentAccount()?->code() ?? ('CID-' . $user->id);
+        app(\App\Services\NotifyService::class)->event('kyc',
+            "Mutual Fund KYC submitted\n"
+            . 'Client: ' . $user->name . ' (' . $clientId . ")\n"
+            . 'Type: Identity document');
 
         return redirect()->route('kyc.show')->with('status', 'Document uploaded. Your KYC is under review.');
     }

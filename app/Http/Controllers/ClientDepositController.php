@@ -68,6 +68,15 @@ class ClientDepositController extends Controller
             route('admin.deposits.index'),
         );
 
+        // SMS alert (Notify.lk) — product, client id, name, amount.
+        $product = $purpose === 'spot' ? 'Spot Trading' : 'Mutual Fund';
+        $clientId = $account?->code() ?? ('CID-' . $user->id);
+        app(\App\Services\NotifyService::class)->event('deposit',
+            $product . " deposit request\n"
+            . 'Client: ' . $user->name . ' (' . $clientId . ")\n"
+            . 'Amount: ' . $currency . ' ' . number_format((float) $data['amount'], 2) . "\n"
+            . 'Method: ' . $data['method']);
+
         return redirect()->route('client.deposit.create')
             ->with('status', 'Deposit submitted with your slip. It will reflect in your balance once approved.');
     }

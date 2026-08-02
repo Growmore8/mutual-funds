@@ -145,6 +145,9 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::post('/settings/fx', [SettingsController::class, 'updateFx'])->name('settings.fx');
     Route::get('/settings/branding', [SettingsController::class, 'branding'])->name('settings.branding');
     Route::post('/settings/branding', [SettingsController::class, 'updateBranding'])->name('settings.branding.update');
+    Route::get('/settings/notify', [SettingsController::class, 'notify'])->name('settings.notify');
+    Route::post('/settings/notify', [SettingsController::class, 'updateNotify'])->name('settings.notify.update');
+    Route::post('/settings/notify/test', [SettingsController::class, 'testNotify'])->name('settings.notify.test');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
 
