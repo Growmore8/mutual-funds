@@ -35,7 +35,7 @@ class SpotTradingService
     public function refreshFx(): void
     {
         try {
-            $p = (float) (app(TwelveDataClient::class)->price('USD/INR')['price'] ?? 0);
+            $p = (float) (app(CubexMarketClient::class)->prices(['USDINR'])['USDINR'] ?? 0);
             if ($p > 0) {
                 \Illuminate\Support\Facades\Cache::put('fx.usdinr', $p, 7200);
                 \App\Models\Setting::put('fx_usdinr_last', $p);

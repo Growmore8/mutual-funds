@@ -2,40 +2,44 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TwelveDataClient;
+use App\Services\CubexMarketClient;
 use Illuminate\Console\Command;
 
 class SpotCheck extends Command
 {
-    protected $signature = 'spot:check {symbol=RELIANCE} {--exchange=NSE}';
+    protected $signature = 'spot:check {symbol=EURUSD}';
 
-    protected $description = 'Verify the Twelve Data spot key and fetch a sample quote (Phase 1 sanity check)';
+    protected $description = 'Verify the CubeX market-data key and fetch a sample price + candles';
 
-    public function handle(TwelveDataClient $td): int
+    public function handle(CubexMarketClient $cubex): int
     {
-        if (! $td->configured()) {
-            $this->error('TWELVEDATA_SPOT_KEY is not set in .env');
+        if (! $cubex->configured()) {
+            $this->error('CubeX is not configured (set CUBEX_PRICES_URL and CUBEX_API_KEY in .env).');
 
             return self::FAILURE;
         }
 
-        $symbol = $this->argument('symbol');
-        $exchange = $this->option('exchange') ?: null;
+        $symbol = strtoupper(str_replace('/', '', $this->argument('symbol')));
 
-        $this->info("Fetching quote for {$symbol}" . ($exchange ? " ({$exchange})" : '') . ' …');
-        $q = $td->quote($symbol, $exchange);
+        $this->info("Fetching CubeX price for {$symbol} …");
+        $price = $cubex->prices([$symbol])[$symbol] ?? null;
 
-        if (! $q) {
-            $this->error('No data returned — check the key, symbol, exchange, or plan coverage.');
+        if ($price === null) {
+            $this->error('No price returned — check the key, symbol, or CubeX coverage.');
 
             return self::FAILURE;
         }
 
-        $this->line('Name:   ' . ($q['name'] ?? '—'));
-        $this->line('Price:  ' . ($q['close'] ?? $q['price'] ?? '—'));
-        $this->line('Change: ' . ($q['percent_change'] ?? '—') . '%');
-        $this->line('Exch:   ' . ($q['exchange'] ?? '—'));
-        $this->info('Twelve Data spot key is working. ✅');
+        $this->line('Price:   ' . $price);
+
+        $candles = $cubex->candles($symbol, '1h', 3);
+        $this->line('Candles: ' . count($candles) . ' bars (1h)');
+        if ($candles) {
+            $last = end($candles);
+            $this->line('Last:    O ' . $last['open'] . ' H ' . $last['high'] . ' L ' . $last['low'] . ' C ' . $last['close']);
+        }
+
+        $this->info('CubeX market-data key is working. ✅');
 
         return self::SUCCESS;
     }

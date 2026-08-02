@@ -8,12 +8,11 @@ use App\Models\SpotOrder;
 use App\Models\SpotTrade;
 use App\Services\CubexMarketClient;
 use App\Services\SpotTradingService;
-use App\Services\TwelveDataClient;
 use Illuminate\Http\Request;
 
 class SpotController extends Controller
 {
-    public function __construct(private SpotTradingService $svc, private TwelveDataClient $td, private CubexMarketClient $cubex) {}
+    public function __construct(private SpotTradingService $svc, private CubexMarketClient $cubex) {}
 
     public function index(Request $request)
     {
@@ -105,21 +104,12 @@ class SpotController extends Controller
         $ttl = in_array($interval, ['1day', '1week'], true) ? 600 : 60;   // intraday refreshes faster
 
         $values = \Illuminate\Support\Facades\Cache::remember("spot.candles.{$ins->id}.{$interval}", $ttl, function () use ($ins, $interval) {
-            // Prefer CubeX candles (same feed as live prices). Returns oldest-first, native currency, unix time.
+            // CubeX candles (same feed as live prices). Returns oldest-first, native currency, unix time.
             $sym = str_replace('/', '', strtoupper($ins->symbol));
             $cx = $this->cubex->candles($sym, $this->cubexInterval($interval), 150);
-            if (! empty($cx)) {
-                return collect($cx)->map(fn ($c) => [
-                    'time' => gmdate('Y-m-d H:i:s', (int) $c['time']),
-                    'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
-                ])->all();
-            }
 
-            // Fallback: TwelveData (newest-first, so reverse).
-            $data = $this->td->timeSeries($ins->symbol, $interval, 90, $ins->exchange);
-
-            return collect($data['values'] ?? [])->reverse()->values()->map(fn ($c) => [
-                'time' => $c['datetime'],
+            return collect($cx)->map(fn ($c) => [
+                'time' => gmdate('Y-m-d H:i:s', (int) $c['time']),
                 'close' => round($this->svc->toUsd((float) $c['close'], $ins->currency), 6),
             ])->all();
         });
@@ -127,7 +117,7 @@ class SpotController extends Controller
         return response()->json(['values' => $values]);
     }
 
-    /** Map the UI's TwelveData-style interval to CubeX's candle interval format. */
+    /** Map the UI interval to CubeX's candle interval format. */
     private function cubexInterval(string $iv): string
     {
         return [

@@ -20,11 +20,6 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
-    // Spot Trading market data — SEPARATE from the mutual-fund / CubeX pool API.
-    'twelvedata' => [
-        'spot_key' => env('TWELVEDATA_SPOT_KEY'),
-    ],
-
     // LogoKit (img.logokit.com) — real ticker & crypto logos. pk_ token is publishable.
     'logokit' => [
         'key' => env('LOGOKIT_KEY', 'pk_fr7d1bb0471266c3803821'),
