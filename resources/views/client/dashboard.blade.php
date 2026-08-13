@@ -311,6 +311,9 @@
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Your Profit Share</dt><dd class="font-semibold dark:text-gray-100">{{ rtrim(rtrim(number_format($sharePct,2),'0'),'.') }}%</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Running PnL <span class="text-[10px] text-gray-400">(live)</span></dt><dd id="live-running-pnl" data-val="{{ $floatingShare }}" class="font-semibold {{ $floatingShare < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ ($floatingShare < 0 ? '-' : '+') . $money(abs($floatingShare)) }}</dd></div>
                 <div class="flex justify-between py-2 bg-emerald-50 dark:bg-emerald-500/10 -mx-2 px-2 rounded"><dt class="text-gray-600 dark:text-emerald-200">Withdrawable profit</dt><dd class="font-bold text-emerald-700 dark:text-emerald-300">{{ $money($withdrawable) }}</dd></div>
+                @if (($pendingWithdrawal ?? 0) > 0)
+                <div class="flex justify-between py-2"><dt class="text-amber-600 dark:text-amber-400"><i class="fa-regular fa-clock text-[10px]"></i> Withdrawal pending approval</dt><dd class="font-semibold text-amber-600 dark:text-amber-400">{{ $money($pendingWithdrawal) }}</dd></div>
+                @endif
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">Per Day Profit (est.)</dt><dd class="font-semibold dark:text-gray-100">{{ $money($perDay) }}</dd></div>
                 <div class="flex justify-between py-2"><dt class="{{ $lbl }}">ROI (monthly, est.)</dt><dd class="font-semibold dark:text-gray-100">{{ rtrim(rtrim(number_format($roiMonthly,2),'0'),'.') }}%</dd></div>
             </dl>

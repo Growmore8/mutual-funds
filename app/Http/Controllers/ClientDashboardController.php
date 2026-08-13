@@ -33,7 +33,9 @@ class ClientDashboardController extends Controller
         $balanceAfter = (float) (Transaction::where('fund_account_id', $aid)->latest('id')->value('balance_after') ?? 0);
         $totalEarned = (float) Transaction::where('fund_account_id', $aid)->where('type', 'profit')->sum('amount');
         $runningPnl = $account ? $account->runningPnl() : 0.0;
-        $withdrawable = $account ? $account->availableToWithdraw() : 0.0;
+        // Withdrawable shown = approved-only, so a pending request doesn't drop it before approval.
+        $withdrawable = $account ? $account->withdrawableProfit() : 0.0;
+        $pendingWithdrawal = $account ? $account->pendingWithdrawn() : 0.0;
 
         $today = (float) PnlAllocation::where('fund_account_id', $aid)->whereDate('allocation_date', today())->sum('net_pnl');
         $yesterday = (float) PnlAllocation::where('fund_account_id', $aid)->whereDate('allocation_date', today()->subDay())->sum('net_pnl');
@@ -163,7 +165,7 @@ class ClientDashboardController extends Controller
         return view('client.dashboard', compact(
             'user', 'account', 'at', 'pool', 'pools', 'latestSnap', 'investment', 'balanceAfter', 'totalEarned',
             'today', 'yesterday', 'month', 'sharePct', 'poolBalance', 'poolsCapacity', 'poolToday', 'chart', 'recent',
-            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'runningPnl', 'referralEarned', 'announcement',
+            'poolsFloating', 'floatingShare', 'liveRef', 'withdrawable', 'pendingWithdrawal', 'runningPnl', 'referralEarned', 'announcement',
             'spotUsd', 'spotDeposited', 'spotTotalPnl', 'spotFloating', 'spotEquity', 'totalPnlUsd', 'fxRates'
         ));
     }

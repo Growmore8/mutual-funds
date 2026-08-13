@@ -98,12 +98,34 @@ class FundAccount extends Model
         return round($this->totalProfit() - $paidOut, 2);
     }
 
-    /** Profit-only withdrawable balance. */
+    /**
+     * True requestable profit RIGHT NOW = profit − (pending + approved).
+     * Used for the withdraw form + validation so the same profit can't be
+     * requested twice while a request is still pending.
+     */
     public function availableToWithdraw(): float
     {
         $locked = (float) $this->withdrawals()->whereIn('status', ['pending', 'approved'])->sum('amount');
 
         return round(max(0, $this->totalProfit() - $locked), 2);
+    }
+
+    /**
+     * Withdrawable profit for DISPLAY = profit − approved only.
+     * A pending (unapproved) request does NOT reduce this — the balance changes
+     * only when the admin approves. Pending amounts are shown separately.
+     */
+    public function withdrawableProfit(): float
+    {
+        $paid = (float) $this->withdrawals()->where('status', 'approved')->sum('amount');
+
+        return round(max(0, $this->totalProfit() - $paid), 2);
+    }
+
+    /** Profit tied up in withdrawal requests still awaiting admin approval. */
+    public function pendingWithdrawn(): float
+    {
+        return round((float) $this->withdrawals()->where('status', 'pending')->sum('amount'), 2);
     }
 
     /** Re-evaluate plan + pool from this account's total deposit (skips if locked). */
