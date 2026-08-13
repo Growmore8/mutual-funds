@@ -137,6 +137,7 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
     Route::post('/withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
     Route::post('/withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
+    Route::post('/withdrawals/{withdrawal}/reverse', [WithdrawalController::class, 'reverse'])->name('withdrawals.reverse');
 
     // Admin settings (own profile + password)
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');

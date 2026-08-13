@@ -46,13 +46,18 @@
                                     <form method="POST" action="{{ route('admin.withdrawals.approve', $w) }}" onsubmit="return confirm('Approve and debit {{ $money($w->amount) }}?')">@csrf
                                         <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-md">Approve</button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.withdrawals.reject', $w) }}" onsubmit="this.admin_note.value=prompt('Reason for rejecting (optional):')||''">@csrf
+                                    <form method="POST" action="{{ route('admin.withdrawals.reject', $w) }}" onsubmit="var r=prompt('Reason for rejecting:'); if(r===null)return false; this.admin_note.value=r;">@csrf
                                         <input type="hidden" name="admin_note">
                                         <button class="px-3 py-1.5 bg-red-600 text-white rounded-md">Reject</button>
                                     </form>
                                 </div>
+                            @elseif ($w->status === 'approved')
+                                <form method="POST" action="{{ route('admin.withdrawals.reverse', $w) }}" onsubmit="if(!confirm('Reverse this approved withdrawal and return {{ $money($w->amount) }} to the client?'))return false; var r=prompt('Reason for reversing:'); if(r===null)return false; this.admin_note.value=r;">@csrf
+                                    <input type="hidden" name="admin_note">
+                                    <button class="px-3 py-1.5 bg-amber-600 text-white rounded-md" title="Undo a withdrawal approved by mistake">Reverse</button>
+                                </form>
                             @else
-                                <span class="text-gray-300">—</span>
+                                @if ($w->admin_note)<div class="text-xs text-gray-400 max-w-[200px] whitespace-pre-line" title="{{ $w->admin_note }}">{{ \Illuminate\Support\Str::limit($w->admin_note, 60) }}</div>@else<span class="text-gray-300">—</span>@endif
                             @endif
                         </td>
                     </tr>
