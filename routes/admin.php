@@ -94,6 +94,7 @@ Route::middleware(['auth', 'admin', 'singleadmin'])->prefix('admin')->name('admi
     Route::post('/spot/client/{client}/reset', [\App\Http\Controllers\Admin\SpotAdminController::class, 'resetAccount'])->name('spot.reset');
     Route::post('/spot/instruments', [\App\Http\Controllers\Admin\SpotAdminController::class, 'storeInstrument'])->name('spot.instruments.store');
     Route::post('/spot/instruments/{instrument}/toggle', [\App\Http\Controllers\Admin\SpotAdminController::class, 'toggleInstrument'])->name('spot.instruments.toggle');
+    Route::post('/spot/instruments/{instrument}/delete', [\App\Http\Controllers\Admin\SpotAdminController::class, 'deleteInstrument'])->name('spot.instruments.delete');
 
     // P2P merchants + orders
     Route::get('/p2p', [\App\Http\Controllers\Admin\P2pController::class, 'index'])->name('p2p.index');

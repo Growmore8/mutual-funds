@@ -239,19 +239,50 @@ class SpotAdminController extends Controller
     public function storeInstrument(Request $request)
     {
         $data = $request->validate([
+            'id' => ['nullable', 'integer', 'exists:spot_instruments,id'],
             'symbol' => ['required', 'string', 'max:40'],
             'name' => ['nullable', 'string', 'max:120'],
             'exchange' => ['nullable', 'string', 'max:40'],
             'market' => ['required', 'in:india,global,crypto,forex,commodity'],
             'type' => ['required', 'in:stock,crypto,forex,commodity,index'],
         ]);
+        $id = $data['id'] ?? null;
+        unset($data['id']);
+        $data['exchange'] = $data['exchange'] ?: null;
+
+        // Edit: update that row in place (keep its enabled state + sort), but never collide with another symbol.
+        if ($id) {
+            $clash = SpotInstrument::where('symbol', $data['symbol'])->where('exchange', $data['exchange'])->where('id', '!=', $id)->exists();
+            if ($clash) {
+                return back()->withErrors(['symbol' => "{$data['symbol']} already exists."])->withInput();
+            }
+            SpotInstrument::findOrFail($id)->update($data);
+
+            return back()->with('status', 'Instrument updated.');
+        }
 
         SpotInstrument::updateOrCreate(
-            ['symbol' => $data['symbol'], 'exchange' => $data['exchange'] ?: null],
+            ['symbol' => $data['symbol'], 'exchange' => $data['exchange']],
             $data + ['enabled' => true, 'sort' => (int) SpotInstrument::max('sort') + 1],
         );
 
         return back()->with('status', 'Instrument saved.');
+    }
+
+    /** Delete an instrument — only if no client ever traded/held it (otherwise disable it instead). */
+    public function deleteInstrument(SpotInstrument $instrument)
+    {
+        $used = SpotTrade::where('instrument_id', $instrument->id)->exists()
+            || SpotHolding::where('instrument_id', $instrument->id)->exists()
+            || SpotOrder::where('instrument_id', $instrument->id)->where('is_maker', false)->exists();
+        if ($used) {
+            return back()->withErrors(['symbol' => "{$instrument->symbol} has client orders/trades/holdings — disable it instead of deleting."]);
+        }
+
+        SpotOrder::where('instrument_id', $instrument->id)->where('is_maker', true)->delete(); // house quotes only
+        $instrument->delete();
+
+        return back()->with('status', "Instrument {$instrument->symbol} deleted.");
     }
 
     public function toggleInstrument(SpotInstrument $instrument)
